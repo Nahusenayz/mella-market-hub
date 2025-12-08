@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react'
 import { supabase } from '../integrations/supabase/client'
 import { useEmergencyRequests } from '../hooks/useEmergencyRequests'
 import { useNavigate } from 'react-router-dom'
+import Modal from '../components/Modal'
+import { EmergencyRequest } from '../hooks/useEmergencyRequests'
 
 export default function Dashboard() {
   const nav = useNavigate()
@@ -15,6 +17,10 @@ export default function Dashboard() {
   const [newRequestCount, setNewRequestCount] = useState(0)
   const prevRequestsRef = useRef<string[]>([])
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // UI State
+  const [showHistoryModal, setShowHistoryModal] = useState(false)
+  const [selectedRequest, setSelectedRequest] = useState<EmergencyRequest | null>(null)
 
   // Check for new requests and play notification
   useEffect(() => {
@@ -307,6 +313,29 @@ export default function Dashboard() {
                     ⏳ Waiting
                   </span>
                 </div>
+
+                {/* View Details Button */}
+                <button
+                  onClick={() => setSelectedRequest(r)}
+                  className="btn-details"
+                  style={{
+                    width: '100%',
+                    marginBottom: '1rem',
+                    padding: '0.75rem',
+                    background: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    color: '#4b5563',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <span>👁️</span> View Full Details
+                </button>
 
                 {/* Emergency Details */}
                 <div style={{ marginBottom: '1rem' }}>
@@ -759,12 +788,210 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
-        {history.length > 5 && (
-          <button className="btn-secondary" style={{ width: '100%', marginTop: '1rem' }}>
+        {(history.length > 5 || (history.length > 0 && history.length <= 5)) && (
+          <button
+            className="btn-secondary"
+            style={{ width: '100%', marginTop: '1rem' }}
+            onClick={() => setShowHistoryModal(true)}
+          >
             View all history ({history.length} total)
           </button>
         )}
       </div>
+
+      {/* Work History Modal */}
+      <Modal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        title={`Work History (${history.length})`}
+      >
+        <div className="flex flex-col gap-3">
+          {history.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+              No completed jobs yet.
+            </div>
+          ) : (
+            history.map((r) => (
+              <div key={r.id} style={{
+                background: '#f9fafb',
+                padding: '1rem',
+                borderRadius: '12px',
+                border: '1px solid #e5e7eb'
+              }}>
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <div style={{ fontWeight: 600, color: '#111827' }}>
+                      {r.category?.replace('_', ' ') || 'Emergency'} Request
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                      {new Date(r.created_at).toLocaleString()}
+                    </div>
+                  </div>
+                  <span className={`status-badge ${r.status}`} style={{ fontSize: '0.75rem' }}>
+                    {r.status}
+                  </span>
+                </div>
+                {r.user_profile && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: '#e5e7eb',
+                      overflow: 'hidden'
+                    }}>
+                      {r.user_profile.profile_image_url ? (
+                        <img src={r.user_profile.profile_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>👤</div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '0.875rem', color: '#374151' }}>{r.user_profile.full_name}</span>
+                  </div>
+                )}
+                {r.details && (
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', background: 'white', padding: '0.5rem', borderRadius: '6px' }}>
+                    {r.details}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </Modal>
+
+      {/* Request Details Modal */}
+      <Modal
+        isOpen={!!selectedRequest}
+        onClose={() => setSelectedRequest(null)}
+        title="Emergency Request Details"
+      >
+        {selectedRequest && (
+          <div>
+            {/* Large User Profile */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              marginBottom: '1.5rem',
+              paddingBottom: '1.5rem',
+              borderBottom: '1px solid #e5e7eb'
+            }}>
+              <div style={{
+                width: '100px',
+                height: '100px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2.5rem',
+                color: 'white',
+                marginBottom: '1rem',
+                overflow: 'hidden',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }}>
+                {selectedRequest.user_profile?.profile_image_url ? (
+                  <img src={selectedRequest.user_profile.profile_image_url} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  selectedRequest.user_profile?.full_name?.charAt(0)?.toUpperCase() || '👤'
+                )}
+              </div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>
+                {selectedRequest.user_profile?.full_name || 'Anonymous User'}
+              </h3>
+              {selectedRequest.user_profile?.phone && (
+                <a href={`tel:${selectedRequest.user_profile.phone}`} style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  color: '#3b82f6',
+                  fontSize: '1.125rem',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  background: '#eff6ff',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '20px'
+                }}>
+                  📞 {selectedRequest.user_profile.phone}
+                </a>
+              )}
+            </div>
+
+            {/* Request Info */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{ background: '#f9fafb', padding: '1rem', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Category</div>
+                  <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>
+                      {selectedRequest.category === 'ambulance' ? '🚑' :
+                        selectedRequest.category === 'fire_truck' ? '🚒' :
+                          selectedRequest.category === 'police' ? '👮' :
+                            selectedRequest.category === 'traffic_police' ? '🚦' :
+                              selectedRequest.category === 'tow_truck' ? '🏗️' : '🚨'}
+                    </span>
+                    {selectedRequest.category?.replace('_', ' ') || 'Emergency'}
+                  </div>
+                </div>
+                <div style={{ background: '#f9fafb', padding: '1rem', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Time</div>
+                  <div style={{ fontWeight: 600 }}>
+                    {formatTimeAgo(selectedRequest.created_at)}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: '#fff1f2', padding: '1rem', borderRadius: '12px', border: '1px solid #fecdd3' }}>
+                <div style={{ fontSize: '0.75rem', color: '#9f1239', marginBottom: '0.5rem', fontWeight: 700 }}>EMERGENCY DETAILS</div>
+                <div style={{ color: '#111827', lineHeight: 1.5 }}>
+                  {selectedRequest.details || 'No additional details provided by the user.'}
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-3">
+              {selectedRequest.user_location_lat && selectedRequest.user_location_lng && (
+                <a
+                  href={`https://maps.google.com/?q=${selectedRequest.user_location_lat},${selectedRequest.user_location_lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-secondary"
+                  style={{ justifyContent: 'center', background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe' }}
+                >
+                  📍 View Location on Map
+                </a>
+              )}
+
+              {selectedRequest.status === 'pending' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => {
+                      userId && accept(selectedRequest.id, userId)
+                      setSelectedRequest(null)
+                    }}
+                    className="btn-accept"
+                    style={{ justifyContent: 'center' }}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => {
+                      decline(selectedRequest.id)
+                      setSelectedRequest(null)
+                    }}
+                    className="btn-decline"
+                    style={{ justifyContent: 'center' }}
+                  >
+                    Reject
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
