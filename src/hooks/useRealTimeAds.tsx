@@ -18,7 +18,6 @@ interface Ad {
     full_name: string;
     rating: number;
     profile_image_url: string;
-    is_verified?: boolean;
   } | null;
 }
 
@@ -35,8 +34,7 @@ export const useRealTimeAds = () => {
           profiles (
             full_name,
             rating,
-            profile_image_url,
-            is_verified
+            profile_image_url
           )
         `)
         .eq('is_active', true)
@@ -53,8 +51,7 @@ export const useRealTimeAds = () => {
         profiles: ad.profiles && typeof ad.profiles === 'object' && 'full_name' in ad.profiles ? {
           full_name: ad.profiles.full_name || '',
           rating: ad.profiles.rating || 0,
-          profile_image_url: ad.profiles.profile_image_url || '',
-          is_verified: ad.profiles.is_verified || false
+          profile_image_url: ad.profiles.profile_image_url || ''
         } : null
       }));
 
@@ -147,8 +144,7 @@ export const useRealTimeAds = () => {
           profiles (
             full_name,
             rating,
-            profile_image_url,
-            is_verified
+            profile_image_url
           )
         `)
         .eq('is_active', true);
@@ -172,8 +168,7 @@ export const useRealTimeAds = () => {
         profiles: ad.profiles && typeof ad.profiles === 'object' && 'full_name' in ad.profiles ? {
           full_name: ad.profiles.full_name || '',
           rating: ad.profiles.rating || 0,
-          profile_image_url: ad.profiles.profile_image_url || '',
-          is_verified: ad.profiles.is_verified || false
+          profile_image_url: ad.profiles.profile_image_url || ''
         } : null
       }));
 
