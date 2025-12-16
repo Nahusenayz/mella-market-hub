@@ -18,6 +18,7 @@ interface Ad {
     full_name: string;
     rating: number;
     profile_image_url: string;
+    is_verified?: boolean;
   } | null;
 }
 
@@ -34,7 +35,8 @@ export const useRealTimeAds = () => {
           profiles (
             full_name,
             rating,
-            profile_image_url
+            profile_image_url,
+            is_verified
           )
         `)
         .eq('is_active', true)
@@ -51,7 +53,8 @@ export const useRealTimeAds = () => {
         profiles: ad.profiles && typeof ad.profiles === 'object' && 'full_name' in ad.profiles ? {
           full_name: ad.profiles.full_name || '',
           rating: ad.profiles.rating || 0,
-          profile_image_url: ad.profiles.profile_image_url || ''
+          profile_image_url: ad.profiles.profile_image_url || '',
+          is_verified: ad.profiles.is_verified || false
         } : null
       }));
 
@@ -59,14 +62,14 @@ export const useRealTimeAds = () => {
       if (userLocation) {
         transformedAds = transformedAds.filter(ad => {
           if (!ad.location_lat || !ad.location_lng) return false;
-          
+
           const distance = calculateDistance(
             userLocation.lat,
             userLocation.lng,
             ad.location_lat,
             ad.location_lng
           );
-          
+
           return distance <= maxDistance;
         });
       }
@@ -144,7 +147,8 @@ export const useRealTimeAds = () => {
           profiles (
             full_name,
             rating,
-            profile_image_url
+            profile_image_url,
+            is_verified
           )
         `)
         .eq('is_active', true);
@@ -168,7 +172,8 @@ export const useRealTimeAds = () => {
         profiles: ad.profiles && typeof ad.profiles === 'object' && 'full_name' in ad.profiles ? {
           full_name: ad.profiles.full_name || '',
           rating: ad.profiles.rating || 0,
-          profile_image_url: ad.profiles.profile_image_url || ''
+          profile_image_url: ad.profiles.profile_image_url || '',
+          is_verified: ad.profiles.is_verified || false
         } : null
       }));
 
@@ -177,14 +182,14 @@ export const useRealTimeAds = () => {
         const maxRadius = Math.min(radius || 5, 5); // Ensure max 5km
         return transformedAds.filter(ad => {
           if (!ad.location_lat || !ad.location_lng) return false;
-          
+
           const distance = calculateDistance(
             location.lat,
             location.lng,
             ad.location_lat,
             ad.location_lng
           );
-          
+
           return distance <= maxRadius;
         });
       }
@@ -200,11 +205,11 @@ export const useRealTimeAds = () => {
     const R = 6371; // Earth's radius in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
 
