@@ -515,7 +515,9 @@ button:disabled {
 }
 
 .request-card.new-request {
-  animation: notificationPulse 2s ease-in-out infinite;
+  animation: fadeInUp 0.5s ease-out forwards, notificationPulse 2s ease-in-out infinite;
+  opacity: 1;
+  /* Fallback to ensure visibility */
 }
 
 /* ==================== STATUS BADGE ==================== */
