@@ -3,6 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { EmergencyAssistant } from '@/components/EmergencyAssistant';
 import { FirstAidChatbot } from '@/components/FirstAidChatbot';
 import { MapView } from '@/components/MapView';
+import { TrackingMap } from '@/components/TrackingMap';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -134,6 +135,41 @@ export const Emergency: React.FC = () => {
       supabase.removeChannel(channel);
     };
   }, [activeRequest?.id]);
+
+  // Subscribe to responder location when en_route
+  useEffect(() => {
+    if (activeRequest?.status !== 'en_route' || !activeRequest?.responder_id) return;
+
+    console.log('🛰️ Subscribing to responder location:', activeRequest.responder_id);
+
+    const channel = supabase
+      .channel('responder-tracking')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'worker_locations',
+          filter: `worker_id=eq.${activeRequest.responder_id}`
+        },
+        (payload) => {
+          console.log('📍 New responder location:', payload.new);
+          const newLoc = payload.new;
+          if (newLoc.location_lat && newLoc.location_lng) {
+            setActiveRequest(prev => prev ? ({
+              ...prev,
+              responder_location_lat: newLoc.location_lat,
+              responder_location_lng: newLoc.location_lng
+            }) : null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeRequest?.status, activeRequest?.responder_id]);
 
   // Check for existing active requests on mount
   useEffect(() => {
@@ -475,23 +511,81 @@ export const Emergency: React.FC = () => {
       </div>
 
       {/* Active Request Banner - Enhanced with Uber-like tracking */}
-      {activeRequest && (
+      {/* Active Request Banner - Enhanced with Uber-like tracking */}
+      {activeRequest && activeRequest.status === 'en_route' ? (
+        <div className="fixed inset-0 z-50 bg-white">
+          {/* Full Screen Map */}
+          <div className="absolute inset-0">
+            {activeRequest.responder_location_lat && activeRequest.responder_location_lng && (
+              <TrackingMap
+                userLocation={userLocation}
+                responderLocation={{
+                  lat: activeRequest.responder_location_lat,
+                  lng: activeRequest.responder_location_lng
+                }}
+                responderType={activeRequest.category}
+              />
+            )}
+          </div>
+
+          {/* Top Status Card */}
+          <div className="absolute top-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-96 z-[9999]">
+            <div className="bg-white rounded-2xl shadow-xl p-4 flex items-start gap-4 animate-in slide-in-from-top duration-500">
+              <div className="h-12 w-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <span className="text-2xl">🚨</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-lg leading-tight">
+                  {activeRequest.category === 'ambulance' ? 'Ambulance' : activeRequest.category.replace('_', ' ')} dispatched.
+                </h3>
+                <p className="text-gray-900 font-medium mt-1">
+                  ETA: {Math.floor(Math.random() * 8 + 2)} minutes.
+                </p>
+                <p className="text-gray-500 text-sm mt-0.5">
+                  Emergency contact notified.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom SOS Button */}
+          <div className="absolute bottom-12 left-0 right-0 flex justify-center items-center z-[9999]">
+            <div className="relative group">
+              {/* Ripple effects */}
+              <div className="absolute inset-0 bg-orange-600 rounded-full opacity-20 animate-ping duration-[2000ms]"></div>
+              <div className="absolute inset-[-12px] bg-orange-600 rounded-full opacity-10 animate-ping delay-300 duration-[2000ms]"></div>
+              <div className="absolute inset-[-24px] bg-orange-600 rounded-full opacity-5 animate-ping delay-700 duration-[2000ms]"></div>
+
+              <button
+                onClick={() => handleEmergencyCall('911')}
+                className="relative w-24 h-24 bg-gradient-to-br from-orange-600 to-red-600 rounded-full shadow-2xl flex items-center justify-center transform transition-transform group-hover:scale-105 active:scale-95"
+              >
+                <span className="text-white font-bold text-2xl tracking-wider">SOS</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Back Button (Optional safety hatch) */}
+          <button
+            onClick={() => setActiveRequest(null)} // Hidden back button for demo purposes or safety
+            className="absolute top-4 right-4 z-[9999] p-2 bg-white/80 rounded-full text-gray-500 hover:text-gray-900 backdrop-blur-sm"
+          >
+            <XCircle className="w-6 h-6" />
+          </button>
+        </div>
+      ) : activeRequest && (
         <div className="container mx-auto px-4 py-4">
-          <div className={`rounded-2xl overflow-hidden border-2 ${activeRequest.status === 'en_route' ? 'border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50' : getStatusInfo(activeRequest.status).border + ' ' + getStatusInfo(activeRequest.status).bg}`}>
+          <div className={`rounded-2xl overflow-hidden border-2 ${getStatusInfo(activeRequest.status).border + ' ' + getStatusInfo(activeRequest.status).bg}`}>
             {/* Header Section */}
             <div className="p-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
-                  <div className={`p-3 rounded-xl ${activeRequest.status === 'en_route' ? 'bg-purple-100' : getStatusInfo(activeRequest.status).bg}`}>
-                    {activeRequest.status === 'en_route' ? (
-                      <Navigation className="h-6 w-6 text-purple-600 animate-pulse" />
-                    ) : (
-                      getStatusInfo(activeRequest.status).icon
-                    )}
+                  <div className={`p-3 rounded-xl ${getStatusInfo(activeRequest.status).bg}`}>
+                    {getStatusInfo(activeRequest.status).icon}
                   </div>
                   <div>
-                    <h3 className={`font-bold text-lg ${activeRequest.status === 'en_route' ? 'text-purple-700' : getStatusInfo(activeRequest.status).color}`}>
-                      {activeRequest.status === 'en_route' ? '🚗 Responder On The Way!' : getStatusInfo(activeRequest.status).label}
+                    <h3 className={`font-bold text-lg ${getStatusInfo(activeRequest.status).color}`}>
+                      {getStatusInfo(activeRequest.status).label}
                     </h3>
                     <p className="text-sm text-gray-600">
                       {activeRequest.category} emergency • {new Date(activeRequest.created_at).toLocaleTimeString()}
@@ -512,81 +606,6 @@ export const Emergency: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Live Tracking Section - Only when en_route */}
-            {activeRequest.status === 'en_route' && activeRequest.responder_location_lat && (
-              <div className="px-4 pb-4">
-                {/* Live Map */}
-                <div className="relative rounded-xl overflow-hidden border-2 border-purple-200 mb-4" style={{ height: '250px' }}>
-                  <iframe
-                    title="Live Responder Tracking"
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    style={{ border: 0 }}
-                    src={`https://www.google.com/maps/embed/v1/directions?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&origin=${activeRequest.responder_location_lat},${activeRequest.responder_location_lng}&destination=${userLocation.lat},${userLocation.lng}&mode=driving`}
-                    allowFullScreen
-                  />
-                  {/* Live indicator */}
-                  <div className="absolute top-3 left-3 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                    LIVE TRACKING
-                  </div>
-                </div>
-
-                {/* ETA Stats */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="bg-white rounded-xl p-3 text-center border border-purple-100">
-                    <div className="text-xs text-gray-500">ETA</div>
-                    <div className="text-xl font-bold text-purple-600">{Math.floor(Math.random() * 8 + 2)} min</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-3 text-center border border-purple-100">
-                    <div className="text-xs text-gray-500">Distance</div>
-                    <div className="text-xl font-bold text-purple-600">{(Math.random() * 2 + 0.3).toFixed(1)} km</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-3 text-center border border-purple-100">
-                    <div className="text-xs text-gray-500">Status</div>
-                    <div className="text-sm font-bold text-green-600">Moving</div>
-                  </div>
-                </div>
-
-                {/* Voice Chat Section */}
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="font-semibold text-green-700 flex items-center gap-2">
-                      <span>🎙️</span> Contact Responder
-                    </div>
-                    <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
-                      Online
-                    </span>
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => alert('🎙️ Voice call connecting... In production, this would use WebRTC for real-time communication.')}
-                      className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold flex items-center justify-center gap-2 hover:from-green-600 hover:to-emerald-600 transition-all"
-                    >
-                      <PhoneCall className="h-5 w-5" /> Voice Call
-                    </button>
-                    <button
-                      onClick={() => alert('💬 Quick message sent: "I am waiting for you!"')}
-                      className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold flex items-center justify-center gap-2 hover:from-blue-600 hover:to-indigo-600 transition-all"
-                    >
-                      <span>💬</span> Message
-                    </button>
-                  </div>
-                </div>
-
-                {/* Open in Maps Button */}
-                <a
-                  href={`https://maps.google.com/?q=${activeRequest.responder_location_lat},${activeRequest.responder_location_lng}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-4 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold flex items-center justify-center gap-2 hover:from-purple-600 hover:to-indigo-600 transition-all"
-                >
-                  <Navigation className="h-5 w-5" /> Open Full Map
-                </a>
-              </div>
-            )}
 
             {/* Accepted Status - Show waiting for responder to start */}
             {activeRequest.status === 'accepted' && (

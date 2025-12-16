@@ -261,7 +261,13 @@ export default function Dashboard() {
           </h2>
           <div className="flex flex-col gap-3">
             {pendingRequests.map((r, index) => (
-              <div key={r.id} className="request-card pending new-request" style={{ animationDelay: `${index * 0.1}s`, borderLeft: `4px solid ${theme.color}`, background: 'linear-gradient(135deg, #fff 0%, #fff9f9 100%)' }}>
+              <div key={r.id} className="request-card pending new-request" style={{
+                animationDelay: `${index * 0.1}s`,
+                borderLeft: `6px solid ${theme.color}`,
+                background: 'white',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
+                border: '1px solid #e5e7eb'
+              }}>
                 {/* User Profile Section */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
                   <div style={{
@@ -381,24 +387,26 @@ export default function Dashboard() {
                 )}
 
                 {/* Accept/Reject Buttons */}
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                   <button
                     onClick={() => userId && accept(r.id, userId)}
                     className="btn-accept"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.5rem',
+                      gap: '0.75rem',
                       flex: 2,
                       justifyContent: 'center',
-                      padding: '1rem',
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                      padding: '1.25rem',
+                      fontSize: '1.125rem',
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                      color: 'white',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 15px rgba(16, 185, 129, 0.2)'
                     }}
                   >
-                    <span style={{ fontSize: '1.25rem' }}>✓</span> Accept Request
+                    <span style={{ fontSize: '1.5rem' }}>✓</span> ACCEPT
                   </button>
                   <button
                     onClick={() => decline(r.id)}
@@ -406,15 +414,19 @@ export default function Dashboard() {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '1rem',
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                      boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                      gap: '0.75rem',
+                      flex: 1,
+                      justifyContent: 'center',
+                      padding: '1.25rem',
+                      fontSize: '1.125rem',
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                      color: 'white',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                     }}
                   >
-                    <span style={{ fontSize: '1.25rem' }}>✗</span> Reject
+                    <span style={{ fontSize: '1.5rem' }}>✗</span> REJECT
                   </button>
                 </div>
               </div>
@@ -776,14 +788,24 @@ export default function Dashboard() {
         <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>📋 Work History</h2>
         {history.length === 0 && <div style={{ color: '#6b7280', fontStyle: 'italic' }}>No completed jobs yet.</div>}
         <div className="flex flex-col gap-3">
+          {history.length === 0 && <div style={{ color: '#6b7280', fontStyle: 'italic', padding: '1rem', background: '#f9fafb', borderRadius: '12px' }}>No completed jobs yet.</div>}
           {history.slice(0, 5).map((r, index) => (
-            <div key={r.id} className="animate-fade-in" style={{ background: '#f9fafb', padding: '1rem', borderRadius: '12px', border: '1px solid #e5e7eb', animationDelay: `${index * 0.1}s` }}>
+            <div key={r.id} className="animate-fade-in" style={{
+              background: 'white',
+              padding: '1.25rem',
+              borderRadius: '16px',
+              border: '1px solid #e5e7eb',
+              animationDelay: `${index * 0.1}s`,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+            }}>
               <div className="flex justify-between items-center">
                 <div>
-                  <div style={{ fontWeight: 600 }}>{r.category || 'Emergency'}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{new Date(r.created_at).toLocaleString()}</div>
+                  <div style={{ fontWeight: 700, fontSize: '1.125rem', color: '#111827' }}>{r.category?.replace('_', ' ') || 'Emergency'}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#4b5563', marginTop: '0.25rem' }}>{new Date(r.created_at).toLocaleString()}</div>
                 </div>
-                <span className={`status-badge ${r.status}`} style={{ transform: 'scale(0.9)' }}>{r.status}</span>
+                <span className={`status-badge ${r.status}`} style={{ transform: 'scale(1)', fontSize: '0.875rem', padding: '0.4rem 0.8rem' }}>
+                  {r.status === 'completed' ? '✓ Completed' : r.status}
+                </span>
               </div>
             </div>
           ))}
