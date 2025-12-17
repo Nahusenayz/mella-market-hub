@@ -29,10 +29,7 @@ body {
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  /* Prevent global scroll */
-  /* Prevent bounce effect on iOS */
-  position: fixed;
+  /* Removed overflow: hidden and fixed position to allow native scrolling behavior if needed */
 }
 
 body {
@@ -43,15 +40,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: linear-gradient(135deg, #fff7ed 0%, #fef2f2 50%, #fdf2f8 100%);
   color: var(--text-primary);
+  /* Ensure minimum height */
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 #root {
-  height: 100dvh;
+  min-height: 100vh;
   /* Dynamic viewport height */
   width: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* Removed overflow: hidden to allow native scrolling */
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

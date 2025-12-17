@@ -171,7 +171,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="container" style={{ paddingTop: '1rem', paddingBottom: '2rem' }}>
+    <div className="container" style={{ paddingTop: '1rem', paddingBottom: '6rem' }}>
       <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto" />
 
       {showNotification && (
@@ -253,12 +253,27 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {pendingRequests.length > 0 && (
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ animation: 'pulse 2s ease-in-out infinite' }}>🔴</span>
-            Pending Requests ({pendingRequests.length})
-          </h2>
+      <div style={{ marginBottom: '2rem' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ animation: 'pulse 2s ease-in-out infinite' }}>🔴</span>
+          Pending Requests ({pendingRequests.length})
+        </h2>
+
+        {pendingRequests.length === 0 && (
+          <div style={{
+            padding: '1.5rem',
+            background: 'white',
+            borderRadius: '12px',
+            border: '1px dashed #e5e7eb',
+            textAlign: 'center',
+            color: '#9ca3af',
+            fontSize: '0.875rem'
+          }}>
+            No pending emergency requests.
+          </div>
+        )}
+
+        {pendingRequests.length > 0 && (
           <div className="flex flex-col gap-3">
             {pendingRequests.map((r, index) => (
               <div key={r.id} className="request-card pending new-request" style={{
@@ -432,8 +447,8 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div style={{ marginBottom: '2rem' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>🎯 Active Requests ({activeRequests.length})</h2>

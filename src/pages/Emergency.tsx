@@ -512,68 +512,8 @@ export const Emergency: React.FC = () => {
 
       {/* Active Request Banner - Enhanced with Uber-like tracking */}
       {/* Active Request Banner - Enhanced with Uber-like tracking */}
-      {activeRequest && activeRequest.status === 'en_route' ? (
-        <div className="fixed inset-0 z-50 bg-white">
-          {/* Full Screen Map */}
-          <div className="absolute inset-0">
-            {activeRequest.responder_location_lat && activeRequest.responder_location_lng && (
-              <TrackingMap
-                userLocation={userLocation}
-                responderLocation={{
-                  lat: activeRequest.responder_location_lat,
-                  lng: activeRequest.responder_location_lng
-                }}
-                responderType={activeRequest.category}
-              />
-            )}
-          </div>
-
-          {/* Top Status Card */}
-          <div className="absolute top-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-96 z-[9999]">
-            <div className="bg-white rounded-2xl shadow-xl p-4 flex items-start gap-4 animate-in slide-in-from-top duration-500">
-              <div className="h-12 w-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <span className="text-2xl">🚨</span>
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900 text-lg leading-tight">
-                  {activeRequest.category === 'ambulance' ? 'Ambulance' : activeRequest.category.replace('_', ' ')} dispatched.
-                </h3>
-                <p className="text-gray-900 font-medium mt-1">
-                  ETA: {Math.floor(Math.random() * 8 + 2)} minutes.
-                </p>
-                <p className="text-gray-500 text-sm mt-0.5">
-                  Emergency contact notified.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom SOS Button */}
-          <div className="absolute bottom-12 left-0 right-0 flex justify-center items-center z-[9999]">
-            <div className="relative group">
-              {/* Ripple effects */}
-              <div className="absolute inset-0 bg-orange-600 rounded-full opacity-20 animate-ping duration-[2000ms]"></div>
-              <div className="absolute inset-[-12px] bg-orange-600 rounded-full opacity-10 animate-ping delay-300 duration-[2000ms]"></div>
-              <div className="absolute inset-[-24px] bg-orange-600 rounded-full opacity-5 animate-ping delay-700 duration-[2000ms]"></div>
-
-              <button
-                onClick={() => handleEmergencyCall('911')}
-                className="relative w-24 h-24 bg-gradient-to-br from-orange-600 to-red-600 rounded-full shadow-2xl flex items-center justify-center transform transition-transform group-hover:scale-105 active:scale-95"
-              >
-                <span className="text-white font-bold text-2xl tracking-wider">SOS</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Back Button (Optional safety hatch) */}
-          <button
-            onClick={() => setActiveRequest(null)} // Hidden back button for demo purposes or safety
-            className="absolute top-4 right-4 z-[9999] p-2 bg-white/80 rounded-full text-gray-500 hover:text-gray-900 backdrop-blur-sm"
-          >
-            <XCircle className="w-6 h-6" />
-          </button>
-        </div>
-      ) : activeRequest && (
+      {/* Active Request Status Card (Pending/Accepted) - Shows standard status card */}
+      {activeRequest && activeRequest.status !== 'en_route' && (
         <div className="container mx-auto px-4 py-4">
           <div className={`rounded-2xl overflow-hidden border-2 ${getStatusInfo(activeRequest.status).border + ' ' + getStatusInfo(activeRequest.status).bg}`}>
             {/* Header Section */}
@@ -621,6 +561,63 @@ export const Emergency: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Floating Live Tracking Popup (En Route) - Overlays on bottom right */}
+      {activeRequest && activeRequest.status === 'en_route' && (
+        <div className="fixed bottom-0 left-0 right-0 md:bottom-4 md:right-4 md:left-auto md:w-96 z-[9999] p-2 md:p-0">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom duration-500">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex justify-between items-start">
+              <div className="flex gap-3">
+                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                  <span className="text-2xl">🚑</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg leading-tight">Ambulance Dispatched</h3>
+                  <p className="text-blue-100/90 text-sm font-medium mt-0.5">ETA: ~4 min</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Map */}
+            <div className="h-48 bg-gray-100 relative">
+              {activeRequest.responder_location_lat && activeRequest.responder_location_lng ? (
+                <TrackingMap
+                  userLocation={userLocation}
+                  responderLocation={{
+                    lat: activeRequest.responder_location_lat,
+                    lng: activeRequest.responder_location_lng
+                  }}
+                  responderType={activeRequest.category}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                  Connecting to GPS...
+                </div>
+              )}
+            </div>
+
+            {/* Footer Details */}
+            <div className="p-4 bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-sm font-medium text-gray-600">Live Updates Active</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button className="flex-1 bg-green-600 hover:bg-green-700 gap-2 h-10">
+                  <Phone className="w-4 h-4" /> Contact
+                </Button>
+                <Button variant="outline" className="flex-1 gap-2 h-10" onClick={() => handleEmergencyCall('911')}>
+                  <Shield className="w-4 h-4" /> 911
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}
