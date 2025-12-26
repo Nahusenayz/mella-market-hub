@@ -40,64 +40,108 @@ async function getUserLocation() {
   });
 }
 
-// Helper: Query a free AI medical API for intent recognition and medicine suggestion
-async function getMedicalAdvice(query: string, lang: string) {
-  // Use Wikipedia (no key, no signup) to fetch concise first-aid info
-  // 1) Try in selected language (e.g., 'am'), 2) fallback to English
-  try {
-    const languages = lang === 'am' ? ['am', 'en'] : ['en'];
-
-    // Light normalization + topic hints to improve search relevance
-    const lower = query.trim().toLowerCase();
-    let searchTerm = lower;
-    const hints: Array<{ keys: string[]; am?: string; en: string }> = [
-      { keys: ['cut', 'laceration', 'wound'], am: 'መቁረጥ', en: 'Laceration' },
-      { keys: ['burn', 'scald'], am: 'ቃጠል', en: 'Burn' },
-      { keys: ['choke', 'choking', 'heimlich'], am: 'መታፈን', en: 'Choking' },
-      { keys: ['bleeding', 'blood loss', 'hemorrhage'], am: 'ደም መፍሰስ', en: 'Bleeding' },
-      { keys: ['sprain', 'ankle', 'twist'], am: 'መወዘዝ', en: 'Sprain' },
-      { keys: ['fever', 'temperature'], am: 'ትኩሳት', en: 'Fever' },
-      { keys: ['allergy', 'allergic', 'anaphylaxis', 'epipen'], am: 'አለርጂ', en: 'Allergy' },
-      { keys: ['seizure', 'epilepsy', 'convulsion'], am: 'ንዕስ በሽታ', en: 'Seizure' },
-      { keys: ['stroke', 'cva'], am: 'ድንጋጤ የአንጎል ችግር', en: 'Stroke' },
-      { keys: ['heart attack', 'chest pain', 'myocardial infarction'], am: 'የልብ ጥቃት', en: 'Myocardial infarction' }
-    ];
-
-    for (const h of hints) {
-      if (h.keys.some(k => lower.includes(k))) {
-        searchTerm = (lang === 'am' && h.am) ? h.am : h.en;
-        break;
-      }
-    }
-
-    for (const l of languages) {
-      // 1) Search best matching page title
-      const searchUrl = `https://${l}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(searchTerm)}&limit=1&namespace=0&format=json&origin=*`;
-      const sRes = await fetch(searchUrl);
-      if (!sRes.ok) continue;
-      const sData: any = await sRes.json();
-      const title: string | undefined = sData?.[1]?.[0];
-      if (!title) continue;
-
-      // 2) Get summary/extract for that title
-      const summaryUrl = `https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
-      const sumRes = await fetch(summaryUrl);
-      if (!sumRes.ok) continue;
-      const sumData: any = await sumRes.json();
-      const extract: string | undefined = sumData?.extract;
-
-      if (extract) {
-        const header = l === 'am' ? 'የመጀመሪያ እርዳታ መረጃ (ከዊኪፔዲያ):' : 'First aid info (from Wikipedia):';
-        const disclaimer = l === 'am'
-          ? '\n\n⚠️ ማስታወሻ: ይህ መረጃ አጠቃላይ መመሪያ ብቻ ነው፣ ለከባድ አደጋ 991 ይደውሉ።'
-          : '\n\n⚠️ Disclaimer: This is general guidance only; for serious emergencies call 991 immediately.';
-        const source = l === 'am' ? '\n\nምንጭ: Wikipedia' : '\n\nSource: Wikipedia';
-        return `${header}\n${extract}${disclaimer}${source}`;
-      }
-    }
-
+// Helper: Query OpenRouter API for specialized first-aid advice using DeepSeek R1 via OpenRouter
+async function getAIAdvice(query: string, lang: string, imageUrl?: string) {
+  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+  if (!apiKey) {
+    console.warn("OpenRouter API key (VITE_OPENROUTER_API_KEY) is missing. Falling back to local knowledge.");
     return null;
-  } catch {
+  }
+
+  const systemPrompt = `You are a professional emergency first-aid assistant for the Mella app in Ethiopia. 
+You can analyze both text and images of injuries.
+Provide clear, step-by-step instructions in ${lang === 'am' ? 'Amharic (with English translation below)' : 'English'}. 
+ALWAYS prioritize safety. If the condition sounds/looks life-threatening (e.g., heavy bleeding, deep wounds, potential fractures, signs of stroke or heart attack), 
+your FIRST sentence must be to tell the user to CALL 911 (or local emergency 991) IMMEDIATELY.
+If an image is provided, describe what you see (e.g., "I see a deep cut on the palm") and provide specific first-aid steps.
+Give concise, actionable steps using bullet points. Do not provide risky or unverified medical advice.
+Always include a short Amharic summary if the output is in English.`;
+
+  try {
+    const contentPayload: any[] = [{ type: "text", text: query || "What should I do for this injury?" }];
+
+    if (imageUrl) {
+      contentPayload.push({
+        type: "image_url",
+        image_url: {
+          url: imageUrl // imageUrl is already base64 from FileReader
+        }
+      });
+    }
+
+    console.log("Calling OpenRouter with model: deepseek/deepseek-r1");
+
+    // Prepare content: use simple string for text-only, or array for multimodal
+    const payloadContent = imageUrl
+      ? contentPayload
+      : (query || "What should I do for this injury?");
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "HTTP-Referer": "http://localhost:8080",
+        "X-Title": "Mella First Aid Assistant",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "model": "deepseek/deepseek-r1",
+        "messages": [
+          { "role": "system", "content": systemPrompt },
+          {
+            "role": "user",
+            "content": payloadContent
+          }
+        ],
+        "temperature": 0.3,
+        "max_tokens": 1500
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      console.error("OpenRouter API Error:", response.status, JSON.stringify(errData, null, 2));
+
+      // If error, try a stable fallback like Gemini Flash 1.5
+      console.warn("Retrying with fallback model: google/gemini-flash-1.5:free");
+      const fallbackResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": "http://localhost:8080",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          "model": "google/gemini-flash-1.5:free",
+          "messages": [
+            { "role": "system", "content": systemPrompt },
+            { "role": "user", "content": payloadContent }
+          ]
+        })
+      });
+
+      if (fallbackResponse.ok) {
+        const fallbackData = await fallbackResponse.json();
+        return (fallbackData.choices?.[0]?.message?.content || null);
+      }
+      return null;
+    }
+
+    const data = await response.json();
+    let content = data.choices?.[0]?.message?.content;
+
+    if (content) {
+      // Remove any <think> tags if present in the response
+      content = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+      const disclaimer = lang === 'am'
+        ? '\n\n⚠️ ማስታወሻ: ይህ AI የመነጨ መረጃ ነው አጠቃላይ መመሪያ ብቻ ነው፣ ለከባድ አደጋ 991 ይደውሉ።'
+        : '\n\n⚠️ Disclaimer: This is AI-generated guidance only; for serious emergencies call 911 immediately.';
+      return content + disclaimer;
+    }
+    return null;
+  } catch (error) {
+    console.error("Fetch error calling OpenRouter:", error);
     return null;
   }
 }
@@ -209,10 +253,10 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
 
   // Initialize welcome message based on language
   useEffect(() => {
-    const welcomeMessage = language === 'en' 
+    const welcomeMessage = language === 'en'
       ? `🚨 IMPORTANT DISCLAIMER: ${t('disclaimer')} In case of serious emergencies, please call 991 or your local emergency services IMMEDIATELY.\n\nFor minor issues, I can offer general first aid tips. ${t('howCanIHelp')}`
       : `🚨 አስፈላጊ ማስታወሻ: ${t('disclaimer')} በከባድ የአደጋ ጊዜ፣ እባክዎ 991 ወይም የአካባቢዎን የአደጋ ጊዜ አገልግሎቶችን ወዲያውኑ ይደውሉ።\n\nለአነስተኛ ችግሮች፣ መሠረታዊ የመጀመሪያ እርዳታ ምክሮች ሰጥት ይችላል። ${t('howCanIHelp')}`;
-    
+
     setMessages([{
       id: '1',
       text: welcomeMessage,
@@ -233,43 +277,43 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
   // Comprehensive first aid knowledge base for instant responses
   const getFirstAidResponse = (message: string): string | null => {
     const lowerMessage = message.toLowerCase();
-    
+
     const responses: { [key: string]: { en: string; am: string } } = {
       'cut': {
         en: "🩸 For minor cuts:\n1. Clean your hands first\n2. Stop bleeding with direct pressure using clean cloth\n3. Clean wound gently with water\n4. Apply antibiotic ointment if available\n5. Cover with sterile bandage\n\n⚠️ Seek immediate medical attention for:\n- Deep cuts (you can see fat/muscle)\n- Cuts that won't stop bleeding\n- Signs of infection",
         am: "🩸 ለአነስተኛ መቁረጫዎች:\n1. መጀመሪያ እጆችዎን ይሰሩ\n2. ንጹህ ጨርቅ በመጠቀም ቀጥተኛ ግፊት በማድረግ ደም መፍሰስን ያስቁሙ\n3. ቁስሉን በውሃ ቀስ ብለው ያጽዱ\n4. የጸረ-ባክቴሪያ ቅባት ካለ ይተግብሩ\n5. በንጹህ ማሰሪያ ይሸፍኑ\n\n⚠️ ቶሎ የሕክምና እርዳታ ይፈልጉ:\n- ጥልቅ መቁረጫዎች\n- የማይቆም ደም መፍሰስ\n- የኢንፌክሽን ምልክቶች"
       },
-      
+
       'burn': {
         en: "🔥 For minor burns:\n1. Cool immediately with cold running water (10-20 minutes)\n2. Remove jewelry/tight clothing before swelling\n3. Do NOT use ice, butter, or oils\n4. Apply aloe vera or burn gel\n5. Cover loosely with sterile gauze\n\n🚨 Call 911 for:\n- Burns larger than palm of hand\n- Burns on face, hands, feet, genitals\n- Chemical or electrical burns",
         am: "🔥 ለአነስተኛ ቃጠሎዎች:\n1. ወዲያውኑ በቀዝቃዛ ውሃ ያቀዝቅዙ (10-20 ደቂቃ)\n2. ከማበጥ በፊት ጌጦች/ጠባብ ልብሶች ያስወግዱ\n3. በረዶ፣ ቅቤ ወይም ዘይት አይጠቀሙ\n4. አሎቬራ ወይም የቃጠሎ ጄል ይተግብሩ\n5. በንጹህ ጋዝ ቀላል ይሸፍኑ\n\n🚨 911 ይደውሉ:\n- ከእጅ መዳፍ የሚበልጥ ቃጠሎ\n- በፊት፣ እጅ፣ እግር፣ ወሲብ አካሎች ላይ\n- የኬሚካል ወይም የኤሌክትሪክ ቃጠሎ"
       },
-      
+
       'choking': {
         en: "🫁 For choking adult:\n1. If they can cough/speak - encourage coughing\n2. If they CANNOT breathe:\n   - Stand behind them\n   - 5 sharp back blows between shoulder blades\n   - 5 abdominal thrusts (Heimlich maneuver)\n   - Repeat until object comes out\n\n📞 Call 911 immediately if unsuccessful\n⚠️ Different technique needed for babies/infants",
         am: "🫁 ለተመነፈሰ ጎልማሳ:\n1. ማሳልና/መናገር ካለቻለ - ማሳል እንዲቀጥል ማበረታታት\n2. መተንፈስ ካልቻለ:\n   - ከኋላቸው ይቁሙ\n   - በትከሻ ምላሾች መካከል 5 ፈጣን የጀርባ ምት\n   - 5 የሆድ ግፊቶች (ሃይምሊክ ዘዴ)\n   - እቃው እስከወጣ ድረስ ይደግሙ\n\n📞 ካልተሳካ ወዲያውኑ 911 ይደውሉ\n⚠️ ለሕፃናት/ለጨቅላ ሕፃናት የተለየ ዘዴ ያስፈልጋል"
       },
-      
+
       'bleeding': {
         en: "🩸 For serious bleeding:\n1. Apply direct pressure with clean cloth/bandage\n2. Do NOT remove if cloth soaks through - add more layers\n3. Elevate injured area above heart if possible\n4. Apply pressure to pressure points if needed\n5. Do NOT remove embedded objects\n\n🚨 Call 911 for:\n- Spurting blood (arterial)\n- Bleeding that won't stop\n- Signs of shock (pale, weak, dizzy)",
         am: "🩸 ለከባድ ደም መፍሰስ:\n1. በንጹህ ጨርቅ/ማሰሪያ ቀጥተኛ ግፊት ይተግብሩ\n2. ጨርቁ ከተሞላ አያስወግዱት - ተጨማሪ ሽፋኖች ይጨምሩ\n3. የተጎዳውን ክፍል ከልብ በላይ ካሽሽ ያሳድሩ\n4. በግፊት ነጥቦች ላይ ግፊት ይተግብሩ\n5. የገቡ ነገሮችን አያስወግዱ\n\n🚨 911 ይደውሉ:\n- የሚዘንብ ደም (የደም ሥር)\n- የማይቆም ደም መፍሰስ\n- የድንጋጤ ምልክቶች (ሸካራማ፣ ደካማ፣ ማዞር)"
       },
-      
+
       'sprain': {
         en: "🦵 For sprains (R.I.C.E. method):\n1. REST - Stop activity, don't walk on it\n2. ICE - 15-20 minutes every 2-3 hours (first 48 hours)\n3. COMPRESSION - Wrap with elastic bandage (not too tight)\n4. ELEVATION - Raise above heart level when possible\n\n🏥 See doctor if:\n- Severe pain or can't bear weight\n- Numbness or tingling\n- No improvement after 2-3 days",
         am: "🦵 ለመወዘዝ (R.I.C.E. ዘዴ):\n1. እረፍት - እንቅስቃሴ ያቁሙ፣ አንርሱብት\n2. በረዶ - በየ2-3 ሰዓት 15-20 ደቂቃ (የመጀመሪያዎቹ 48 ሰዓቶች)\n3. ጫና - በላስቲክ ማሰሪያ ይጠቁ (በጣም አይጥ)\n4. ከፍ ማድረግ - በተቻለ መጠን ከልብ ደረጃ በላይ ያሳድሩ\n\n🏥 ዶክተር ይመልከቱ:\n- ከባድ ህመም ወይም ክብደት መሸከም ካልቻሉ\n- መደንዘዝ ወይም መተነተን\n- ከ2-3 ቀናት በኋላ መሻሻል ካልታየ"
       },
-      
+
       'fever': {
         en: "🌡️ For fever:\n1. Rest and drink plenty of fluids\n2. Take fever-reducing medication (follow dosage)\n3. Use cool, damp cloths on forehead\n4. Wear light, breathable clothing\n5. Monitor temperature regularly\n\n🚨 Seek immediate care for:\n- Fever over 103°F (39.4°C)\n- Fever with stiff neck, severe headache\n- Difficulty breathing",
         am: "🌡️ ለትኩሳት:\n1. ይዝናኑ እና ብዙ ፈሳሽ ይጠጡ\n2. የትኩሳት ቀንሻ መድሐኒት ይውሰዱ (መጠኑን ይከተሉ)\n3. በግንባር ላይ ቀዝቃዛ፣ እርጥብ ጨርቅ ይጠቀሙ\n4. ቀላል፣ አየር የሚያስተላልፍ ልብስ ይልበሱ\n5. ሙቀትዎን በመደበኛነት ይቆጣጠሩ\n\n🚨 ወዲያውኑ እንክብካቤ ይፈልጉ:\n- ከ103°F (39.4°C) በላይ ትኩሳት\n- ከአንገት ጥሪ፣ ከባድ ራስ ምታት ጋር ትኩሳት\n- የመተንፈስ ችግር"
       },
-      
+
       'allergic': {
         en: "⚠️ For allergic reactions:\nMILD (skin rash, itching):\n1. Remove/avoid trigger if known\n2. Take antihistamine (Benadryl)\n3. Apply cool compress to affected area\n\n🚨 SEVERE (trouble breathing, swelling of face/throat):\n1. Call 911 IMMEDIATELY\n2. Use EpiPen if available\n3. Help person sit upright\n4. Be ready to perform CPR",
         am: "⚠️ ለአለርጂ ምላሾች:\nመለስተኛ (የቆዳ ሽፍታ፣ መቀሳቀስ):\n1. ይታወቅ ከሆነ መንስኤውን ያስወግዱ/ያስቁሙ\n2. አንቲሂስታሚን (ቤናድሪል) ይውሰዱ\n3. በተጎዳው ቦታ ላይ ቀዝቃዛ ጫና ይተግብሩ\n\n🚨 ከባድ (የመተንፈስ ችግር፣ የፊት/የጉሮሮ ማበጥ):\n1. ወዲያውኑ 911 ይደውሉ\n2. ኢፒፔን ካለ ይጠቀሙ\n3. ሰውየው በኩልኩል እንዲቀመጥ ያግዙ\n4. ሲፒአር ለመስጠት ዝግጁ ይሁኑ"
       },
-      
+
       'seizure': {
         en: "🧠 For seizures:\n1. Keep person safe - move sharp objects away\n2. Time the seizure\n3. Turn person on side if possible\n4. Do NOT put anything in their mouth\n5. Stay with them until they're fully conscious\n\n📞 Call 911 if:\n- Seizure lasts over 5 minutes\n- Person has trouble breathing after\n- Another seizure happens soon after",
         am: "🧠 ለንዕስ በሽታ:\n1. ሰውየውን ደህንነት ያሁኑ - ስለታም ነገሮችን ያስወግዱ\n2. የንዕስ በሽታውን ጊዜ ይቆጥሩ\n3. ሰውየውን በጎን ያሽክርክሩ ከቻሉ\n4. በአፋቸው ውስጥ ምንም ነገር አያድርጉ\n5. ሙሉ በሙሉ እስኪጠግ ድረስ ከእነሱ ጋር ይቆዩ\n\n📞 911 ይደውሉ:\n- ንዕስ በሽታው ከ5 ደቂቃ በላይ ከዘለቀ\n- ሰውየው ከዚህ በኋላ የመተንፈስ ችግር ከነበረው\n- ሌላ ንዕስ በሽታ ብዙም ሳይቆይ ከተከሰተ"
@@ -279,7 +323,7 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
     // Check for keywords in the message
     for (const [keyword, response] of Object.entries(responses)) {
       if (lowerMessage.includes(keyword)) {
-        const reminder = language === 'en' 
+        const reminder = language === 'en'
           ? "\n\n⚠️ REMINDER: I'm not a doctor. This is basic first aid guidance only."
           : "\n\n⚠️ ማስታወሻ: እኔ ዶክተር አይደለሁም። ይህ መሠረታዊ የመጀመሪያ እርዳታ መመሪያ ብቻ ነው።";
         return response[language] + reminder;
@@ -300,37 +344,43 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
     return null;
   };
 
-  const generateResponse = async (userMessage: string): Promise<string> => {
-    // First check our knowledge base for instant responses
-    const knowledgeResponse = getFirstAidResponse(userMessage);
-    if (knowledgeResponse) {
-      return knowledgeResponse;
+  const generateResponse = async (userMessage: string, imageUrl?: string): Promise<string> => {
+    // 1. Try to get specialized medical advice from OpenRouter AI (Gemini Flash Multimodal)
+    let finalAdvice = await getAIAdvice(userMessage, language, imageUrl);
+
+    // 2. Fallback to local knowledge base if AI is unavailable
+    if (!finalAdvice && !imageUrl) {
+      finalAdvice = getFirstAidResponse(userMessage);
     }
 
-    // 1. Try to get medical advice/medicine suggestion from free AI API
-    let aiAdvice = await getMedicalAdvice(userMessage, language);
-    let emergencyInfo = '';
+    if (!finalAdvice && imageUrl) {
+      return language === 'en'
+        ? "I have analyzed your image. Please call 991 if this is an emergency, or describe the symptoms to help me provide better advice."
+        : "የላኩትን ምስል አይቻለሁ። አደጋ ከሆነ 991 ይደውሉ፣ ወይም ሁኔታዎን በዝርዝር ይግለጹ።";
+    }
 
-    // 2. If user input seems like an emergency, try to get location and show closest emergency station
+    let emergencyInfo = '';
+    // 3. If user input or image indicates an emergency, detect location
     const lowerMsg = userMessage.toLowerCase();
-    if (EMERGENCY_KEYWORDS.some(k => lowerMsg.includes(k))) {
+    const isEmergency = EMERGENCY_KEYWORDS.some(k => lowerMsg.includes(k)) || imageUrl;
+
+    if (isEmergency) {
       const loc = await getUserLocation();
       if (loc) {
         const stationInfo = await getClosestEmergencyStation(loc.lat, loc.lng, language);
-        if (stationInfo) emergencyInfo = `\n${stationInfo}`;
+        if (stationInfo) emergencyInfo = `\n\n📍 ${stationInfo}`;
       } else {
         emergencyInfo = language === 'en'
-          ? '\n(Location not available. Please enable location for local emergency info.)'
-          : '\n(አካባቢ መረጃ አልተገኘም። ለአካባቢያዊ የአደጋ መረጃ እባክዎ አካባቢ ፍቃድ ይስጡ።)';
+          ? '\n\n(Location not available. Please enable location for local emergency info.)'
+          : '\n\n(አካባቢ መረጃ አልተገኘም። ለአካባቢያዊ የአደጋ መረጃ እባክዎ አካባቢ ፍቃድ ይስጡ።)';
       }
     }
 
-    // 3. Compose the response
-    if (aiAdvice) {
-      return aiAdvice + emergencyInfo;
+    if (finalAdvice) {
+      return finalAdvice + emergencyInfo;
     }
 
-    // 4. Fallback to general guidance
+    // 4. Fallback to general guidance if everything else fails
     const generalResponses = {
       en: [
         "I couldn't match your request precisely. Try asking about: cuts, burns, choking, bleeding, sprains, fever, or allergic reactions.\n\nI'll also show the nearest emergency service below so you can call right away.\n\n⚠️ Remember: For serious emergencies, always call 991 first!",
@@ -353,7 +403,7 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
         const audioUrl = URL.createObjectURL(blob);
-        
+
         const audioMessage: Message = {
           id: Date.now().toString(),
           text: language === 'en' ? 'Voice message' : 'የድምጽ መልእክት',
@@ -362,15 +412,15 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
           type: 'audio',
           audioUrl
         };
-        
+
         setMessages(prev => [...prev, audioMessage]);
-        
+
         // Simulate processing voice message
         setTimeout(() => {
-          const response = language === 'en' 
+          const response = language === 'en'
             ? "I received your voice message. Please describe your situation in text for better assistance."
             : "የድምጽ መልእክትዎን ተቀብያለሁ። ለተሻለ እርዳታ ሁኔታዎን በጽሁፍ ይግለጹ።";
-          
+
           const botMessage: Message = {
             id: (Date.now() + 1).toString(),
             text: response,
@@ -399,40 +449,42 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
     }
   };
 
-  // Handle image upload
+  // Handle image upload with AI analysis
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
-        
+
         const imageMessage: Message = {
           id: Date.now().toString(),
-          text: language === 'en' ? 'Image uploaded' : 'ምስል ተሰቅሏል',
+          text: language === 'en' ? 'Injury photo uploaded' : 'የጉዳት ምስል ተሰቅሏል',
           sender: 'user',
           timestamp: new Date(),
           type: 'image',
           imageUrl
         };
-        
+
         setMessages(prev => [...prev, imageMessage]);
-        
-        // Simulate image analysis
-        setTimeout(() => {
-          const response = language === 'en' 
-            ? "I can see your image. Please describe what happened so I can provide appropriate first aid guidance."
-            : "ምስልዎን ማየት እችላለሁ። ተገቢውን የመጀመሪያ እርዳታ መመሪያ ለመስጠት ምን እንደተከሰተ ይግለጹ።";
-          
+        setIsLoading(true);
+
+        try {
+          const botResponse = await generateResponse("Analyze this injury and suggest first aid", imageUrl);
+
           const botMessage: Message = {
             id: (Date.now() + 1).toString(),
-            text: response,
+            text: botResponse,
             sender: 'bot',
             timestamp: new Date(),
             type: 'text'
           };
           setMessages(prev => [...prev, botMessage]);
-        }, 1500);
+        } catch (error) {
+          console.error('Error analyzing image:', error);
+        } finally {
+          setIsLoading(false);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -456,7 +508,7 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
 
     try {
       const botResponse = await generateResponse(currentInput);
-      
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: botResponse,
@@ -493,10 +545,10 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
       }
     } catch (error) {
       console.error('Error generating response:', error);
-      const errorText = language === 'en' 
+      const errorText = language === 'en'
         ? "🚨 I'm having trouble right now. For any medical emergency, please call 991 immediately or contact your local emergency services."
         : "🚨 አሁን ችግር እያጋጠመኝ ነው። ለማንኛውም የሕክምና አደጋ፣ እባክዎ 991 ወይም የአካባቢዎን የአደጋ ጊዜ አገልግሎቶችን ወዲያውኑ ይደውሉ።";
-      
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: errorText,
@@ -560,7 +612,7 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
         <Alert className="m-4 mb-2 border-red-200 bg-red-50">
           <AlertTriangle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-sm font-medium text-red-800">
-            {language === 'en' 
+            {language === 'en'
               ? '⚠️ NOT MEDICAL ADVICE - For emergencies, call 911 immediately!'
               : '⚠️ የሕክምና ምክር አይደለም - ለአደጋ ጊዜ፣ ወዲያውኑ 911 ይደውሉ!'
             }
@@ -570,12 +622,11 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
         <CardContent className="flex-1 p-0 flex flex-col min-h-0">
           <ScrollArea className="flex-1 p-4 min-h-0 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
             <div className="space-y-4">
-                  {messages.map((message) => (
+              {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex gap-3 ${
-                    message.sender === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
+                  className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'
+                    }`}
                 >
                   {message.sender === 'bot' && (
                     <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
@@ -583,17 +634,16 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
                     </div>
                   )}
                   <div
-                    className={`max-w-[85%] rounded-lg p-3 text-sm ${
-                      message.sender === 'user'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-900 border border-gray-200'
-                    }`}
+                    className={`max-w-[85%] rounded-lg p-3 text-sm ${message.sender === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-900 border border-gray-200'
+                      }`}
                   >
                     {message.type === 'image' && message.imageUrl && (
                       <div className="mb-2">
-                        <img 
-                          src={message.imageUrl} 
-                          alt="Uploaded" 
+                        <img
+                          src={message.imageUrl}
+                          alt="Uploaded"
                           className="max-w-full h-32 object-cover rounded border"
                         />
                       </div>
@@ -644,9 +694,8 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
                       <div className="whitespace-pre-wrap">{message.text}</div>
                     )}
                     <div
-                      className={`text-xs mt-1 ${
-                        message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
-                      }`}
+                      className={`text-xs mt-1 ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
+                        }`}
                     >
                       {message.timestamp.toLocaleTimeString()}
                     </div>
@@ -771,7 +820,7 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
                 }}
               />
             </div>
-            
+
             <div className="flex gap-2">
               <Input
                 value={inputMessage}

@@ -5,13 +5,18 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
+console.log("Initializing Supabase with URL:", SUPABASE_URL);
+
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   const missing = [
     !SUPABASE_URL ? 'VITE_SUPABASE_URL' : null,
     !SUPABASE_PUBLISHABLE_KEY ? 'VITE_SUPABASE_ANON_KEY' : null,
   ].filter(Boolean).join(', ');
+  console.error(`Missing required environment variables: ${missing}`);
   throw new Error(`Missing required environment variables: ${missing}. Create a .env.local with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.`);
 }
+
+console.log("Supabase URL validated.");
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
