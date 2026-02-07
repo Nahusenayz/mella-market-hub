@@ -48,7 +48,34 @@ async function getAIAdvice(query: string, lang: string, imageUrl?: string) {
     return null;
   }
 
+  const knowledgeBase = `
+  OFFICIAL FIRST AID RESOURCES & EMERGENCY DATA:
+  
+  1. ETHIO FIRST AID (ethiofirstaid.com):
+  - Provides video/audio training, blogs, and first-aid kits.
+  - Key focus: CPR, choking, bleeding, and fracture management.
+  - Contact: +251 911 123 456 (Mock)
+  
+  2. FIRE STATIONS IN ADDIS ABABA (map.et):
+  - Arada Fire Station
+  - Addis Ketema Sub City Fire Station (Mesalemia)
+  - Akaki Kaliti Fire Station
+  - Nefas Silk Lafto Fire Station
+  - Kirkos Sub City Fire Station (Kera)
+  - Bethel Fire Station
+  - HQ: Addis Ababa Fire and Emergency Management Authority
+  
+  3. GENERAL EMERGENCY NUMBERS (Ethiopia):
+  - Police: 991
+  - Traffic Police: 945
+  - Ambulance/Red Cross: 907
+  - Fire: 939
+  
+  USE THIS DATA TO ANSWER LOCATION-SPECIFIC OR RESOURCE QUESTIONS.
+  `;
+
   const systemPrompt = "You are a professional emergency first-aid assistant for the Mella app in Ethiopia. \n" +
+    "You have access to the following LOCAL KNOWLEDGE BASE:\n" + knowledgeBase + "\n\n" +
     "You can analyze both text and images of injuries.\n" +
     "Provide clear, step-by-step instructions in ${lang === 'am' ? 'Amharic (with English translation below)' : 'English'}. \n" +
     "ALWAYS prioritize safety. If the condition sounds/looks life-threatening (e.g., heavy bleeding, deep wounds, potential fractures, signs of stroke or heart attack), \n" +
