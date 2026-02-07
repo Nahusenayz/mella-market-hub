@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { EmergencyAssistant } from '@/components/EmergencyAssistant';
-import { FirstAidChatbot } from '@/components/FirstAidChatbot';
 import { MapView } from '@/components/MapView';
 import { TrackingMap } from '@/components/TrackingMap';
 import { Button } from '@/components/ui/button';
@@ -65,7 +64,6 @@ export const Emergency: React.FC = () => {
   const [userLocation, setUserLocation] = useState({ lat: 9.0320, lng: 38.7469 });
   const [emergencyStations, setEmergencyStations] = useState<EmergencyStation[]>([]);
   const [showEmergencyAssistant, setShowEmergencyAssistant] = useState(false);
-  const [showFirstAidBot, setShowFirstAidBot] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [requestDetails, setRequestDetails] = useState('');
@@ -660,7 +658,11 @@ export const Emergency: React.FC = () => {
           </Button>
 
           <Button
-            onClick={() => setShowFirstAidBot(true)}
+            onClick={() => {
+              // Redirect to main chat or open Chatbase if possible
+              // For now, we removed the custom bot action
+              window.open('https://www.chatbase.co', '_blank');
+            }}
             className="h-20 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white flex-col gap-2 shadow-lg"
           >
             <Bot className="h-6 w-6" />
@@ -1000,13 +1002,7 @@ export const Emergency: React.FC = () => {
         userLocation={userLocation}
       />
 
-      {/* First Aid Chatbot Modal */}
-      {showFirstAidBot && (
-        <FirstAidChatbot
-          isOpen={showFirstAidBot}
-          onClose={() => setShowFirstAidBot(false)}
-        />
-      )}
+
     </div>
   );
 };

@@ -48,14 +48,14 @@ async function getAIAdvice(query: string, lang: string, imageUrl?: string) {
     return null;
   }
 
-  const systemPrompt = `You are a professional emergency first-aid assistant for the Mella app in Ethiopia. 
-You can analyze both text and images of injuries.
-Provide clear, step-by-step instructions in ${lang === 'am' ? 'Amharic (with English translation below)' : 'English'}. 
-ALWAYS prioritize safety. If the condition sounds/looks life-threatening (e.g., heavy bleeding, deep wounds, potential fractures, signs of stroke or heart attack), 
-your FIRST sentence must be to tell the user to CALL 911 (or local emergency 991) IMMEDIATELY.
-If an image is provided, describe what you see (e.g., "I see a deep cut on the palm") and provide specific first-aid steps.
-Give concise, actionable steps using bullet points. Do not provide risky or unverified medical advice.
-Always include a short Amharic summary if the output is in English.`;
+  const systemPrompt = "You are a professional emergency first-aid assistant for the Mella app in Ethiopia. \n" +
+    "You can analyze both text and images of injuries.\n" +
+    "Provide clear, step-by-step instructions in ${lang === 'am' ? 'Amharic (with English translation below)' : 'English'}. \n" +
+    "ALWAYS prioritize safety. If the condition sounds/looks life-threatening (e.g., heavy bleeding, deep wounds, potential fractures, signs of stroke or heart attack), \n" +
+    "your FIRST sentence must be to tell the user to CALL 991 IMMEDIATELY.\n" +
+    "If an image is provided, describe what you see (e.g., \"I see a deep cut on the palm\") and provide specific first-aid steps.\n" +
+    "Give concise, actionable steps using bullet points. Do not provide risky or unverified medical advice.\n" +
+    "Always include a short Amharic summary if the output is in English.";
 
   try {
     const contentPayload: any[] = [{ type: "text", text: query || "What should I do for this injury?" }];
@@ -69,7 +69,7 @@ Always include a short Amharic summary if the output is in English.`;
       });
     }
 
-    console.log("Calling OpenRouter with model: deepseek/deepseek-r1");
+    console.log("Calling OpenRouter with model: google/gemini-2.0-flash-exp:free");
 
     // Prepare content: use simple string for text-only, or array for multimodal
     const payloadContent = imageUrl
@@ -85,7 +85,7 @@ Always include a short Amharic summary if the output is in English.`;
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "deepseek/deepseek-r1",
+        "model": "google/gemini-2.0-flash-exp:free",
         "messages": [
           { "role": "system", "content": systemPrompt },
           {
@@ -103,7 +103,7 @@ Always include a short Amharic summary if the output is in English.`;
       console.error("OpenRouter API Error:", response.status, JSON.stringify(errData, null, 2));
 
       // If error, try a stable fallback like Gemini Flash 1.5
-      console.warn("Retrying with fallback model: google/gemini-flash-1.5:free");
+      console.warn("Retrying with fallback model: meta-llama/llama-3-8b-instruct:free");
       const fallbackResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -112,7 +112,7 @@ Always include a short Amharic summary if the output is in English.`;
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "model": "google/gemini-flash-1.5:free",
+          "model": "meta-llama/llama-3-8b-instruct:free",
           "messages": [
             { "role": "system", "content": systemPrompt },
             { "role": "user", "content": payloadContent }
@@ -136,7 +136,7 @@ Always include a short Amharic summary if the output is in English.`;
 
       const disclaimer = lang === 'am'
         ? '\n\n⚠️ ማስታወሻ: ይህ AI የመነጨ መረጃ ነው አጠቃላይ መመሪያ ብቻ ነው፣ ለከባድ አደጋ 991 ይደውሉ።'
-        : '\n\n⚠️ Disclaimer: This is AI-generated guidance only; for serious emergencies call 911 immediately.';
+        : '\n\n⚠️ Disclaimer: This is AI-generated guidance only; for serious emergencies call 991 immediately.';
       return content + disclaimer;
     }
     return null;
@@ -285,17 +285,17 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
       },
 
       'burn': {
-        en: "🔥 For minor burns:\n1. Cool immediately with cold running water (10-20 minutes)\n2. Remove jewelry/tight clothing before swelling\n3. Do NOT use ice, butter, or oils\n4. Apply aloe vera or burn gel\n5. Cover loosely with sterile gauze\n\n🚨 Call 911 for:\n- Burns larger than palm of hand\n- Burns on face, hands, feet, genitals\n- Chemical or electrical burns",
+        en: "🔥 For minor burns:\n1. Cool immediately with cold running water (10-20 minutes)\n2. Remove jewelry/tight clothing before swelling\n3. Do NOT use ice, butter, or oils\n4. Apply aloe vera or burn gel\n5. Cover loosely with sterile gauze\n\n🚨 Call 991 for:\n- Burns larger than palm of hand\n- Burns on face, hands, feet, genitals\n- Chemical or electrical burns",
         am: "🔥 ለአነስተኛ ቃጠሎዎች:\n1. ወዲያውኑ በቀዝቃዛ ውሃ ያቀዝቅዙ (10-20 ደቂቃ)\n2. ከማበጥ በፊት ጌጦች/ጠባብ ልብሶች ያስወግዱ\n3. በረዶ፣ ቅቤ ወይም ዘይት አይጠቀሙ\n4. አሎቬራ ወይም የቃጠሎ ጄል ይተግብሩ\n5. በንጹህ ጋዝ ቀላል ይሸፍኑ\n\n🚨 911 ይደውሉ:\n- ከእጅ መዳፍ የሚበልጥ ቃጠሎ\n- በፊት፣ እጅ፣ እግር፣ ወሲብ አካሎች ላይ\n- የኬሚካል ወይም የኤሌክትሪክ ቃጠሎ"
       },
 
       'choking': {
-        en: "🫁 For choking adult:\n1. If they can cough/speak - encourage coughing\n2. If they CANNOT breathe:\n   - Stand behind them\n   - 5 sharp back blows between shoulder blades\n   - 5 abdominal thrusts (Heimlich maneuver)\n   - Repeat until object comes out\n\n📞 Call 911 immediately if unsuccessful\n⚠️ Different technique needed for babies/infants",
+        en: "🫁 For choking adult:\n1. If they can cough/speak - encourage coughing\n2. If they CANNOT breathe:\n   - Stand behind them\n   - 5 sharp back blows between shoulder blades\n   - 5 abdominal thrusts (Heimlich maneuver)\n   - Repeat until object comes out\n\n📞 Call 991 immediately if unsuccessful\n⚠️ Different technique needed for babies/infants",
         am: "🫁 ለተመነፈሰ ጎልማሳ:\n1. ማሳልና/መናገር ካለቻለ - ማሳል እንዲቀጥል ማበረታታት\n2. መተንፈስ ካልቻለ:\n   - ከኋላቸው ይቁሙ\n   - በትከሻ ምላሾች መካከል 5 ፈጣን የጀርባ ምት\n   - 5 የሆድ ግፊቶች (ሃይምሊክ ዘዴ)\n   - እቃው እስከወጣ ድረስ ይደግሙ\n\n📞 ካልተሳካ ወዲያውኑ 911 ይደውሉ\n⚠️ ለሕፃናት/ለጨቅላ ሕፃናት የተለየ ዘዴ ያስፈልጋል"
       },
 
       'bleeding': {
-        en: "🩸 For serious bleeding:\n1. Apply direct pressure with clean cloth/bandage\n2. Do NOT remove if cloth soaks through - add more layers\n3. Elevate injured area above heart if possible\n4. Apply pressure to pressure points if needed\n5. Do NOT remove embedded objects\n\n🚨 Call 911 for:\n- Spurting blood (arterial)\n- Bleeding that won't stop\n- Signs of shock (pale, weak, dizzy)",
+        en: "🩸 For serious bleeding:\n1. Apply direct pressure with clean cloth/bandage\n2. Do NOT remove if cloth soaks through - add more layers\n3. Elevate injured area above heart if possible\n4. Apply pressure to pressure points if needed\n5. Do NOT remove embedded objects\n\n🚨 Call 991 for:\n- Spurting blood (arterial)\n- Bleeding that won't stop\n- Signs of shock (pale, weak, dizzy)",
         am: "🩸 ለከባድ ደም መፍሰስ:\n1. በንጹህ ጨርቅ/ማሰሪያ ቀጥተኛ ግፊት ይተግብሩ\n2. ጨርቁ ከተሞላ አያስወግዱት - ተጨማሪ ሽፋኖች ይጨምሩ\n3. የተጎዳውን ክፍል ከልብ በላይ ካሽሽ ያሳድሩ\n4. በግፊት ነጥቦች ላይ ግፊት ይተግብሩ\n5. የገቡ ነገሮችን አያስወግዱ\n\n🚨 911 ይደውሉ:\n- የሚዘንብ ደም (የደም ሥር)\n- የማይቆም ደም መፍሰስ\n- የድንጋጤ ምልክቶች (ሸካራማ፣ ደካማ፣ ማዞር)"
       },
 
@@ -310,12 +310,12 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
       },
 
       'allergic': {
-        en: "⚠️ For allergic reactions:\nMILD (skin rash, itching):\n1. Remove/avoid trigger if known\n2. Take antihistamine (Benadryl)\n3. Apply cool compress to affected area\n\n🚨 SEVERE (trouble breathing, swelling of face/throat):\n1. Call 911 IMMEDIATELY\n2. Use EpiPen if available\n3. Help person sit upright\n4. Be ready to perform CPR",
+        en: "⚠️ For allergic reactions:\nMILD (skin rash, itching):\n1. Remove/avoid trigger if known\n2. Take antihistamine (Benadryl)\n3. Apply cool compress to affected area\n\n🚨 SEVERE (trouble breathing, swelling of face/throat):\n1. Call 991 IMMEDIATELY\n2. Use EpiPen if available\n3. Help person sit upright\n4. Be ready to perform CPR",
         am: "⚠️ ለአለርጂ ምላሾች:\nመለስተኛ (የቆዳ ሽፍታ፣ መቀሳቀስ):\n1. ይታወቅ ከሆነ መንስኤውን ያስወግዱ/ያስቁሙ\n2. አንቲሂስታሚን (ቤናድሪል) ይውሰዱ\n3. በተጎዳው ቦታ ላይ ቀዝቃዛ ጫና ይተግብሩ\n\n🚨 ከባድ (የመተንፈስ ችግር፣ የፊት/የጉሮሮ ማበጥ):\n1. ወዲያውኑ 911 ይደውሉ\n2. ኢፒፔን ካለ ይጠቀሙ\n3. ሰውየው በኩልኩል እንዲቀመጥ ያግዙ\n4. ሲፒአር ለመስጠት ዝግጁ ይሁኑ"
       },
 
       'seizure': {
-        en: "🧠 For seizures:\n1. Keep person safe - move sharp objects away\n2. Time the seizure\n3. Turn person on side if possible\n4. Do NOT put anything in their mouth\n5. Stay with them until they're fully conscious\n\n📞 Call 911 if:\n- Seizure lasts over 5 minutes\n- Person has trouble breathing after\n- Another seizure happens soon after",
+        en: "🧠 For seizures:\n1. Keep person safe - move sharp objects away\n2. Time the seizure\n3. Turn person on side if possible\n4. Do NOT put anything in their mouth\n5. Stay with them until they're fully conscious\n\n📞 Call 991 if:\n- Seizure lasts over 5 minutes\n- Person has trouble breathing after\n- Another seizure happens soon after",
         am: "🧠 ለንዕስ በሽታ:\n1. ሰውየውን ደህንነት ያሁኑ - ስለታም ነገሮችን ያስወግዱ\n2. የንዕስ በሽታውን ጊዜ ይቆጥሩ\n3. ሰውየውን በጎን ያሽክርክሩ ከቻሉ\n4. በአፋቸው ውስጥ ምንም ነገር አያድርጉ\n5. ሙሉ በሙሉ እስኪጠግ ድረስ ከእነሱ ጋር ይቆዩ\n\n📞 911 ይደውሉ:\n- ንዕስ በሽታው ከ5 ደቂቃ በላይ ከዘለቀ\n- ሰውየው ከዚህ በኋላ የመተንፈስ ችግር ከነበረው\n- ሌላ ንዕስ በሽታ ብዙም ሳይቆይ ከተከሰተ"
       },
     };
@@ -335,8 +335,8 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
     for (const keyword of emergencyKeywords) {
       if (lowerMessage.includes(keyword)) {
         const emergencyResponse = language === 'en'
-          ? `🚨 EMERGENCY SITUATION DETECTED 🚨\n\nCall 911 IMMEDIATELY for: ${keyword.toUpperCase()}\n\nWhile waiting for help:\n- Stay with the person\n- Follow dispatcher instructions\n- Be ready to provide CPR if trained\n- Keep person calm and comfortable\n\n⚠️ Do not delay - professional medical help is urgently needed!`
-          : `🚨 የአደጋ ጊዜ ሁኔታ ተገኝቷል 🚨\n\nወዲያውኑ 911 ይደውሉ: ${keyword.toUpperCase()}\n\nእርዳታ እስክትመጣ ድረስ:\n- ከሰውየው ጋር ይቆዩ\n- የላኪ መመሪያዎችን ይከተሉ\n- ሲፒአር ለመስጠት ዝግጁ ይሁኑ\n- ሰውየውን ረጋ ያድርጉት\n\n⚠️ አይዘገዩ - የባለሙያ የሕክምና እርዳታ አስፈላጊ ነው!`;
+          ? `🚨 EMERGENCY SITUATION DETECTED 🚨\n\nCall 991 IMMEDIATELY for: ${keyword.toUpperCase()}\n\nWhile waiting for help:\n- Stay with the person\n- Follow dispatcher instructions\n- Be ready to provide CPR if trained\n- Keep person calm and comfortable\n\n⚠️ Do not delay - professional medical help is urgently needed!`
+          : `🚨 የአደጋ ጊዜ ሁኔታ ተገኝቷል 🚨\n\nወዲያውኑ 991 ይደውሉ: ${keyword.toUpperCase()}\n\nእርዳታ እስክትመጣ ድረስ:\n- ከሰውየው ጋር ይቆዩ\n- የላኪ መመሪያዎችን ይከተሉ\n- ሲፒአር ለመስጠት ዝግጁ ይሁኑ\n- ሰውየውን ረጋ ያድርጉት\n\n⚠️ አይዘገዩ - የባለሙያ የሕክምና እርዳታ አስፈላጊ ነው!`;
         return emergencyResponse;
       }
     }
@@ -613,8 +613,8 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
           <AlertTriangle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-sm font-medium text-red-800">
             {language === 'en'
-              ? '⚠️ NOT MEDICAL ADVICE - For emergencies, call 911 immediately!'
-              : '⚠️ የሕክምና ምክር አይደለም - ለአደጋ ጊዜ፣ ወዲያውኑ 911 ይደውሉ!'
+              ? '⚠️ NOT MEDICAL ADVICE - For emergencies, call 991 immediately!'
+              : '⚠️ የሕክምና ምክር አይደለም - ለአደጋ ጊዜ፣ ወዲያውኑ 991 ይደውሉ!'
             }
           </AlertDescription>
         </Alert>

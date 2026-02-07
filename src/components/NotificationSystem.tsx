@@ -25,7 +25,7 @@ export const NotificationSystem: React.FC = () => {
     if (!user) return;
 
     fetchNotifications();
-    
+
     // Set up real-time subscription for notifications
     const channel = supabase
       .channel('notifications-changes')
@@ -51,7 +51,7 @@ export const NotificationSystem: React.FC = () => {
           };
           setNotifications(prev => [mappedNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
-          
+
           // Show toast notification
           toast({
             title: mappedNotification.title,
@@ -62,7 +62,11 @@ export const NotificationSystem: React.FC = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      // Async cleanup to avoid blocking
+      const cleanup = async () => {
+        await supabase.removeChannel(channel);
+      };
+      cleanup();
     };
   }, [user]);
 
@@ -172,7 +176,7 @@ export const NotificationSystem: React.FC = () => {
         return;
       }
 
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
@@ -275,9 +279,8 @@ export const NotificationSystem: React.FC = () => {
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b border-gray-100 ${
-                    !notification.read ? 'bg-blue-50' : 'hover:bg-gray-50'
-                  }`}
+                  className={`p-4 border-b border-gray-100 ${!notification.read ? 'bg-blue-50' : 'hover:bg-gray-50'
+                    }`}
                   onClick={() => markAsRead(notification.id)}
                 >
                   <div className="flex items-start gap-3">
@@ -289,7 +292,7 @@ export const NotificationSystem: React.FC = () => {
                       <p className="text-sm text-gray-600 mt-1">
                         {notification.message}
                       </p>
-                      
+
                       {/* Customer Information for Booking Requests */}
                       {notification.type === 'booking_request' && notification.data && (
                         <div className="mt-2 p-2 bg-gray-50 rounded border">
@@ -298,7 +301,7 @@ export const NotificationSystem: React.FC = () => {
                           {notification.data.customer_phone && (
                             <div className="flex items-center gap-1 mt-1">
                               <Phone size={12} className="text-gray-500" />
-                              <a 
+                              <a
                                 href={`tel:${notification.data.customer_phone}`}
                                 className="text-sm text-blue-600 hover:text-blue-800"
                               >

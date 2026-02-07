@@ -9,6 +9,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { ChatbotFloatingButton } from "@/components/ChatbotFloatingButton";
+import { ChatbaseWidget } from "@/components/ChatbaseWidget";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -53,6 +54,7 @@ const App = () => (
                 </Routes>
                 <BottomNavigation />
                 <ChatbotFloatingButton />
+                <ChatbaseWidget />
               </div>
             </BrowserRouter>
           </LocationProvider>
