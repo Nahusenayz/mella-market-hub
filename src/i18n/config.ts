@@ -10,19 +10,34 @@ const resources = {
       emergency: 'Emergency',
       add: 'Add',
       profile: 'Profile',
-      
+
       // Emergency Page
       emergencyTitle: 'Emergency Services',
       emergencySubtitle: 'Get immediate help in critical situations',
       emergencyStations: 'Emergency Stations Near You',
       firstAidBot: 'First Aid Assistant',
       emergencyContacts: 'Emergency Contacts',
-      call911: 'Call 911',
+      call911: 'Call 991',
       callPolice: 'Call Police',
       callFireDept: 'Call Fire Department',
       callAmbulance: 'Call Ambulance',
       shareLocation: 'Share My Location',
-      
+
+      // Search Hero / Emergency Dashboard
+      police: 'Police',
+      trafficPolice: 'Traffic Police',
+      ambulance: 'Ambulance',
+      fireStation: 'Fire Station',
+      nearestStationsTitle: 'Nearest {{type}} Stations',
+      usingLiveLocation: 'Using your live location for accurate results',
+      usingDefaultLocation: 'Using default location',
+      callNow: 'Call Now',
+      navigate: 'Navigate',
+      noStationsFound: 'No {{type}} stations found within 5km of your location.',
+      tryMovingCenter: 'Try moving closer to the city center or check your location settings.',
+      emergencyDescription: 'Quick access to nearest emergency services in your area',
+      closest: 'CLOSEST',
+
       // Main Page
       searchPlaceholder: 'Search for services...',
       communityPosts: 'Community Posts',
@@ -34,7 +49,7 @@ const resources = {
       clearSearch: 'Clear Search',
       postsWithinDistance: 'posts within',
       loadingPosts: 'Loading community posts...',
-      
+
       // Categories
       all: 'All',
       plumbing: 'Plumbing',
@@ -49,27 +64,27 @@ const resources = {
       delivery: 'Delivery',
       babysitting: 'Babysitting',
       petcare: 'Pet Care',
-      
+
       // Authentication
       authRequired: 'Authentication Required',
       signInToShare: 'Please sign in to share a post.',
       signIn: 'Sign In',
-      
+
       // Messages
       success: 'Success!',
       postSharedSuccess: 'Your post has been shared successfully.',
-      
+
       // Distance Filter
       maxDistance: 'Max Distance',
       kilometers: 'km',
-      
+
       // Service Cards
       rating: 'Rating',
       distance: 'Distance',
       book: 'Book',
       message: 'Message',
       viewProfile: 'View Profile',
-      
+
       // Emergency Assistant
       emergencyAssistant: 'Emergency Assistant',
       emergencyReceived: 'Emergency Report Received',
@@ -84,12 +99,12 @@ const resources = {
       continueBtn: 'Continue',
       understood: 'Understood',
       emergencyNotified: 'Emergency services have been notified',
-      
+
       // First Aid Chatbot
       firstAidTitle: 'First Aid Assistant',
       disclaimer: 'I am not a doctor. This is general guidance only.',
       howCanIHelp: 'How can I help you today?',
-      
+
       // Language
       language: 'Language',
       english: 'English',
@@ -103,19 +118,34 @@ const resources = {
       emergency: 'አደጋ',
       add: 'አክል',
       profile: 'መገለጫ',
-      
+
       // Emergency Page
       emergencyTitle: 'የአደጋ ጊዜ አገልግሎቶች',
       emergencySubtitle: 'በወሳኝ ሁኔታዎች ላይ ቶሎ እርዳታ ያግኙ',
       emergencyStations: 'በአቅራቢያዎ ያሉ የአደጋ ጊዜ ጣቢያዎች',
       firstAidBot: 'የመጀመሪያ እርዳታ ረዳት',
       emergencyContacts: 'የአደጋ ጊዜ ዕውቅዎች',
-      call911: '911 ይደውሉ',
+      call911: '991 ይደውሉ',
       callPolice: 'ፖሊስ ይደውሉ',
       callFireDept: 'የእሳት አደጋ መከላከያ ይደውሉ',
       callAmbulance: 'አምቡላንስ ይደውሉ',
       shareLocation: 'መገኛዬን ያጋሩ',
-      
+
+      // Search Hero / Emergency Dashboard
+      police: 'ፖሊስ',
+      trafficPolice: 'ትራፊክ ፖሊስ',
+      ambulance: 'አምቡላንስ',
+      fireStation: 'የእሳት አደጋ መከላከያ',
+      nearestStationsTitle: 'በአቅራቢያ ያሉ የ{{type}} ጣቢያዎች',
+      usingLiveLocation: 'ለበለጠ ትክክለኛ ውጤት የቀጥታ መገኛዎን በመጠቀም ላይ',
+      usingDefaultLocation: 'መደበኛ መገኛን በመጠቀም ላይ',
+      callNow: 'አሁን ይደውሉ',
+      navigate: 'አቅጣጫ አሳይ',
+      noStationsFound: 'በመገኛዎ በ5 ኪሜ ክልል ውስጥ ምንም የ{{type}} ጣቢያዎች አልተገኙም።',
+      tryMovingCenter: 'ወደ ከተማው መሃል ለመቅረብ ይሞክሩ ወይም የመገኛ ቅንብሮችዎን ያረጋግጡ።',
+      emergencyDescription: 'በአካባቢዎ ያሉ የአደጋ ጊዜ አገልግሎቶችን በፍጥነት ያግኙ',
+      closest: 'በጣም ቅርብ',
+
       // Main Page
       searchPlaceholder: 'አገልግሎቶችን ይፈልጉ...',
       communityPosts: 'የማህበረሰብ ልጥፎች',
@@ -127,7 +157,7 @@ const resources = {
       clearSearch: 'ፍለጋ አጽዳ',
       postsWithinDistance: 'ልጥፎች በውስጥ',
       loadingPosts: 'የማህበረሰብ ልጥፎችን በመጫን ላይ...',
-      
+
       // Categories
       all: 'ሁሉም',
       plumbing: 'የቧንቧ ስራ',
@@ -142,27 +172,27 @@ const resources = {
       delivery: 'ማድረስ',
       babysitting: 'ህጻን መንከባከብ',
       petcare: 'የቤት እንስሳት እንክብካቤ',
-      
+
       // Authentication
       authRequired: 'ማረጋገጥ ያስፈልጋል',
       signInToShare: 'ልጥፍ ለማጋራት እባክዎ ይግቡ።',
       signIn: 'ግባ',
-      
+
       // Messages
       success: 'ተሳክቷል!',
       postSharedSuccess: 'ልጥፍዎ በተሳካ ሁኔታ ተጋርቷል።',
-      
+
       // Distance Filter
       maxDistance: 'ከፍተኛ ርቀት',
       kilometers: 'ኪሜ',
-      
+
       // Service Cards
       rating: 'ደረጃ',
       distance: 'ርቀት',
       book: 'ይመዝግቡ',
       message: 'መልእክት',
       viewProfile: 'መገለጫ ይመልከቱ',
-      
+
       // Emergency Assistant
       emergencyAssistant: 'የአደጋ ጊዜ ረዳት',
       emergencyReceived: 'የአደጋ ጊዜ ሪፖርት ተቀብሏል',
@@ -177,12 +207,12 @@ const resources = {
       continueBtn: 'ቀጥል',
       understood: 'ተረድቻል',
       emergencyNotified: 'የአደጋ ጊዜ አገልግሎቶች ማሳወቅ ተደርጓል',
-      
+
       // First Aid Chatbot
       firstAidTitle: 'የመጀመሪያ እርዳታ ረዳት',
       disclaimer: 'እኔ ሐኪም አይደለሁም። ይህ አጠቃላይ መመሪያ ብቻ ነው።',
       howCanIHelp: 'ዛሬ እንዴት ልረዳዎት እችላለሁ?',
-      
+
       // Language
       language: 'ቋንቋ',
       english: 'English',

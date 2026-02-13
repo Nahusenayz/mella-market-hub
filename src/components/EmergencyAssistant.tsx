@@ -19,10 +19,10 @@ interface ConversationStep {
   isCompleted: boolean;
 }
 
-export const EmergencyAssistant: React.FC<EmergencyAssistantProps> = ({ 
-  isOpen, 
-  onClose, 
-  userLocation 
+export const EmergencyAssistant: React.FC<EmergencyAssistantProps> = ({
+  isOpen,
+  onClose,
+  userLocation
 }) => {
   const { t, language, setLanguage } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
@@ -260,10 +260,10 @@ export const EmergencyAssistant: React.FC<EmergencyAssistantProps> = ({
                   variant="outline"
                   size="sm"
                   className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-100"
-                  onClick={() => window.open('tel:911')}
+                  onClick={() => window.open('tel:991')}
                 >
                   <Phone className="h-4 w-4" />
-                  {language === 'en' ? 'Call 911' : '911 ይደውሉ'}
+                  {language === 'en' ? 'Call 991' : '991 ይደውሉ'}
                 </Button>
                 {userLocation && (
                   <Button

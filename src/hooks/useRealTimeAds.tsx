@@ -25,7 +25,7 @@ export const useRealTimeAds = () => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchAds = async (userLocation?: { lat: number; lng: number }, maxDistance: number = 5) => {
+  const fetchAds = async () => {
     try {
       const { data, error } = await supabase
         .from('ads')
@@ -46,7 +46,7 @@ export const useRealTimeAds = () => {
       }
 
       // Transform the data
-      let transformedAds = (data || []).map(ad => ({
+      const transformedAds = (data || []).map(ad => ({
         ...ad,
         profiles: ad.profiles && typeof ad.profiles === 'object' && 'full_name' in ad.profiles ? {
           full_name: ad.profiles.full_name || '',
@@ -55,53 +55,20 @@ export const useRealTimeAds = () => {
         } : null
       }));
 
-      // Filter by distance if user location is available
-      if (userLocation) {
-        transformedAds = transformedAds.filter(ad => {
-          if (!ad.location_lat || !ad.location_lng) return false;
-
-          const distance = calculateDistance(
-            userLocation.lat,
-            userLocation.lng,
-            ad.location_lat,
-            ad.location_lng
-          );
-
-          return distance <= maxDistance;
-        });
-      }
-
       setAds(transformedAds);
     } catch (error) {
-      console.error('Error fetching ads:', error);
+      console.error('Error in fetchAds:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Get user location and fetch ads
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const userLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          fetchAds(userLocation, 5); // 5km max distance
-        },
-        (error) => {
-          console.log('Geolocation error:', error);
-          fetchAds(); // Fetch without location filter
-        }
-      );
-    } else {
-      fetchAds(); // Fetch without location filter
-    }
+    fetchAds();
 
     // Set up real-time subscription for ads
     const channel = supabase
-      .channel('ads-changes')
+      .channel('ads-changes-main')
       .on(
         'postgres_changes',
         {
@@ -109,23 +76,8 @@ export const useRealTimeAds = () => {
           schema: 'public',
           table: 'ads'
         },
-        (payload) => {
-          console.log('Real-time ads update:', payload);
-          // Refetch with current location constraints
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              (position) => {
-                const userLocation = {
-                  lat: position.coords.latitude,
-                  lng: position.coords.longitude
-                };
-                fetchAds(userLocation, 5);
-              },
-              () => fetchAds()
-            );
-          } else {
-            fetchAds();
-          }
+        () => {
+          fetchAds();
         }
       )
       .subscribe();

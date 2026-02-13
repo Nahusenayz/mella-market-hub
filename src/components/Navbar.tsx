@@ -5,7 +5,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NotificationSystem } from './NotificationSystem';
 import { UserSearch } from './UserSearch';
 import { UserProfileModal } from './UserProfile';
-import { User, LogOut, MessageSquare, Home, Plus } from 'lucide-react';
+import { User, LogOut, MessageSquare, Home, Plus, Globe } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+import { Button } from '@/components/ui/button';
 
 interface NavbarProps {
   onPostAd?: () => void;
@@ -15,6 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { language, setLanguage } = useLanguage();
   const [selectedUserProfile, setSelectedUserProfile] = useState<string | null>(null);
 
   const handleSignOut = async () => {
@@ -38,6 +42,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
     }
   };
 
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'am' : 'en');
+  };
+
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -46,7 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div 
+            <div
               className="flex items-center space-x-3 cursor-pointer"
               onClick={() => navigate('/')}
             >
@@ -66,6 +74,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
 
             {/* Right Side */}
             <div className="flex items-center space-x-4">
+              {/* Language Switcher */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleLanguage}
+                className="flex items-center gap-1 text-gray-600 hover:text-orange-600"
+              >
+                <Globe size={18} />
+                <span className="text-xs font-bold uppercase">{language === 'en' ? 'አማ' : 'EN'}</span>
+              </Button>
               {user ? (
                 <>
                   {/* Notifications */}
@@ -74,11 +92,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                   {/* Messages */}
                   <button
                     onClick={() => navigate('/messages')}
-                    className={`p-2 rounded-full transition-colors ${
-                      isActive('/messages')
-                        ? 'bg-orange-100 text-orange-600'
-                        : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                    }`}
+                    className={`p-2 rounded-full transition-colors ${isActive('/messages')
+                      ? 'bg-orange-100 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                      }`}
                   >
                     <MessageSquare size={20} />
                   </button>

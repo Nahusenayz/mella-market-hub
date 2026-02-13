@@ -326,8 +326,8 @@ export const EmergencyNavigation: React.FC<EmergencyNavigationProps> = ({
                 key={type}
                 onClick={() => setSelectedType(type)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedType === type
-                    ? 'bg-red-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
               >
                 {type === 'all' ? 'All Emergency' : type}
@@ -377,11 +377,11 @@ export const EmergencyNavigation: React.FC<EmergencyNavigationProps> = ({
         {/* Emergency Call Button */}
         <div className="p-4 border-t bg-gray-50">
           <button
-            onClick={() => handleCall('911')}
+            onClick={() => handleCall('991')}
             className="w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
           >
             <Phone size={20} />
-            Emergency Call 911
+            Emergency Call 991
           </button>
         </div>
       </div>

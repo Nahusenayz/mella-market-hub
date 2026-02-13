@@ -42,6 +42,18 @@ interface Service {
   };
 }
 
+const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
 const Index = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -81,9 +93,9 @@ const Index = () => {
 
 
 
-  // Transform ads data to match Service interface
-  const transformAdsToServices = (adsData: any[]): Service[] => {
-    return adsData.map(ad => {
+  // Memoized transformation of ads data to match Service interface
+  const services = React.useMemo(() => {
+    return ads.map(ad => {
       const distance = ad.location_lat && ad.location_lng
         ? calculateDistance(currentLocation.lat, currentLocation.lng, ad.location_lat, ad.location_lng)
         : 0;
@@ -105,27 +117,29 @@ const Index = () => {
         user_id: ad.user_id,
         profiles: ad.profiles
       };
-    }).filter(service => service.distance <= distanceFilter); // Only show posts within distance filter
-  };
+    });
+  }, [ads, currentLocation.lat, currentLocation.lng]);
 
-  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
+  const filteredServices = React.useMemo(() => {
+    const searchSource = isSearching ? searchResults : services;
 
-  const services = transformAdsToServices(isSearching ? searchResults : ads);
+    // If we're searching, searchResults are already filtered/transformed from searchAds
+    // But we still need to apply distance and category filters to the main ads list
+    const source = isSearching
+      ? searchResults.map(ad => ({
+        ...ad,
+        distance: ad.location_lat && ad.location_lng
+          ? calculateDistance(currentLocation.lat, currentLocation.lng, ad.location_lat, ad.location_lng)
+          : 0
+      }))
+      : services;
 
-  const filteredServices = services.filter(service => {
-    const categoryMatch = selectedCategory === 'all' || service.category === selectedCategory;
-    return categoryMatch;
-  });
+    return source.filter(service => {
+      const categoryMatch = selectedCategory === 'all' || service.category === selectedCategory;
+      const distanceMatch = service.distance <= distanceFilter;
+      return categoryMatch && distanceMatch;
+    });
+  }, [services, isSearching, searchResults, selectedCategory, distanceFilter, currentLocation.lat, currentLocation.lng]);
 
   const handleSearch = async (query: string, location?: { lat: number; lng: number }, radius?: number) => {
     setIsSearching(true);
@@ -276,8 +290,8 @@ const Index = () => {
                       <button
                         onClick={() => setViewMode('list')}
                         className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${viewMode === 'list'
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                           }`}
                       >
                         <List size={20} />

@@ -1,0 +1,4516 @@
+[
+  {
+    "id": "clinic_470321671",
+    "type": "clinic",
+    "name": "Senay Higer Clinic",
+    "lat": 8.9891687,
+    "lon": 38.7597072,
+    "address": ""
+  },
+  {
+    "id": "hospital_595145872",
+    "type": "hospital",
+    "name": "Gonder university hospital",
+    "lat": 12.6168703,
+    "lon": 37.4509954,
+    "address": ""
+  },
+  {
+    "id": "police_633638962",
+    "type": "police",
+    "name": "Mesalemia Area Police",
+    "lat": 9.032998,
+    "lon": 38.7254941,
+    "address": ""
+  },
+  {
+    "id": "police_633639575",
+    "type": "police",
+    "name": "Medhanialem Area Police",
+    "lat": 9.0506354,
+    "lon": 38.7257655,
+    "address": ""
+  },
+  {
+    "id": "police_634309246",
+    "type": "police",
+    "name": "Yohannes Area Police",
+    "lat": 9.0457306,
+    "lon": 38.7436298,
+    "address": ""
+  },
+  {
+    "id": "police_634309453",
+    "type": "police",
+    "name": "Addisu Gebeya Area Police | አዲሱ ገበያ አካባቢ ፖሊስ",
+    "lat": 9.057157,
+    "lon": 38.740055,
+    "address": ""
+  },
+  {
+    "id": "police_647883243",
+    "type": "police",
+    "name": "Legehar Police Station",
+    "phone": "+251115546267",
+    "lat": 9.0143122,
+    "lon": 38.7517682,
+    "address": ""
+  },
+  {
+    "id": "police_648315551",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.0161003,
+    "lon": 38.7436838,
+    "address": ""
+  },
+  {
+    "id": "police_651579675",
+    "type": "police",
+    "name": "Dembel Area Police",
+    "lat": 9.001855,
+    "lon": 38.766296,
+    "address": ""
+  },
+  {
+    "id": "police_651580437",
+    "type": "police",
+    "name": "Kazanchiz Area Police",
+    "lat": 9.01314,
+    "lon": 38.7742082,
+    "address": ""
+  },
+  {
+    "id": "police_677510142",
+    "type": "police",
+    "name": "Nifas Silk Lafto Sub City Police",
+    "lat": 8.980879,
+    "lon": 38.754852,
+    "address": ""
+  },
+  {
+    "id": "police_677510148",
+    "type": "police",
+    "name": "Kera Area Police",
+    "lat": 8.9865314,
+    "lon": 38.7489908,
+    "address": ""
+  },
+  {
+    "id": "police_677510158",
+    "type": "police",
+    "name": "Populare Police Station",
+    "phone": "+251114651417",
+    "lat": 9.0050348,
+    "lon": 38.7518334,
+    "address": ""
+  },
+  {
+    "id": "police_677510169",
+    "type": "police",
+    "name": "Lancha Area Police",
+    "lat": 8.9900743,
+    "lon": 38.7606943,
+    "address": ""
+  },
+  {
+    "id": "police_732448091",
+    "type": "police",
+    "name": "ፒያሳ አራዳ ፖሊስ ጣቢያ",
+    "lat": 9.0310545,
+    "lon": 38.754817,
+    "address": ""
+  },
+  {
+    "id": "police_752801319",
+    "type": "police",
+    "name": "Police Station",
+    "lat": 9.0121171,
+    "lon": 38.7811291,
+    "address": ""
+  },
+  {
+    "id": "police_768599408",
+    "type": "police",
+    "name": "Yeka Sub City Police",
+    "lat": 9.0245464,
+    "lon": 38.795607,
+    "address": ""
+  },
+  {
+    "id": "police_787146602",
+    "type": "police",
+    "name": "Gerji Police Station",
+    "lat": 8.9968012,
+    "lon": 38.8080335,
+    "address": ""
+  },
+  {
+    "id": "police_791387528",
+    "type": "police",
+    "name": "Quwasmeda Area Police",
+    "lat": 9.0347237,
+    "lon": 38.7279542,
+    "address": "Addis Ababa"
+  },
+  {
+    "id": "police_791387619",
+    "type": "police",
+    "name": "Addisu Mikael Area Police",
+    "lat": 9.0412233,
+    "lon": 38.73048,
+    "address": ""
+  },
+  {
+    "id": "hospital_800904452",
+    "type": "hospital",
+    "name": "Selihom Clinic",
+    "lat": 8.9380687,
+    "lon": 38.7468861,
+    "address": ""
+  },
+  {
+    "id": "police_846950799",
+    "type": "police",
+    "name": "Akaki kality Sub City Police",
+    "lat": 8.9092886,
+    "lon": 38.764916,
+    "address": ""
+  },
+  {
+    "id": "police_846950810",
+    "type": "police",
+    "name": "Akaki Kality Police",
+    "lat": 8.896138,
+    "lon": 38.771286,
+    "address": ""
+  },
+  {
+    "id": "police_849597028",
+    "type": "police",
+    "name": "Saris Area Police",
+    "lat": 8.955301,
+    "lon": 38.76347,
+    "address": ""
+  },
+  {
+    "id": "police_1102261890",
+    "type": "police",
+    "name": "Police Post",
+    "lat": 4.6514,
+    "lon": 36.19725,
+    "address": ""
+  },
+  {
+    "id": "police_1102262756",
+    "type": "police",
+    "name": "Bubuaa Police Post",
+    "lat": 4.4562,
+    "lon": 36.23029,
+    "address": ""
+  },
+  {
+    "id": "police_1102307899",
+    "type": "police",
+    "name": "Police Check Point",
+    "lat": 4.9929249,
+    "lon": 36.8521326,
+    "address": ""
+  },
+  {
+    "id": "hospital_1110691820",
+    "type": "hospital",
+    "name": "Ghandi Hospital",
+    "phone": "+251115518185",
+    "lat": 9.0152977,
+    "lon": 38.7554049,
+    "address": "Addis Ababa"
+  },
+  {
+    "id": "police_1175666431",
+    "type": "police",
+    "name": "Dire Dawa Police",
+    "lat": 9.5939151,
+    "lon": 41.8631245,
+    "address": ""
+  },
+  {
+    "id": "hospital_1298133865",
+    "type": "hospital",
+    "name": "Health Center",
+    "lat": 9.2010727,
+    "lon": 36.5111602,
+    "address": ""
+  },
+  {
+    "id": "police_1435174671",
+    "type": "police",
+    "name": "Gulele Sub city Police Station",
+    "lat": 9.0562288,
+    "lon": 38.7435936,
+    "address": ""
+  },
+  {
+    "id": "police_1435265680",
+    "type": "police",
+    "name": "Bole S/City Police Department",
+    "lat": 9.0091785,
+    "lon": 38.7737056,
+    "address": ""
+  },
+  {
+    "id": "police_1585428382",
+    "type": "police",
+    "name": "police station",
+    "lat": 9.0052635,
+    "lon": 38.7726463,
+    "address": ""
+  },
+  {
+    "id": "police_1592292244",
+    "type": "police",
+    "name": "Weliso Police",
+    "phone": "+251 (0) 11 341 0006",
+    "lat": 8.5365913,
+    "lon": 37.9700181,
+    "address": ""
+  },
+  {
+    "id": "police_1639090384",
+    "type": "police",
+    "name": "City Admin Police",
+    "lat": 12.037346,
+    "lon": 39.0457323,
+    "address": ""
+  },
+  {
+    "id": "police_1674569373",
+    "type": "police",
+    "name": "BGI area community policing office",
+    "lat": 9.0126339,
+    "lon": 38.7412445,
+    "address": ""
+  },
+  {
+    "id": "police_1748678060",
+    "type": "police",
+    "name": "Police Station",
+    "lat": 10.8512,
+    "lon": 37.5987544,
+    "address": ""
+  },
+  {
+    "id": "hospital_1748678062",
+    "type": "hospital",
+    "name": "Health Center Feres Bet",
+    "lat": 10.8493702,
+    "lon": 37.6088443,
+    "address": ""
+  },
+  {
+    "id": "police_1960135799",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.0530545,
+    "lon": 38.697925,
+    "address": ""
+  },
+  {
+    "id": "police_2041750986",
+    "type": "police",
+    "name": "Police station",
+    "lat": 8.9357524,
+    "lon": 38.7735055,
+    "address": ""
+  },
+  {
+    "id": "police_2320666260",
+    "type": "police",
+    "name": "Harar Police Station",
+    "lat": 9.3139214,
+    "lon": 42.1303481,
+    "address": ""
+  },
+  {
+    "id": "police_2802423158",
+    "type": "police",
+    "name": "Checkpoint",
+    "lat": 8.2415254,
+    "lon": 34.9634307,
+    "address": ""
+  },
+  {
+    "id": "police_2805091557",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 6.151224,
+    "lon": 35.4110338,
+    "address": ""
+  },
+  {
+    "id": "clinic_2874060918",
+    "type": "clinic",
+    "name": "Get'E Clinic",
+    "lat": 8.1473181,
+    "lon": 37.9703828,
+    "address": ""
+  },
+  {
+    "id": "clinic_2902330039",
+    "type": "clinic",
+    "name": "Dacuna Clinic",
+    "lat": 8.0822742,
+    "lon": 37.993111,
+    "address": ""
+  },
+  {
+    "id": "clinic_3073322588",
+    "type": "clinic",
+    "name": "St. Joannes Babtist clinic",
+    "lat": 7.9950245,
+    "lon": 37.9122171,
+    "address": ""
+  },
+  {
+    "id": "police_3157659350",
+    "type": "police",
+    "name": "Kucha Woreda Police",
+    "lat": 6.4717819,
+    "lon": 37.4538854,
+    "address": ""
+  },
+  {
+    "id": "clinic_3164279131",
+    "type": "clinic",
+    "name": "Secha health center",
+    "lat": 6.007863,
+    "lon": 37.541093,
+    "address": ""
+  },
+  {
+    "id": "clinic_3181570568",
+    "type": "clinic",
+    "name": "Guakepece clinic",
+    "lat": 8.0085254,
+    "lon": 37.9803361,
+    "address": ""
+  },
+  {
+    "id": "clinic_3181570572",
+    "type": "clinic",
+    "name": "Zizecio Clinic",
+    "lat": 7.9566686,
+    "lon": 38.0368342,
+    "address": ""
+  },
+  {
+    "id": "clinic_3207352242",
+    "type": "clinic",
+    "name": "Tabor Medium Clinic",
+    "lat": 8.9519698,
+    "lon": 38.7603615,
+    "address": ""
+  },
+  {
+    "id": "police_3293032950",
+    "type": "police",
+    "name": "Bole Sub-city Police Department",
+    "lat": 8.9965286,
+    "lon": 38.7853126,
+    "address": ""
+  },
+  {
+    "id": "clinic_3517529850",
+    "type": "clinic",
+    "name": "Wegepeche clinic",
+    "lat": 8.0085254,
+    "lon": 37.9803361,
+    "address": ""
+  },
+  {
+    "id": "clinic_3696831492",
+    "type": "clinic",
+    "name": "Erestino Dispensary",
+    "lat": 3.4557024,
+    "lon": 39.5534753,
+    "address": ""
+  },
+  {
+    "id": "clinic_4221673491",
+    "type": "clinic",
+    "name": "Dr. Aemiro Higher Clinic",
+    "lat": 9.0283564,
+    "lon": 38.7517678,
+    "address": ""
+  },
+  {
+    "id": "police_4253877691",
+    "type": "police",
+    "name": "Police Station",
+    "lat": 5.9503769,
+    "lon": 43.5535133,
+    "address": ""
+  },
+  {
+    "id": "clinic_4285949890",
+    "type": "clinic",
+    "name": "Dr. Abdurahman Duri Specialized Clinic Internal Medicine",
+    "lat": 9.0014649,
+    "lon": 38.7401529,
+    "address": ""
+  },
+  {
+    "id": "clinic_4306074591",
+    "type": "clinic",
+    "name": "Seyoum Special Eye Clinic",
+    "lat": 9.0035942,
+    "lon": 38.8157633,
+    "address": ""
+  },
+  {
+    "id": "police_4316805895",
+    "type": "police",
+    "name": "Lemi Police Station",
+    "lat": 9.7994463,
+    "lon": 38.9103183,
+    "address": ""
+  },
+  {
+    "id": "clinic_4348222791",
+    "type": "clinic",
+    "name": "SOS Health Center",
+    "lat": 5.9343406,
+    "lon": 43.5467414,
+    "address": ""
+  },
+  {
+    "id": "hospital_4369113590",
+    "type": "hospital",
+    "name": "Icon center of special surgery",
+    "lat": 9.0000257,
+    "lon": 38.8060175,
+    "address": "Bob Marley Square"
+  },
+  {
+    "id": "hospital_4369176589",
+    "type": "hospital",
+    "name": "arsho laboratories",
+    "lat": 9.0156828,
+    "lon": 38.7844988,
+    "address": "Haile Gebresellasie Avenue"
+  },
+  {
+    "id": "clinic_4369427866",
+    "type": "clinic",
+    "name": "Wojel Health Center",
+    "lat": 10.2237665,
+    "lon": 38.0195622,
+    "address": ""
+  },
+  {
+    "id": "clinic_4384752495",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.0045937,
+    "lon": 38.46419,
+    "address": ""
+  },
+  {
+    "id": "clinic_4403374257",
+    "type": "clinic",
+    "name": "ከሳ ጤና ጣቢያ/Health Sub Center",
+    "lat": 10.9015265,
+    "lon": 36.97479,
+    "address": ""
+  },
+  {
+    "id": "clinic_4403374260",
+    "type": "clinic",
+    "name": "ከሳ ጤና ጣቢያ/ Kessa Health Sub Center",
+    "lat": 10.8951593,
+    "lon": 36.9742826,
+    "address": ""
+  },
+  {
+    "id": "police_4406898596",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 7.5337882,
+    "lon": 39.2487968,
+    "address": ""
+  },
+  {
+    "id": "clinic_4406925891",
+    "type": "clinic",
+    "name": "በቆጂ ቀይመስቀል",
+    "phone": "+251223320917",
+    "lat": 7.5331118,
+    "lon": 39.2514026,
+    "address": "8"
+  },
+  {
+    "id": "police_4406935189",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 7.5333253,
+    "lon": 39.2513583,
+    "address": ""
+  },
+  {
+    "id": "clinic_4406936292",
+    "type": "clinic",
+    "name": "በቆጂ ጤና ጣቢያ",
+    "lat": 7.5391798,
+    "lon": 39.2578043,
+    "address": ""
+  },
+  {
+    "id": "clinic_4453844991",
+    "type": "clinic",
+    "name": "Health Clinic",
+    "lat": 12.733891,
+    "lon": 39.5042212,
+    "address": ""
+  },
+  {
+    "id": "clinic_4486585092",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.0479532,
+    "lon": 38.4762428,
+    "address": ""
+  },
+  {
+    "id": "clinic_4486588994",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.0446528,
+    "lon": 38.4779738,
+    "address": ""
+  },
+  {
+    "id": "hospital_4486594689",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 7.051637,
+    "lon": 38.4731721,
+    "address": ""
+  },
+  {
+    "id": "police_4512308592",
+    "type": "police",
+    "name": "ቤተል ቤት",
+    "lat": 9.0125506,
+    "lon": 38.6924127,
+    "address": "KK_07_2399 St."
+  },
+  {
+    "id": "clinic_4517891351",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.1987603,
+    "lon": 37.7945308,
+    "address": ""
+  },
+  {
+    "id": "police_4517900341",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 8.2031744,
+    "lon": 37.7932018,
+    "address": ""
+  },
+  {
+    "id": "clinic_4524357790",
+    "type": "clinic",
+    "name": "Unknown",
+    "phone": "+251114431993",
+    "lat": 8.9552541,
+    "lon": 38.7648831,
+    "address": ""
+  },
+  {
+    "id": "clinic_4544840344",
+    "type": "clinic",
+    "name": "Michew Curcumshion Clinic",
+    "lat": 9.010331,
+    "lon": 38.7418941,
+    "address": "Addis Ababa"
+  },
+  {
+    "id": "clinic_4547150717",
+    "type": "clinic",
+    "name": "feto clinic",
+    "lat": 8.9466263,
+    "lon": 38.7406565,
+    "address": ""
+  },
+  {
+    "id": "hospital_4550845131",
+    "type": "hospital",
+    "name": "1st Chiropractic Clinic",
+    "lat": 8.9908609,
+    "lon": 38.7940723,
+    "address": "Addis Ababa, Ring Road"
+  },
+  {
+    "id": "clinic_4551059675",
+    "type": "clinic",
+    "name": "1st Chiropractic Clinic",
+    "lat": 9.0376215,
+    "lon": 38.7513517,
+    "address": "Addis Ababa"
+  },
+  {
+    "id": "hospital_4551063002",
+    "type": "hospital",
+    "name": "Amanuel Psychiatric Hospital",
+    "lat": 9.0282507,
+    "lon": 38.7226843,
+    "address": "Addis Ababa"
+  },
+  {
+    "id": "clinic_4554091892",
+    "type": "clinic",
+    "name": "ቢሃም ልዩ የህፃናት ክሊንክ",
+    "phone": "+251114160411",
+    "lat": 8.998313,
+    "lon": 38.762068,
+    "address": ""
+  },
+  {
+    "id": "clinic_4571496889",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.5839972,
+    "lon": 37.3678995,
+    "address": ""
+  },
+  {
+    "id": "clinic_4577395777",
+    "type": "clinic",
+    "name": "Dr. Bekele",
+    "lat": 9.0202877,
+    "lon": 38.8598816,
+    "address": ""
+  },
+  {
+    "id": "police_4578674516",
+    "type": "police",
+    "name": "Police Station (9)",
+    "lat": 11.5817113,
+    "lon": 37.3708134,
+    "address": ""
+  },
+  {
+    "id": "police_4581265398",
+    "type": "police",
+    "name": "ፋና የማህበር መኖሪያ ቤቶች",
+    "lat": 8.9599328,
+    "lon": 38.7672001,
+    "address": ""
+  },
+  {
+    "id": "police_4587249690",
+    "type": "police",
+    "name": "ማይካድራ",
+    "lat": 14.0718383,
+    "lon": 36.5612717,
+    "address": ""
+  },
+  {
+    "id": "clinic_4592675690",
+    "type": "clinic",
+    "name": "Haro Gondio Health center",
+    "lat": 8.8937645,
+    "lon": 35.7396555,
+    "address": ""
+  },
+  {
+    "id": "police_4623397504",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 14.2335185,
+    "lon": 36.6188156,
+    "address": ""
+  },
+  {
+    "id": "police_4666716089",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 8.9601567,
+    "lon": 38.7138532,
+    "address": ""
+  },
+  {
+    "id": "police_4735486123",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.0230881,
+    "lon": 38.7805638,
+    "address": ""
+  },
+  {
+    "id": "clinic_4737660622",
+    "type": "clinic",
+    "name": "Unknown",
+    "phone": "+251921787120",
+    "lat": 8.9913969,
+    "lon": 38.7527963,
+    "address": ""
+  },
+  {
+    "id": "clinic_4740325325",
+    "type": "clinic",
+    "name": "17 kebele Health Center ቀበሌ 17 ጥዕና ጣብያ",
+    "lat": 13.4874325,
+    "lon": 39.471855,
+    "address": ""
+  },
+  {
+    "id": "police_4742022024",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 13.489975,
+    "lon": 39.4762168,
+    "address": ""
+  },
+  {
+    "id": "clinic_4748306268",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.2600245,
+    "lon": 38.3028132,
+    "address": ""
+  },
+  {
+    "id": "clinic_4773229124",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.3529741,
+    "lon": 42.8005266,
+    "address": ""
+  },
+  {
+    "id": "clinic_4790704624",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.9841014,
+    "lon": 38.7775094,
+    "address": ""
+  },
+  {
+    "id": "hospital_4800340422",
+    "type": "hospital",
+    "name": "Dilchora Hospital",
+    "lat": 9.5880776,
+    "lon": 41.859517,
+    "address": ""
+  },
+  {
+    "id": "police_4800340427",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.5975943,
+    "lon": 41.8498256,
+    "address": ""
+  },
+  {
+    "id": "police_4800346725",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.5973398,
+    "lon": 41.8507987,
+    "address": ""
+  },
+  {
+    "id": "police_4800356828",
+    "type": "police",
+    "name": "አ/ቤ/ክ/መ/ፓሊስ ኮምሽን",
+    "lat": 11.7924055,
+    "lon": 41.0099661,
+    "address": ""
+  },
+  {
+    "id": "hospital_4804024549",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 7.5962094,
+    "lon": 38.0686504,
+    "address": ""
+  },
+  {
+    "id": "police_4806301821",
+    "type": "police",
+    "name": "Check point Magalo Qaran",
+    "lat": 9.4654561,
+    "lon": 43.1399862,
+    "address": ""
+  },
+  {
+    "id": "clinic_4831476323",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.0489713,
+    "lon": 38.4919024,
+    "address": ""
+  },
+  {
+    "id": "clinic_4834988921",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.0489085,
+    "lon": 38.491898,
+    "address": ""
+  },
+  {
+    "id": "police_4849443765",
+    "type": "police",
+    "name": "gemerak mile",
+    "lat": 11.391685,
+    "lon": 40.7465528,
+    "address": ""
+  },
+  {
+    "id": "clinic_4861397671",
+    "type": "clinic",
+    "name": "Dr Mulat",
+    "lat": 7.0389482,
+    "lon": 38.4798717,
+    "address": ""
+  },
+  {
+    "id": "police_4863170421",
+    "type": "police",
+    "name": "ገሳንግስ",
+    "lat": 10.5859588,
+    "lon": 35.7922234,
+    "address": ""
+  },
+  {
+    "id": "police_4863170423",
+    "type": "police",
+    "name": "ገሳንግስ",
+    "lat": 10.5858289,
+    "lon": 35.7922623,
+    "address": ""
+  },
+  {
+    "id": "police_4864028863",
+    "type": "police",
+    "name": "Border Control Ethiopia",
+    "lat": 4.6327842,
+    "lon": 35.9488398,
+    "address": ""
+  },
+  {
+    "id": "police_4876346725",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.5889658,
+    "lon": 41.8665037,
+    "address": ""
+  },
+  {
+    "id": "clinic_4887293724",
+    "type": "clinic",
+    "name": "Washington Medical center",
+    "phone": "+251116635969",
+    "lat": 8.9883302,
+    "lon": 38.7765893,
+    "address": "Bole, infront of Rwanda Embassy"
+  },
+  {
+    "id": "clinic_4893086521",
+    "type": "clinic",
+    "name": "ዶ/ር ግንባሩ ሳይካትሪ",
+    "lat": 8.9465345,
+    "lon": 38.7485306,
+    "address": ""
+  },
+  {
+    "id": "clinic_4902307125",
+    "type": "clinic",
+    "name": "Seyoum Special Eye Clinic Plc ስየዩም ልዩ የዓይን ክሊኒክ",
+    "lat": 8.9911965,
+    "lon": 38.7841114,
+    "address": ""
+  },
+  {
+    "id": "clinic_4902326121",
+    "type": "clinic",
+    "name": "Seyoum Special Eye Clinic Plc. ስዩም ልዩ የዓይን ክሊኒክ",
+    "lat": 9.0035999,
+    "lon": 38.8157717,
+    "address": ""
+  },
+  {
+    "id": "clinic_4954111140",
+    "type": "clinic",
+    "name": "International Clinical Laboratories",
+    "lat": 9.0116259,
+    "lon": 38.7670341,
+    "address": "Addis Ababa"
+  },
+  {
+    "id": "clinic_4956406224",
+    "type": "clinic",
+    "name": "ቾይዝ የሕፃናትና የታዳጊዎች ልዩ ክሊኒክ",
+    "phone": "+251911035247",
+    "lat": 9.0016223,
+    "lon": 38.7803347,
+    "address": "BL_03_613 St."
+  },
+  {
+    "id": "clinic_4973823121",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 5.9991084,
+    "lon": 37.5440951,
+    "address": ""
+  },
+  {
+    "id": "police_4990620321",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 13.1566502,
+    "lon": 37.8967944,
+    "address": ""
+  },
+  {
+    "id": "clinic_5058229722",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0449594,
+    "lon": 38.7332304,
+    "address": ""
+  },
+  {
+    "id": "police_5058267729",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.3512212,
+    "lon": 42.797412,
+    "address": ""
+  },
+  {
+    "id": "clinic_5058291339",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.351122,
+    "lon": 42.7991522,
+    "address": ""
+  },
+  {
+    "id": "police_5060323021",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.0661738,
+    "lon": 38.4934807,
+    "address": ""
+  },
+  {
+    "id": "clinic_5060323222",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0672439,
+    "lon": 38.6939595,
+    "address": ""
+  },
+  {
+    "id": "police_5082927726",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 11.0505186,
+    "lon": 39.7470004,
+    "address": ""
+  },
+  {
+    "id": "clinic_5100640125",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.3531685,
+    "lon": 42.8020052,
+    "address": ""
+  },
+  {
+    "id": "clinic_5100640726",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.3575124,
+    "lon": 42.7988784,
+    "address": ""
+  },
+  {
+    "id": "clinic_5100640727",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.35741,
+    "lon": 42.8015704,
+    "address": ""
+  },
+  {
+    "id": "clinic_5100730323",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.3558346,
+    "lon": 42.7838158,
+    "address": ""
+  },
+  {
+    "id": "clinic_5100730324",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.3511481,
+    "lon": 42.7989197,
+    "address": ""
+  },
+  {
+    "id": "clinic_5100730522",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.3509739,
+    "lon": 42.7944867,
+    "address": ""
+  },
+  {
+    "id": "police_5100732123",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.3511876,
+    "lon": 42.7973229,
+    "address": ""
+  },
+  {
+    "id": "police_5107585631",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 7.67783,
+    "lon": 36.833164,
+    "address": ""
+  },
+  {
+    "id": "police_5107586441",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 7.6711425,
+    "lon": 36.8317997,
+    "address": ""
+  },
+  {
+    "id": "clinic_5140786226",
+    "type": "clinic",
+    "name": "ዳሌ ወረዳ መገራ ጤና ጣብያ",
+    "lat": 6.6934516,
+    "lon": 38.3547336,
+    "address": ""
+  },
+  {
+    "id": "clinic_5140786227",
+    "type": "clinic",
+    "name": "አየር ጤና መካከለኛ ክሊኒክ",
+    "lat": 8.9819484,
+    "lon": 38.6911682,
+    "address": ""
+  },
+  {
+    "id": "clinic_5190519627",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 6.8644708,
+    "lon": 37.7608022,
+    "address": ""
+  },
+  {
+    "id": "clinic_5190519628",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 6.8700631,
+    "lon": 37.7594574,
+    "address": ""
+  },
+  {
+    "id": "clinic_5225074922",
+    "type": "clinic",
+    "name": "ጀሞ",
+    "lat": 8.9983203,
+    "lon": 38.6799532,
+    "address": ""
+  },
+  {
+    "id": "clinic_5245406804",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.1898597,
+    "lon": 38.600582,
+    "address": "Shashamane, Addis Ababa to Nairobi road"
+  },
+  {
+    "id": "police_5245436808",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 7.195145,
+    "lon": 38.597806,
+    "address": ""
+  },
+  {
+    "id": "clinic_5260308524",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0114154,
+    "lon": 38.7877666,
+    "address": ""
+  },
+  {
+    "id": "clinic_5303210930",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.5988267,
+    "lon": 37.4142069,
+    "address": ""
+  },
+  {
+    "id": "hospital_5306021321",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 12.6102929,
+    "lon": 37.4539273,
+    "address": ""
+  },
+  {
+    "id": "police_5338558927",
+    "type": "police",
+    "name": "Police station",
+    "lat": 9.5884026,
+    "lon": 41.8545044,
+    "address": ""
+  },
+  {
+    "id": "hospital_5356977321",
+    "type": "hospital",
+    "name": "ቆቦ ሆስፒታል",
+    "lat": 12.1627062,
+    "lon": 39.6497244,
+    "address": ""
+  },
+  {
+    "id": "clinic_5404801431",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0007326,
+    "lon": 38.7814474,
+    "address": ""
+  },
+  {
+    "id": "clinic_5459779621",
+    "type": "clinic",
+    "name": "ያኔት ልዩ ከፍተኛ ክሊኒክ",
+    "lat": 7.0235129,
+    "lon": 38.4684384,
+    "address": ""
+  },
+  {
+    "id": "police_5470214527",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 13.2894123,
+    "lon": 38.9932966,
+    "address": ""
+  },
+  {
+    "id": "clinic_5492886122",
+    "type": "clinic",
+    "name": "የኢትዮጵያ አየር መንገድ የህክምና ማዕከል",
+    "lat": 8.983333,
+    "lon": 38.7885325,
+    "address": ""
+  },
+  {
+    "id": "clinic_5540597724",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 5.3097161,
+    "lon": 44.6732891,
+    "address": ""
+  },
+  {
+    "id": "clinic_5540629725",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 5.275855,
+    "lon": 44.5423513,
+    "address": ""
+  },
+  {
+    "id": "clinic_5540636021",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 5.0841719,
+    "lon": 44.8761976,
+    "address": ""
+  },
+  {
+    "id": "clinic_5540638321",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 5.1758641,
+    "lon": 44.7671507,
+    "address": ""
+  },
+  {
+    "id": "clinic_5540638322",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 5.2381278,
+    "lon": 44.6750207,
+    "address": ""
+  },
+  {
+    "id": "clinic_5540639321",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 5.2367167,
+    "lon": 44.6514115,
+    "address": ""
+  },
+  {
+    "id": "police_5541092721",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 5.2421636,
+    "lon": 44.7348184,
+    "address": ""
+  },
+  {
+    "id": "clinic_5542449923",
+    "type": "clinic",
+    "name": "ሴማህ የእናቶችና የህፃናት ልዩ የጤና ማዕከል",
+    "lat": 9.0091893,
+    "lon": 38.7838982,
+    "address": ""
+  },
+  {
+    "id": "clinic_5546926622",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.2860237,
+    "lon": 38.9767084,
+    "address": ""
+  },
+  {
+    "id": "police_5622001924",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 6.4156249,
+    "lon": 38.3067898,
+    "address": "Addis Ababa to Nairobi road"
+  },
+  {
+    "id": "clinic_5622004327",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 6.4149935,
+    "lon": 38.3080753,
+    "address": "Addis Ababa to Nairobi road"
+  },
+  {
+    "id": "hospital_5645445021",
+    "type": "hospital",
+    "name": "ፈለገ ህይወት ሪፈራል ሆስፒታል",
+    "lat": 11.6080164,
+    "lon": 37.3699039,
+    "address": ""
+  },
+  {
+    "id": "clinic_5647514222",
+    "type": "clinic",
+    "name": "ዛግራ መካከለኛ ክሊኒክ",
+    "phone": "0583205157",
+    "lat": 11.60292,
+    "lon": 37.3741848,
+    "address": ""
+  },
+  {
+    "id": "clinic_5655733922",
+    "type": "clinic",
+    "name": "አፍሪካ መካከለኛ ክሊኒክ",
+    "phone": "0588999456",
+    "lat": 11.6067969,
+    "lon": 37.3692895,
+    "address": ""
+  },
+  {
+    "id": "clinic_5661188741",
+    "type": "clinic",
+    "name": "ካሳ እና የኔው መካከለኛ ክሊኒክ",
+    "lat": 11.6052103,
+    "lon": 37.3686163,
+    "address": ""
+  },
+  {
+    "id": "police_5670559030",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 11.6015345,
+    "lon": 37.3654901,
+    "address": ""
+  },
+  {
+    "id": "hospital_5671866221",
+    "type": "hospital",
+    "name": "የሁልእሸት ሪፈራል ሆስፒታል",
+    "lat": 9.0277121,
+    "lon": 38.7512707,
+    "address": ""
+  },
+  {
+    "id": "hospital_5720719122",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 9.019603,
+    "lon": 38.7499016,
+    "address": ""
+  },
+  {
+    "id": "clinic_5731625921",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.9997875,
+    "lon": 38.7719334,
+    "address": ""
+  },
+  {
+    "id": "clinic_5857209685",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.9977069,
+    "lon": 38.8142465,
+    "address": ""
+  },
+  {
+    "id": "police_5901731979",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 12.0369255,
+    "lon": 39.0462213,
+    "address": ""
+  },
+  {
+    "id": "clinic_5913047497",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 4.8955197,
+    "lon": 38.0915962,
+    "address": ""
+  },
+  {
+    "id": "clinic_5964497986",
+    "type": "clinic",
+    "name": "ቦናት ክልንክ",
+    "lat": 9.0515981,
+    "lon": 38.7163788,
+    "address": ""
+  },
+  {
+    "id": "clinic_5964497987",
+    "type": "clinic",
+    "name": "ቦናት ክልንክ",
+    "lat": 9.0559918,
+    "lon": 38.7196519,
+    "address": ""
+  },
+  {
+    "id": "clinic_5964522687",
+    "type": "clinic",
+    "name": "ቦኒ-አት ክልንክ",
+    "lat": 9.0557062,
+    "lon": 38.7199804,
+    "address": ""
+  },
+  {
+    "id": "police_5964825086",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 13.6453682,
+    "lon": 39.7231175,
+    "address": ""
+  },
+  {
+    "id": "police_5980747991",
+    "type": "police",
+    "name": "የአብነት አካባቢ ፓሊስ ጣብያ",
+    "lat": 9.0205493,
+    "lon": 38.7351991,
+    "address": "Bekele Weya Street"
+  },
+  {
+    "id": "clinic_5980748086",
+    "type": "clinic",
+    "name": "አብነት ክሊኒክ ቁ 1",
+    "lat": 9.0206247,
+    "lon": 38.7339365,
+    "address": ""
+  },
+  {
+    "id": "clinic_5983391686",
+    "type": "clinic",
+    "name": "ላይፍ አዲስ",
+    "lat": 9.0350034,
+    "lon": 38.7682131,
+    "address": ""
+  },
+  {
+    "id": "clinic_5984627587",
+    "type": "clinic",
+    "name": "ሽምብጥ",
+    "lat": 11.6068514,
+    "lon": 37.3638232,
+    "address": ""
+  },
+  {
+    "id": "clinic_6023260810",
+    "type": "clinic",
+    "name": "“Sitot” Health Center for Mental Care",
+    "lat": 8.995243,
+    "lon": 38.7177381,
+    "address": "Addis Ababa, Ring Road"
+  },
+  {
+    "id": "police_6050674988",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.0217328,
+    "lon": 38.7502018,
+    "address": ""
+  },
+  {
+    "id": "clinic_6122261585",
+    "type": "clinic",
+    "name": "ዶ/ር ምስጋናው የማዋለጃ  ከሊኒክ",
+    "lat": 11.1312772,
+    "lon": 39.6323986,
+    "address": ""
+  },
+  {
+    "id": "clinic_6136275485",
+    "type": "clinic",
+    "name": "ዋጋ የአይን ማዕከል",
+    "phone": "+251944123456",
+    "lat": 8.9841859,
+    "lon": 38.7660555,
+    "address": ""
+  },
+  {
+    "id": "clinic_6178641485",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.020792,
+    "lon": 38.7488271,
+    "address": ""
+  },
+  {
+    "id": "clinic_6191929785",
+    "type": "clinic",
+    "name": "Kereda",
+    "lat": 5.8842218,
+    "lon": 37.9284847,
+    "address": ""
+  },
+  {
+    "id": "clinic_6203078986",
+    "type": "clinic",
+    "name": "ኢንተርናሽናል ክሊኒካል ላቡራቶሪ International Clinical Laburatory",
+    "phone": "0118400858",
+    "lat": 9.0485958,
+    "lon": 38.7379905,
+    "address": ""
+  },
+  {
+    "id": "police_6207066585",
+    "type": "police",
+    "name": "አቃቂ  ቃሊቲ ትራፊክ ፖሊስ",
+    "lat": 8.9206809,
+    "lon": 38.7691602,
+    "address": ""
+  },
+  {
+    "id": "clinic_6239297785",
+    "type": "clinic",
+    "name": "Melka Jewe health centre",
+    "lat": 5.6055937,
+    "lon": 37.8938292,
+    "address": ""
+  },
+  {
+    "id": "clinic_6280109488",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 14.2799549,
+    "lon": 39.461559,
+    "address": ""
+  },
+  {
+    "id": "clinic_6280109490",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 14.282546,
+    "lon": 39.45909,
+    "address": ""
+  },
+  {
+    "id": "police_6280109687",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 14.2806197,
+    "lon": 39.4641551,
+    "address": ""
+  },
+  {
+    "id": "police_6301491088",
+    "type": "police",
+    "name": "ቡልቡላ ፖሊስ ጣቢያ",
+    "lat": 8.9533774,
+    "lon": 38.7829753,
+    "address": ""
+  },
+  {
+    "id": "clinic_6301697387",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 14.2886148,
+    "lon": 39.4657239,
+    "address": ""
+  },
+  {
+    "id": "clinic_6314150488",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 14.2779429,
+    "lon": 39.4633348,
+    "address": ""
+  },
+  {
+    "id": "clinic_6329251387",
+    "type": "clinic",
+    "name": "wisdom dental clinic",
+    "phone": "+251 91 188 1961",
+    "lat": 9.0057134,
+    "lon": 38.7895619,
+    "address": ""
+  },
+  {
+    "id": "clinic_6403567192",
+    "type": "clinic",
+    "name": "ውዳሴ",
+    "lat": 9.0267349,
+    "lon": 38.7575132,
+    "address": ""
+  },
+  {
+    "id": "clinic_6445958586",
+    "type": "clinic",
+    "name": "ካዛንቺስ ጤና ጣብያ",
+    "lat": 8.994833,
+    "lon": 38.8100143,
+    "address": ""
+  },
+  {
+    "id": "clinic_6451264087",
+    "type": "clinic",
+    "name": "Yilak Speciality Clinic",
+    "lat": 9.3510465,
+    "lon": 42.793468,
+    "address": ""
+  },
+  {
+    "id": "clinic_6454234385",
+    "type": "clinic",
+    "name": "ሜሪስቶቭስ",
+    "lat": 9.0260706,
+    "lon": 38.7554834,
+    "address": ""
+  },
+  {
+    "id": "clinic_6463570986",
+    "type": "clinic",
+    "name": "ዶክተር ተስፋሁን ክሊኒክ",
+    "lat": 6.4058247,
+    "lon": 38.3101311,
+    "address": ""
+  },
+  {
+    "id": "clinic_6470000397",
+    "type": "clinic",
+    "name": "MS Clinic",
+    "lat": 8.992207,
+    "lon": 38.8589398,
+    "address": ""
+  },
+  {
+    "id": "clinic_6471701691",
+    "type": "clinic",
+    "name": "Bruksemu",
+    "lat": 8.9975925,
+    "lon": 38.8609716,
+    "address": ""
+  },
+  {
+    "id": "clinic_6471701694",
+    "type": "clinic",
+    "name": "Mercy Clinic",
+    "lat": 8.9938838,
+    "lon": 38.8551932,
+    "address": ""
+  },
+  {
+    "id": "clinic_6499000386",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.4585182,
+    "lon": 39.4945598,
+    "address": ""
+  },
+  {
+    "id": "police_6524268288",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.6671374,
+    "lon": 39.5280703,
+    "address": ""
+  },
+  {
+    "id": "police_6556218885",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 3.601273,
+    "lon": 39.0219537,
+    "address": ""
+  },
+  {
+    "id": "police_6575402097",
+    "type": "police",
+    "name": "Check Point",
+    "lat": 9.3043468,
+    "lon": 42.9165407,
+    "address": ""
+  },
+  {
+    "id": "clinic_6593078586",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.9979515,
+    "lon": 38.7618499,
+    "address": ""
+  },
+  {
+    "id": "clinic_6618209985",
+    "type": "clinic",
+    "name": "Unknown",
+    "phone": "+251911114490",
+    "lat": 8.8688396,
+    "lon": 39.9165501,
+    "address": ""
+  },
+  {
+    "id": "police_6622509314",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 6.5116785,
+    "lon": 38.741131,
+    "address": ""
+  },
+  {
+    "id": "clinic_6622509316",
+    "type": "clinic",
+    "name": "Worancha Health Center",
+    "lat": 6.5075442,
+    "lon": 38.7432426,
+    "address": ""
+  },
+  {
+    "id": "clinic_6627794300",
+    "type": "clinic",
+    "name": "Unknown",
+    "phone": "+251116461857,+251911682762,+251118687203",
+    "lat": 9.0243522,
+    "lon": 38.7975849,
+    "address": ""
+  },
+  {
+    "id": "hospital_6633197986",
+    "type": "hospital",
+    "name": "አየር ጤና የመ/ደ ሆስፒታል",
+    "lat": 8.9819457,
+    "lon": 38.6911212,
+    "address": ""
+  },
+  {
+    "id": "clinic_6698676490",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0140329,
+    "lon": 38.8519277,
+    "address": ""
+  },
+  {
+    "id": "clinic_6718406279",
+    "type": "clinic",
+    "name": "Guarure Bora Clinic",
+    "lat": 8.4969778,
+    "lon": 38.0205041,
+    "address": ""
+  },
+  {
+    "id": "police_6728232295",
+    "type": "police",
+    "name": "Lode Hetosa Woreda Police Station / የሎዴ ሄጦሳ ወረዳ ፖሊስ ጣቢያ",
+    "lat": 8.151679,
+    "lon": 39.3561771,
+    "address": "Huruta"
+  },
+  {
+    "id": "police_6738259907",
+    "type": "police",
+    "name": "Lideta Sub City Community police station",
+    "lat": 9.0186852,
+    "lon": 38.7462553,
+    "address": ""
+  },
+  {
+    "id": "clinic_6749384188",
+    "type": "clinic",
+    "name": "አደራ የውስጥ ደዌ ማዕከል",
+    "lat": 9.0080693,
+    "lon": 38.7641939,
+    "address": "Africa Avenue / Bole Road"
+  },
+  {
+    "id": "clinic_6749410685",
+    "type": "clinic",
+    "name": "ኢትዮ-ካናዳ ዲያግኖስቲክ ሴንተር",
+    "lat": 9.0139171,
+    "lon": 38.7507209,
+    "address": "Ras Abebe Aregay Street"
+  },
+  {
+    "id": "police_6782297539",
+    "type": "police",
+    "name": "West Harerge Zone Police",
+    "lat": 9.3958648,
+    "lon": 42.0085985,
+    "address": ""
+  },
+  {
+    "id": "police_6782303565",
+    "type": "police",
+    "name": "Kersa Wereda Police",
+    "lat": 9.4541804,
+    "lon": 41.866656,
+    "address": ""
+  },
+  {
+    "id": "police_6807134994",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 7.5521302,
+    "lon": 37.852483,
+    "address": ""
+  },
+  {
+    "id": "clinic_6814021301",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.9501318,
+    "lon": 38.7179896,
+    "address": ""
+  },
+  {
+    "id": "clinic_6814279370",
+    "type": "clinic",
+    "name": "Alemetena clinic",
+    "lat": 9.0461009,
+    "lon": 38.7293102,
+    "address": ""
+  },
+  {
+    "id": "police_6824850401",
+    "type": "police",
+    "name": "የአንጋ",
+    "lat": 7.3423633,
+    "lon": 37.8609757,
+    "address": ""
+  },
+  {
+    "id": "clinic_6824881585",
+    "type": "clinic",
+    "name": "አንጋጫ ጤና ጣቢያ",
+    "lat": 7.3428792,
+    "lon": 37.8584496,
+    "address": ""
+  },
+  {
+    "id": "police_6839483187",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 7.1967581,
+    "lon": 35.4232439,
+    "address": ""
+  },
+  {
+    "id": "clinic_6839483198",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.197171,
+    "lon": 35.4249213,
+    "address": ""
+  },
+  {
+    "id": "clinic_6846933486",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.8705274,
+    "lon": 38.7084004,
+    "address": ""
+  },
+  {
+    "id": "clinic_6846933785",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.91611,
+    "lon": 38.7137508,
+    "address": ""
+  },
+  {
+    "id": "clinic_6847783185",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.9894897,
+    "lon": 38.7827077,
+    "address": ""
+  },
+  {
+    "id": "hospital_6855641985",
+    "type": "hospital",
+    "name": "St. Yared general hospital",
+    "lat": 9.0190983,
+    "lon": 38.809959,
+    "address": ""
+  },
+  {
+    "id": "police_6857270302",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 7.5498981,
+    "lon": 37.8537718,
+    "address": ""
+  },
+  {
+    "id": "clinic_6897864285",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.9809196,
+    "lon": 38.7342204,
+    "address": ""
+  },
+  {
+    "id": "clinic_6906329885",
+    "type": "clinic",
+    "name": "ሀሴት",
+    "lat": 9.024893,
+    "lon": 38.8786376,
+    "address": "Road 1"
+  },
+  {
+    "id": "hospital_6929805085",
+    "type": "hospital",
+    "name": "ጆይ የማህፀንና ፅንስ ሆስፒታል",
+    "lat": 9.0328767,
+    "lon": 38.7803847,
+    "address": ""
+  },
+  {
+    "id": "clinic_6939488188",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.0690894,
+    "lon": 39.1958531,
+    "address": ""
+  },
+  {
+    "id": "clinic_6939488286",
+    "type": "clinic",
+    "name": "Fito Health Center",
+    "lat": 11.1280404,
+    "lon": 39.2270333,
+    "address": ""
+  },
+  {
+    "id": "clinic_6939488288",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.0344402,
+    "lon": 39.2278259,
+    "address": ""
+  },
+  {
+    "id": "clinic_6942568786",
+    "type": "clinic",
+    "name": "ንፋስ ስልክ ላፍቶ ወረዳ 06 ጤና ጣቢያ",
+    "lat": 8.9715301,
+    "lon": 38.7501898,
+    "address": "Mauritius Street"
+  },
+  {
+    "id": "police_6942915696",
+    "type": "police",
+    "name": "ኮምሽን ፖሊስ ክልል ትግራይ",
+    "phone": "+251814",
+    "lat": 13.4901596,
+    "lon": 39.4761902,
+    "address": ""
+  },
+  {
+    "id": "clinic_6944652186",
+    "type": "clinic",
+    "name": "SolAlem computer sol ፅገና ኮምፒተር",
+    "phone": "+251914017035",
+    "lat": 13.4923907,
+    "lon": 39.4729882,
+    "address": ""
+  },
+  {
+    "id": "clinic_6977395885",
+    "type": "clinic",
+    "name": "ኦሊ መካከለኛ የጥርስ",
+    "lat": 9.0128979,
+    "lon": 37.4494234,
+    "address": ""
+  },
+  {
+    "id": "clinic_6978635785",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0115954,
+    "lon": 38.7779984,
+    "address": ""
+  },
+  {
+    "id": "clinic_6985509787",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 10.9997688,
+    "lon": 39.2020713,
+    "address": ""
+  },
+  {
+    "id": "hospital_6994458586",
+    "type": "hospital",
+    "name": "አቤ ዶንጎሩ",
+    "lat": 9.6100628,
+    "lon": 36.9229688,
+    "address": ""
+  },
+  {
+    "id": "clinic_7008212086",
+    "type": "clinic",
+    "name": "Addis sub city Felege meles health center",
+    "lat": 9.0448561,
+    "lon": 38.7334401,
+    "address": ""
+  },
+  {
+    "id": "police_7008327566",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 14.1769706,
+    "lon": 37.7222875,
+    "address": ""
+  },
+  {
+    "id": "police_7008370399",
+    "type": "police",
+    "name": "Communal Police",
+    "lat": 13.6583258,
+    "lon": 38.1552367,
+    "address": ""
+  },
+  {
+    "id": "clinic_7008450276",
+    "type": "clinic",
+    "name": "ARRA Health Center",
+    "lat": 14.1767652,
+    "lon": 37.7218547,
+    "address": ""
+  },
+  {
+    "id": "police_7008464846",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 11.5915367,
+    "lon": 41.446911,
+    "address": ""
+  },
+  {
+    "id": "clinic_7008470295",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.6569558,
+    "lon": 38.1542164,
+    "address": ""
+  },
+  {
+    "id": "clinic_7008577635",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.5910227,
+    "lon": 41.4464937,
+    "address": ""
+  },
+  {
+    "id": "clinic_7008577636",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.5904042,
+    "lon": 41.4462692,
+    "address": ""
+  },
+  {
+    "id": "clinic_7031634486",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.1976018,
+    "lon": 35.4250432,
+    "address": ""
+  },
+  {
+    "id": "clinic_7031712925",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 5.6591467,
+    "lon": 38.3417275,
+    "address": ""
+  },
+  {
+    "id": "clinic_7067231700",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0946681,
+    "lon": 43.1800652,
+    "address": ""
+  },
+  {
+    "id": "clinic_7067231701",
+    "type": "clinic",
+    "name": "Health Center",
+    "lat": 9.0990696,
+    "lon": 43.1803952,
+    "address": ""
+  },
+  {
+    "id": "police_7089702985",
+    "type": "police",
+    "name": "Universty",
+    "lat": 6.7039175,
+    "lon": 44.2537267,
+    "address": "10"
+  },
+  {
+    "id": "police_7107654686",
+    "type": "police",
+    "name": "አቃቂ አካባቢ ፖሊስ",
+    "phone": "+251114340001",
+    "lat": 8.8674972,
+    "lon": 38.7891262,
+    "address": ""
+  },
+  {
+    "id": "clinic_7132478402",
+    "type": "clinic",
+    "name": "OIA India Eye Care Centre",
+    "lat": 9.0180486,
+    "lon": 38.7570301,
+    "address": ""
+  },
+  {
+    "id": "clinic_7153138829",
+    "type": "clinic",
+    "name": "Dus Health Clinic",
+    "lat": 5.274924,
+    "lon": 36.2036997,
+    "address": ""
+  },
+  {
+    "id": "police_7179557286",
+    "type": "police",
+    "name": "Federal Police Commission Crime Prevention",
+    "lat": 9.0163806,
+    "lon": 38.7457415,
+    "address": ""
+  },
+  {
+    "id": "hospital_7319752291",
+    "type": "hospital",
+    "name": "ይርጋለም ጀነራል ሆስፒታል",
+    "lat": 6.7499829,
+    "lon": 38.3940917,
+    "address": "Road to Yirga Alem"
+  },
+  {
+    "id": "clinic_7328369385",
+    "type": "clinic",
+    "name": "Nur clinic",
+    "lat": 12.6047943,
+    "lon": 37.4539268,
+    "address": ""
+  },
+  {
+    "id": "police_7335408485",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.0172773,
+    "lon": 38.8600253,
+    "address": ""
+  },
+  {
+    "id": "hospital_7340474485",
+    "type": "hospital",
+    "name": "ቅ/ጴጥሮስ ሆስፒታል (የመንግስት)",
+    "lat": 9.0745204,
+    "lon": 38.7586606,
+    "address": "Intoto Road"
+  },
+  {
+    "id": "hospital_7368469585",
+    "type": "hospital",
+    "name": "ያኔት ሀየር እስፔሻላይዝድ ክሊኒክ",
+    "phone": "0462122726",
+    "lat": 7.0245706,
+    "lon": 38.4693788,
+    "address": "Hawassa,referral Hospital Road near yanet square"
+  },
+  {
+    "id": "hospital_7398323192",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 9.0313602,
+    "lon": 38.7466728,
+    "address": ""
+  },
+  {
+    "id": "clinic_7404728685",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.9528884,
+    "lon": 38.7897192,
+    "address": ""
+  },
+  {
+    "id": "hospital_7457788685",
+    "type": "hospital",
+    "name": "አፍንጮ በር ጤና ጣቢያ",
+    "lat": 9.045081,
+    "lon": 38.7510368,
+    "address": ""
+  },
+  {
+    "id": "police_7464058934",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 8.9824018,
+    "lon": 38.7359847,
+    "address": ""
+  },
+  {
+    "id": "hospital_7506993985",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 7.6762126,
+    "lon": 36.8295424,
+    "address": ""
+  },
+  {
+    "id": "hospital_7521975485",
+    "type": "hospital",
+    "name": "ኢትዬ-ጠቢብ",
+    "lat": 9.0375208,
+    "lon": 38.7209861,
+    "address": ""
+  },
+  {
+    "id": "clinic_7526924885",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.6759416,
+    "lon": 36.8293906,
+    "address": ""
+  },
+  {
+    "id": "hospital_7528067385",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 13.5889041,
+    "lon": 38.1320291,
+    "address": ""
+  },
+  {
+    "id": "hospital_7528067988",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 9.0079798,
+    "lon": 38.7641998,
+    "address": ""
+  },
+  {
+    "id": "clinic_7589378885",
+    "type": "clinic",
+    "name": "ሀሌሉያ የውስጥ ደዌ ስፔሻሊቲ ክሊኒክ",
+    "phone": "+251111261317",
+    "lat": 9.0315207,
+    "lon": 38.7664999,
+    "address": ""
+  },
+  {
+    "id": "clinic_7617892506",
+    "type": "clinic",
+    "name": "ፉሉይ ሕክምና ዓይኒ ዶ/ር ጥላሁን ኪሮስ",
+    "phone": "+251344410304",
+    "lat": 13.4923807,
+    "lon": 39.4773004,
+    "address": ""
+  },
+  {
+    "id": "clinic_7619435685",
+    "type": "clinic",
+    "name": "ገሊላ መካከለኛ ክሊኒክ",
+    "phone": "+251912195470",
+    "lat": 6.601827,
+    "lon": 38.4225983,
+    "address": "Chefe"
+  },
+  {
+    "id": "clinic_7625304985",
+    "type": "clinic",
+    "name": "ዱሳይ ከፍተኛ ክሊኒክ",
+    "lat": 9.0056522,
+    "lon": 38.7896597,
+    "address": ""
+  },
+  {
+    "id": "police_7660329285",
+    "type": "police",
+    "name": "የቤንች ሸኮ ዞን ፖሊስ መምርያ",
+    "lat": 6.9939925,
+    "lon": 35.5850684,
+    "address": ""
+  },
+  {
+    "id": "police_7772846085",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 11.8682034,
+    "lon": 38.0070566,
+    "address": ""
+  },
+  {
+    "id": "hospital_7775733386",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 3.7653145,
+    "lon": 39.2258044,
+    "address": ""
+  },
+  {
+    "id": "hospital_7781858387",
+    "type": "hospital",
+    "name": "Blood Bank",
+    "lat": 9.3550649,
+    "lon": 42.7841903,
+    "address": ""
+  },
+  {
+    "id": "hospital_7782612486",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 8.9656394,
+    "lon": 38.7880676,
+    "address": ""
+  },
+  {
+    "id": "hospital_7840028405",
+    "type": "hospital",
+    "name": "ባህርዳር ዩ",
+    "lat": 11.5250362,
+    "lon": 37.4002724,
+    "address": "Mota Road"
+  },
+  {
+    "id": "clinic_7846652985",
+    "type": "clinic",
+    "name": "Pioneer Diagnostic Center",
+    "lat": 8.9896021,
+    "lon": 38.7847474,
+    "address": ""
+  },
+  {
+    "id": "clinic_7849633785",
+    "type": "clinic",
+    "name": "Al-Borg Internal Medicine Speciality",
+    "lat": 8.9861441,
+    "lon": 38.7848028,
+    "address": ""
+  },
+  {
+    "id": "clinic_7852742486",
+    "type": "clinic",
+    "name": "Afei Diagnostic Center",
+    "lat": 8.99537,
+    "lon": 38.7593233,
+    "address": ""
+  },
+  {
+    "id": "clinic_7856255086",
+    "type": "clinic",
+    "name": "Dr Abreham Eye Clinic",
+    "lat": 8.9876787,
+    "lon": 38.7758546,
+    "address": ""
+  },
+  {
+    "id": "hospital_7866098585",
+    "type": "hospital",
+    "name": "Somali Regional State Blood Bank",
+    "lat": 9.355069,
+    "lon": 42.7841676,
+    "address": ""
+  },
+  {
+    "id": "clinic_7877347585",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.9950117,
+    "lon": 38.7596728,
+    "address": "Belo bet st"
+  },
+  {
+    "id": "clinic_7881860485",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.4838653,
+    "lon": 39.4528374,
+    "address": ""
+  },
+  {
+    "id": "clinic_7973668405",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0091714,
+    "lon": 38.8496841,
+    "address": ""
+  },
+  {
+    "id": "police_7985513493",
+    "type": "police",
+    "name": "Pickock  police manja",
+    "lat": 8.9118227,
+    "lon": 38.7633069,
+    "address": ""
+  },
+  {
+    "id": "hospital_8001840185",
+    "type": "hospital",
+    "name": "የኢትዮጵያ ፌደራል ፖሊስ ሆስፒታል",
+    "lat": 9.0118515,
+    "lon": 38.7398606,
+    "address": ""
+  },
+  {
+    "id": "hospital_8005522986",
+    "type": "hospital",
+    "name": "የኢትዮጵያ የልብ ማእከል",
+    "lat": 9.0207753,
+    "lon": 38.7484495,
+    "address": ""
+  },
+  {
+    "id": "hospital_8041424885",
+    "type": "hospital",
+    "name": "ደጃዝማች ባልቻ አባነፍሶ ሆስፒታል",
+    "lat": 9.0118881,
+    "lon": 38.7386679,
+    "address": ""
+  },
+  {
+    "id": "hospital_8073085218",
+    "type": "hospital",
+    "name": "ግንቦት 20 ጤና ጣቢያ",
+    "lat": 9.0307882,
+    "lon": 38.7427866,
+    "address": ""
+  },
+  {
+    "id": "hospital_8073085417",
+    "type": "hospital",
+    "name": "አዲስ ከተማ ጤና ጣቢያ",
+    "lat": 9.0335569,
+    "lon": 38.7254506,
+    "address": ""
+  },
+  {
+    "id": "hospital_8073085517",
+    "type": "hospital",
+    "name": "አዲስ ከተማ ጤና ጣቢያ",
+    "lat": 9.0337997,
+    "lon": 38.7237227,
+    "address": ""
+  },
+  {
+    "id": "hospital_8296886117",
+    "type": "hospital",
+    "name": "የኢትዮጲያ ህብረተሰብ ጤና ኢንስቲትዮት",
+    "lat": 9.0466828,
+    "lon": 38.7308027,
+    "address": ""
+  },
+  {
+    "id": "hospital_8296886217",
+    "type": "hospital",
+    "name": "ቅድስ ፓውሎስ ሆስፒታል ሚሊኒየም ሜዲካል ኮሌጅ",
+    "lat": 9.04783,
+    "lon": 38.7280864,
+    "address": ""
+  },
+  {
+    "id": "hospital_8299731919",
+    "type": "hospital",
+    "name": "Hospitaala Waliigalaa Aayiraa",
+    "lat": 9.1042613,
+    "lon": 35.3981391,
+    "address": ""
+  },
+  {
+    "id": "police_8425989728",
+    "type": "police",
+    "name": "Unknown",
+    "phone": "+251257720382",
+    "lat": 9.3566667,
+    "lon": 42.3955184,
+    "address": "funyanbira, Gursum Road"
+  },
+  {
+    "id": "hospital_8426040800",
+    "type": "hospital",
+    "name": "Gursum health",
+    "phone": "0915444555",
+    "lat": 9.3523228,
+    "lon": 42.39975,
+    "address": "funyanbira, Gursum Road"
+  },
+  {
+    "id": "hospital_8428297217",
+    "type": "hospital",
+    "name": "አዲስ ከተማ ጤና ጣቢያ",
+    "lat": 9.0334913,
+    "lon": 38.7238553,
+    "address": ""
+  },
+  {
+    "id": "police_8474724317",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 8.4521151,
+    "lon": 39.2219802,
+    "address": ""
+  },
+  {
+    "id": "clinic_8493717518",
+    "type": "clinic",
+    "name": "አዲስ የ እናቶች እና የ ህፃናት ልዩ ህክምና",
+    "lat": 9.0371485,
+    "lon": 38.7672029,
+    "address": ""
+  },
+  {
+    "id": "hospital_8493717526",
+    "type": "hospital",
+    "name": "አይሲኤምሲ  ሆስፒታል",
+    "lat": 9.0235811,
+    "lon": 38.8542508,
+    "address": ""
+  },
+  {
+    "id": "hospital_8513036430",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 9.0037819,
+    "lon": 38.7322551,
+    "address": ""
+  },
+  {
+    "id": "hospital_8513036622",
+    "type": "hospital",
+    "name": "Dream Orthopedics Trauma and Spine Center",
+    "phone": "+251115500079",
+    "lat": 9.0045033,
+    "lon": 38.737961,
+    "address": "Addis Ababa"
+  },
+  {
+    "id": "hospital_8518249418",
+    "type": "hospital",
+    "name": "ለሚ ኩራ ወረዳ 13 ጤና ጣቢያ",
+    "lat": 9.0382317,
+    "lon": 38.8770372,
+    "address": ""
+  },
+  {
+    "id": "police_8543827205",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 13.7324532,
+    "lon": 39.0000232,
+    "address": ""
+  },
+  {
+    "id": "clinic_8569063819",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 14.080299,
+    "lon": 38.2858021,
+    "address": ""
+  },
+  {
+    "id": "hospital_8571946118",
+    "type": "hospital",
+    "name": "ወረዳ 09 ጤና ጣቢያ",
+    "lat": 8.9987434,
+    "lon": 38.7162809,
+    "address": ""
+  },
+  {
+    "id": "clinic_8590253518",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.0396708,
+    "lon": 41.7189301,
+    "address": "Qumbii Street"
+  },
+  {
+    "id": "clinic_8625139117",
+    "type": "clinic",
+    "name": "የለማ ልዩ የውስጥ ደዌና የሕፃናት ሕክምና ክሊኒክ",
+    "lat": 9.0413889,
+    "lon": 38.7658858,
+    "address": ""
+  },
+  {
+    "id": "clinic_8627834217",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0346284,
+    "lon": 38.7534589,
+    "address": ""
+  },
+  {
+    "id": "police_8631008417",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 8.9958613,
+    "lon": 38.8280353,
+    "address": ""
+  },
+  {
+    "id": "hospital_8641930117",
+    "type": "hospital",
+    "name": "Fifake",
+    "lat": 8.9897654,
+    "lon": 38.7557521,
+    "address": ""
+  },
+  {
+    "id": "clinic_8646561618",
+    "type": "clinic",
+    "name": "አሜን ክሊኒክ",
+    "lat": 11.5840585,
+    "lon": 37.3676098,
+    "address": ""
+  },
+  {
+    "id": "police_8651300418",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 8.9138508,
+    "lon": 38.7640477,
+    "address": ""
+  },
+  {
+    "id": "police_8654479017",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.0468524,
+    "lon": 38.88079,
+    "address": ""
+  },
+  {
+    "id": "hospital_8661357217",
+    "type": "hospital",
+    "name": "ፈለገ ህይወት ሪፈራል ሆስፒታል",
+    "lat": 11.608003,
+    "lon": 37.3699025,
+    "address": ""
+  },
+  {
+    "id": "police_8672238620",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 8.981155,
+    "lon": 38.7552379,
+    "address": ""
+  },
+  {
+    "id": "police_8672243717",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 8.9456113,
+    "lon": 38.7416677,
+    "address": ""
+  },
+  {
+    "id": "clinic_8672244117",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.9940735,
+    "lon": 38.8930066,
+    "address": ""
+  },
+  {
+    "id": "hospital_8677500817",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 11.5804335,
+    "lon": 37.3781815,
+    "address": ""
+  },
+  {
+    "id": "clinic_8689487518",
+    "type": "clinic",
+    "name": "Corona Lab",
+    "lat": 8.9881182,
+    "lon": 38.7765199,
+    "address": "Rwanda Street"
+  },
+  {
+    "id": "hospital_8752467518",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 9.0416874,
+    "lon": 38.6983113,
+    "address": ""
+  },
+  {
+    "id": "hospital_8765527919",
+    "type": "hospital",
+    "name": "Harmukale Health Station",
+    "lat": 9.8169526,
+    "lon": 42.1400298,
+    "address": ""
+  },
+  {
+    "id": "police_8811659423",
+    "type": "police",
+    "name": "Guya Police Community",
+    "lat": 13.6196911,
+    "lon": 38.8167853,
+    "address": ""
+  },
+  {
+    "id": "hospital_8817899718",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 10.0178518,
+    "lon": 39.9116556,
+    "address": ""
+  },
+  {
+    "id": "hospital_8821369017",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 10.3177956,
+    "lon": 39.8762232,
+    "address": ""
+  },
+  {
+    "id": "hospital_8856063217",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 10.5563147,
+    "lon": 39.9302001,
+    "address": ""
+  },
+  {
+    "id": "hospital_8856063317",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 10.6528677,
+    "lon": 39.8650126,
+    "address": ""
+  },
+  {
+    "id": "hospital_8856063517",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 10.5933229,
+    "lon": 39.9217798,
+    "address": ""
+  },
+  {
+    "id": "hospital_8862981917",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 8.9983837,
+    "lon": 38.7673546,
+    "address": ""
+  },
+  {
+    "id": "hospital_8869450782",
+    "type": "hospital",
+    "name": "Wogeba Primary Hospital",
+    "lat": 12.7603698,
+    "lon": 37.6088199,
+    "address": ""
+  },
+  {
+    "id": "police_8874817618",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 11.5978421,
+    "lon": 41.4209384,
+    "address": ""
+  },
+  {
+    "id": "clinic_8883907317",
+    "type": "clinic",
+    "name": "Ayat zone 5 Tena tabia",
+    "lat": 9.0136947,
+    "lon": 38.882531,
+    "address": ""
+  },
+  {
+    "id": "police_8888300717",
+    "type": "police",
+    "name": "ደብረ ብርሃን ፖሊስ ጣቢያ",
+    "lat": 9.6872342,
+    "lon": 39.544819,
+    "address": ""
+  },
+  {
+    "id": "hospital_8912951117",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 9.0217256,
+    "lon": 38.8898766,
+    "address": ""
+  },
+  {
+    "id": "hospital_8919879217",
+    "type": "hospital",
+    "name": "Kadisco Tena tabia",
+    "lat": 8.9632349,
+    "lon": 38.7643518,
+    "address": ""
+  },
+  {
+    "id": "hospital_8932837317",
+    "type": "hospital",
+    "name": "በ የካ ክፍለ ከተማ ወረዳ 10ጤና ጣቢያ",
+    "lat": 9.0422135,
+    "lon": 38.8221534,
+    "address": "Kotebe"
+  },
+  {
+    "id": "police_8937372818",
+    "type": "police",
+    "name": "ቦሌ አካባቢ ፖሊስ ጣቢያ አንበሳ ጋራዥ ጀርባ",
+    "lat": 9.0059625,
+    "lon": 38.8059354,
+    "address": ""
+  },
+  {
+    "id": "hospital_8957794917",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 13.1963205,
+    "lon": 39.2080959,
+    "address": ""
+  },
+  {
+    "id": "clinic_8982362118",
+    "type": "clinic",
+    "name": "ማሬስቶፕስ ኢትዮጵያ",
+    "lat": 9.0187762,
+    "lon": 38.7958104,
+    "address": ""
+  },
+  {
+    "id": "clinic_8996829017",
+    "type": "clinic",
+    "name": "ቤቴል መካከለኛ ክሊኒክ",
+    "phone": "+251911662922",
+    "lat": 8.6894151,
+    "lon": 38.8931985,
+    "address": ""
+  },
+  {
+    "id": "hospital_9022925159",
+    "type": "hospital",
+    "name": "ጤና ጣቢያ",
+    "lat": 7.0475166,
+    "lon": 38.5113098,
+    "address": ""
+  },
+  {
+    "id": "police_9026185220",
+    "type": "police",
+    "name": "Federal Police Customs Checkpoint",
+    "lat": 9.2255762,
+    "lon": 42.4872685,
+    "address": ""
+  },
+  {
+    "id": "clinic_9073301317",
+    "type": "clinic",
+    "name": "ኮልፌ ቀራኒዮ ወረዳ 5 ጤና ጣቢያ",
+    "lat": 8.9936232,
+    "lon": 38.704837,
+    "address": ""
+  },
+  {
+    "id": "police_9242793314",
+    "type": "police",
+    "name": "police station",
+    "lat": 7.070306,
+    "lon": 37.706227,
+    "address": ""
+  },
+  {
+    "id": "police_9315105973",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 12.780681,
+    "lon": 39.5378034,
+    "address": ""
+  },
+  {
+    "id": "hospital_9316126117",
+    "type": "hospital",
+    "name": "Delt General Hospital",
+    "lat": 9.5995179,
+    "lon": 41.8403174,
+    "address": ""
+  },
+  {
+    "id": "hospital_9352714520",
+    "type": "hospital",
+    "name": "Shashemene",
+    "phone": "0940017261",
+    "lat": 7.2070497,
+    "lon": 38.6118909,
+    "address": "Shashamane/Robe Road"
+  },
+  {
+    "id": "clinic_9431054660",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.2295166,
+    "lon": 36.2564358,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431054661",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.2244043,
+    "lon": 36.2524688,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431091087",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.1468101,
+    "lon": 36.4093941,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431091091",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.1221925,
+    "lon": 36.416164,
+    "address": ""
+  },
+  {
+    "id": "hospital_9431091092",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 9.0644287,
+    "lon": 36.5051383,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431111283",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.2844238,
+    "lon": 36.3088904,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431111284",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.2898317,
+    "lon": 36.3152325,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431160573",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.172697,
+    "lon": 36.4804056,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431194972",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.2125908,
+    "lon": 36.4567472,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431194973",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.2011821,
+    "lon": 36.4172262,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431194995",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.3150253,
+    "lon": 36.3675624,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431234026",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.2226225,
+    "lon": 36.4810681,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431234083",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.17275,
+    "lon": 36.4671206,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431234086",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.1786945,
+    "lon": 36.4273649,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431468578",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.1681346,
+    "lon": 36.5203169,
+    "address": ""
+  },
+  {
+    "id": "clinic_9431468580",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.2627277,
+    "lon": 36.5178278,
+    "address": ""
+  },
+  {
+    "id": "hospital_9439100917",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 9.3058254,
+    "lon": 42.127229,
+    "address": ""
+  },
+  {
+    "id": "clinic_9462686117",
+    "type": "clinic",
+    "name": "Meshualekiya Tena Tabiya",
+    "lat": 9.0011713,
+    "lon": 38.7627581,
+    "address": ""
+  },
+  {
+    "id": "clinic_9576137138",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.7488097,
+    "lon": 38.9814599,
+    "address": ""
+  },
+  {
+    "id": "hospital_9609625079",
+    "type": "hospital",
+    "name": "Student's Clinic",
+    "lat": 9.0774575,
+    "lon": 36.5811105,
+    "address": ""
+  },
+  {
+    "id": "hospital_9644878952",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 7.0850645,
+    "lon": 38.6148964,
+    "address": ""
+  },
+  {
+    "id": "hospital_9644935021",
+    "type": "hospital",
+    "name": "Melka oda general hospital",
+    "lat": 7.2103126,
+    "lon": 38.6142548,
+    "address": ""
+  },
+  {
+    "id": "clinic_9702651156",
+    "type": "clinic",
+    "name": "Maya Medium Clinic",
+    "lat": 7.668136,
+    "lon": 36.8444288,
+    "address": ""
+  },
+  {
+    "id": "hospital_9707117583",
+    "type": "hospital",
+    "name": "Nekemte Hospital",
+    "lat": 9.0823957,
+    "lon": 36.5526113,
+    "address": ""
+  },
+  {
+    "id": "hospital_9707226723",
+    "type": "hospital",
+    "name": "Nekemte School of Nursing",
+    "lat": 9.0824245,
+    "lon": 36.5535234,
+    "address": "Nekemte School of Nursing"
+  },
+  {
+    "id": "clinic_9770669949",
+    "type": "clinic",
+    "name": "Jimma plant health clinic",
+    "lat": 7.6745415,
+    "lon": 36.850212,
+    "address": ""
+  },
+  {
+    "id": "hospital_9961317417",
+    "type": "hospital",
+    "name": "New leaf fertility cent",
+    "phone": "+251945784848",
+    "lat": 8.9948015,
+    "lon": 38.7300161,
+    "address": "South Africa Street"
+  },
+  {
+    "id": "clinic_9977879702",
+    "type": "clinic",
+    "name": "Lotus Gynecology and Obsetrics Special Clinic",
+    "lat": 8.9405057,
+    "lon": 38.7352958,
+    "address": ""
+  },
+  {
+    "id": "clinic_9985269908",
+    "type": "clinic",
+    "name": "Mechare Medium Clinic",
+    "lat": 9.0035476,
+    "lon": 38.8047839,
+    "address": ""
+  },
+  {
+    "id": "clinic_9985273019",
+    "type": "clinic",
+    "name": "Sholla Ber Medium Clinic",
+    "phone": "+251913234445",
+    "lat": 9.0220038,
+    "lon": 38.7938546,
+    "address": ""
+  },
+  {
+    "id": "police_10004999552",
+    "type": "police",
+    "name": "Oromiya Police Station",
+    "lat": 3.5420639,
+    "lon": 39.0496905,
+    "address": ""
+  },
+  {
+    "id": "hospital_10157435071",
+    "type": "hospital",
+    "name": "Erbti Woreda hospital",
+    "lat": 13.256593,
+    "lon": 40.0017739,
+    "address": ""
+  },
+  {
+    "id": "hospital_10196645826",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 11.5809048,
+    "lon": 37.3780472,
+    "address": ""
+  },
+  {
+    "id": "clinic_10197937717",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0424442,
+    "lon": 38.8218497,
+    "address": ""
+  },
+  {
+    "id": "police_10240043713",
+    "type": "police",
+    "name": "gerare police station",
+    "lat": 8.9278989,
+    "lon": 38.7350187,
+    "address": ""
+  },
+  {
+    "id": "police_10240048411",
+    "type": "police",
+    "name": "sefera police station gerare",
+    "lat": 8.919651,
+    "lon": 38.7325554,
+    "address": ""
+  },
+  {
+    "id": "hospital_10246206410",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 8.967599,
+    "lon": 38.7555261,
+    "address": ""
+  },
+  {
+    "id": "hospital_10272256309",
+    "type": "hospital",
+    "name": "ቡሌ ሆራ አጠቃላይ ሆስፒታል",
+    "lat": 5.6226754,
+    "lon": 38.2408496,
+    "address": ""
+  },
+  {
+    "id": "police_10313977109",
+    "type": "police",
+    "name": "ፖሊስ ሰራዊት",
+    "lat": 13.7857333,
+    "lon": 39.5929927,
+    "address": ""
+  },
+  {
+    "id": "hospital_10594497705",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 9.023389,
+    "lon": 38.8792375,
+    "address": ""
+  },
+  {
+    "id": "hospital_10606067505",
+    "type": "hospital",
+    "name": "Berhale Primery Hospital",
+    "lat": 13.8399122,
+    "lon": 40.0063061,
+    "address": ""
+  },
+  {
+    "id": "police_10657567386",
+    "type": "police",
+    "name": "ለሚ ኩራ ክፍለ ከተማ ፖሊስ መምሪያ/ Lemi Kura Sub-city Police Station",
+    "lat": 9.0271029,
+    "lon": 38.8781749,
+    "address": ""
+  },
+  {
+    "id": "clinic_10664995505",
+    "type": "clinic",
+    "name": "Yehuleshet Speciality Clinic",
+    "lat": 9.0129672,
+    "lon": 38.7387474,
+    "address": ""
+  },
+  {
+    "id": "clinic_10690260005",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 7.761296,
+    "lon": 46.5313225,
+    "address": ""
+  },
+  {
+    "id": "hospital_10695450731",
+    "type": "hospital",
+    "name": "Gobiso Health Center",
+    "lat": 4.4320002,
+    "lon": 37.9950834,
+    "address": ""
+  },
+  {
+    "id": "police_10699659705",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 7.0615427,
+    "lon": 38.488047,
+    "address": ""
+  },
+  {
+    "id": "police_10699659805",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 7.0286365,
+    "lon": 38.4723786,
+    "address": ""
+  },
+  {
+    "id": "clinic_10713045305",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.1858759,
+    "lon": 38.8896335,
+    "address": ""
+  },
+  {
+    "id": "hospital_10734999584",
+    "type": "hospital",
+    "name": "Jinka Jeneral Hospital",
+    "lat": 5.7817452,
+    "lon": 36.5633213,
+    "address": "Jinka"
+  },
+  {
+    "id": "clinic_10768953105",
+    "type": "clinic",
+    "name": "Clinic",
+    "lat": 8.884872,
+    "lon": 38.8113751,
+    "address": ""
+  },
+  {
+    "id": "clinic_10775089205",
+    "type": "clinic",
+    "name": "ውቕሮ መርሲ ስፐሻሊስት ክሊኒክ",
+    "lat": 13.7838794,
+    "lon": 39.5993165,
+    "address": ""
+  },
+  {
+    "id": "hospital_10790238605",
+    "type": "hospital",
+    "name": "Halaku Gulanta Boke Halth Center",
+    "lat": 7.8750291,
+    "lon": 38.640778,
+    "address": ""
+  },
+  {
+    "id": "hospital_10790387705",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 7.9911771,
+    "lon": 38.6593741,
+    "address": ""
+  },
+  {
+    "id": "hospital_10790389405",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 7.7193474,
+    "lon": 38.7758522,
+    "address": ""
+  },
+  {
+    "id": "hospital_10792254705",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 7.7164446,
+    "lon": 38.7578052,
+    "address": ""
+  },
+  {
+    "id": "clinic_10794780906",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.4657011,
+    "lon": 39.2284884,
+    "address": ""
+  },
+  {
+    "id": "clinic_10794916007",
+    "type": "clinic",
+    "name": "የእንስሳት ማወገጃ",
+    "lat": 7.2781771,
+    "lon": 38.0780639,
+    "address": ""
+  },
+  {
+    "id": "clinic_10794916108",
+    "type": "clinic",
+    "name": "የእንስሳት ማሶገጃ",
+    "lat": 7.2804953,
+    "lon": 38.0798078,
+    "address": ""
+  },
+  {
+    "id": "hospital_10820672414",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 4.0618739,
+    "lon": 38.3158744,
+    "address": ""
+  },
+  {
+    "id": "hospital_10855786606",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 8.9911998,
+    "lon": 38.7553088,
+    "address": ""
+  },
+  {
+    "id": "hospital_10881556328",
+    "type": "hospital",
+    "name": "Hospital",
+    "lat": 3.8935155,
+    "lon": 38.5665937,
+    "address": ""
+  },
+  {
+    "id": "police_10916237406",
+    "type": "police",
+    "name": "Unknown",
+    "lat": 9.1786484,
+    "lon": 38.7592466,
+    "address": ""
+  },
+  {
+    "id": "clinic_10943972505",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.3934401,
+    "lon": 39.9215128,
+    "address": ""
+  },
+  {
+    "id": "clinic_10948756505",
+    "type": "clinic",
+    "name": "Unknown",
+    "phone": "0912690995",
+    "lat": 9.3120261,
+    "lon": 42.1090434,
+    "address": "Shash Road"
+  },
+  {
+    "id": "hospital_10951554505",
+    "type": "hospital",
+    "name": "eyasu chemicals and pharmaceutical industry",
+    "lat": 9.0155692,
+    "lon": 38.7366391,
+    "address": ""
+  },
+  {
+    "id": "hospital_10994873907",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 4.1791088,
+    "lon": 42.0512053,
+    "address": ""
+  },
+  {
+    "id": "clinic_11209700838",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0153885,
+    "lon": 38.7565423,
+    "address": ""
+  },
+  {
+    "id": "clinic_11250763637",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 9.0436111,
+    "lon": 38.8493343,
+    "address": ""
+  },
+  {
+    "id": "hospital_11283493369",
+    "type": "hospital",
+    "name": "Kil lHP",
+    "lat": 13.1805481,
+    "lon": 38.2823702,
+    "address": ""
+  },
+  {
+    "id": "hospital_11283493469",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 13.0877114,
+    "lon": 38.1920476,
+    "address": ""
+  },
+  {
+    "id": "hospital_11283494069",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 13.0192745,
+    "lon": 38.1051249,
+    "address": ""
+  },
+  {
+    "id": "clinic_11283494070",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.5167671,
+    "lon": 38.5197843,
+    "address": ""
+  },
+  {
+    "id": "clinic_11283494269",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.4560043,
+    "lon": 38.3878688,
+    "address": ""
+  },
+  {
+    "id": "clinic_11283496069",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.3716488,
+    "lon": 38.848491,
+    "address": ""
+  },
+  {
+    "id": "clinic_11283496070",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4187956,
+    "lon": 38.7607704,
+    "address": ""
+  },
+  {
+    "id": "clinic_11283496071",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4351016,
+    "lon": 38.8061487,
+    "address": ""
+  },
+  {
+    "id": "clinic_11283496169",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4451227,
+    "lon": 38.8404138,
+    "address": ""
+  },
+  {
+    "id": "clinic_11307550770",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.286224,
+    "lon": 34.2520827,
+    "address": ""
+  },
+  {
+    "id": "clinic_11307550771",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.2923445,
+    "lon": 34.2635813,
+    "address": ""
+  },
+  {
+    "id": "clinic_11307550777",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.3030354,
+    "lon": 34.2391142,
+    "address": ""
+  },
+  {
+    "id": "clinic_11307550782",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.2948076,
+    "lon": 34.2556527,
+    "address": ""
+  },
+  {
+    "id": "clinic_11307550783",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.2964399,
+    "lon": 34.2537913,
+    "address": ""
+  },
+  {
+    "id": "clinic_11307550784",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 8.2989135,
+    "lon": 34.2546201,
+    "address": ""
+  },
+  {
+    "id": "clinic_11364070344",
+    "type": "clinic",
+    "name": "Health center",
+    "lat": 6.8292946,
+    "lon": 37.7506938,
+    "address": ""
+  },
+  {
+    "id": "clinic_11364180725",
+    "type": "clinic",
+    "name": "Stud",
+    "lat": 6.829226,
+    "lon": 37.7510726,
+    "address": ""
+  },
+  {
+    "id": "hospital_11385038770",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 13.4984152,
+    "lon": 39.4598584,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466069",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.3912477,
+    "lon": 38.5894561,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466169",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4099762,
+    "lon": 38.5529818,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466170",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.3600745,
+    "lon": 38.760598,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466171",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.359307,
+    "lon": 38.6351215,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466172",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4708695,
+    "lon": 38.8078326,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466173",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4233056,
+    "lon": 38.7126808,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466174",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.4516255,
+    "lon": 38.0597052,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466175",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.525952,
+    "lon": 38.4722354,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466176",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.7715736,
+    "lon": 38.4649873,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466178",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.9204502,
+    "lon": 38.4085576,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466269",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.3866351,
+    "lon": 38.8637094,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466270",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4807267,
+    "lon": 38.8367608,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466272",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.3410116,
+    "lon": 37.8812857,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466369",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.3692015,
+    "lon": 38.6661529,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466469",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.483647,
+    "lon": 38.9231164,
+    "address": ""
+  },
+  {
+    "id": "clinic_11428466470",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4545837,
+    "lon": 38.7465884,
+    "address": ""
+  },
+  {
+    "id": "clinic_11459231169",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.6287274,
+    "lon": 36.6096465,
+    "address": ""
+  },
+  {
+    "id": "clinic_11506302491",
+    "type": "clinic",
+    "name": "Sabanbon Clinic",
+    "lat": 9.0802587,
+    "lon": 41.6895937,
+    "address": ""
+  },
+  {
+    "id": "clinic_11549031869",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.1172232,
+    "lon": 38.0834848,
+    "address": ""
+  },
+  {
+    "id": "clinic_11549031870",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.7671505,
+    "lon": 38.8000285,
+    "address": ""
+  },
+  {
+    "id": "clinic_11549031871",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.6248458,
+    "lon": 38.7097751,
+    "address": ""
+  },
+  {
+    "id": "clinic_11549031872",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.9283552,
+    "lon": 38.9409586,
+    "address": ""
+  },
+  {
+    "id": "clinic_11549031969",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.2634779,
+    "lon": 38.1577939,
+    "address": ""
+  },
+  {
+    "id": "clinic_11549031970",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.1914003,
+    "lon": 38.0834264,
+    "address": ""
+  },
+  {
+    "id": "clinic_11549032069",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.0674847,
+    "lon": 38.0562481,
+    "address": ""
+  },
+  {
+    "id": "clinic_11549032070",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.78329,
+    "lon": 38.7941532,
+    "address": ""
+  },
+  {
+    "id": "clinic_11549032071",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4676933,
+    "lon": 39.0724235,
+    "address": ""
+  },
+  {
+    "id": "clinic_11549032072",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4038623,
+    "lon": 38.9718771,
+    "address": ""
+  },
+  {
+    "id": "hospital_11575064675",
+    "type": "hospital",
+    "name": "Kercheche Health Center",
+    "lat": 6.953294,
+    "lon": 37.9894932,
+    "address": "Kercheche"
+  },
+  {
+    "id": "clinic_11683863969",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4086742,
+    "lon": 37.6832243,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864069",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4460423,
+    "lon": 37.7292023,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864070",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.297987,
+    "lon": 37.8903303,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864071",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.3910733,
+    "lon": 37.9336654,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864072",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.566373,
+    "lon": 38.2818748,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864073",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4118963,
+    "lon": 39.0143766,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864074",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.7701596,
+    "lon": 38.4685632,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864075",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.7728925,
+    "lon": 38.4614299,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864076",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.0878524,
+    "lon": 38.1921026,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864077",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.1186667,
+    "lon": 38.2013882,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864078",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.0516732,
+    "lon": 38.1721575,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864079",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.0599163,
+    "lon": 38.1391549,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864082",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.1202718,
+    "lon": 38.4369739,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864084",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.2459663,
+    "lon": 38.2682154,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864085",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.0985096,
+    "lon": 38.141792,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864086",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.7334311,
+    "lon": 38.3067826,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864169",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4431919,
+    "lon": 37.7780775,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864270",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4464858,
+    "lon": 37.8625604,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864271",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4636633,
+    "lon": 37.8613328,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864272",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.360954,
+    "lon": 38.0596409,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864273",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.3480722,
+    "lon": 38.0050462,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864369",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.3409592,
+    "lon": 37.8806195,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864370",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4015149,
+    "lon": 38.0718903,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864371",
+    "type": "clinic",
+    "name": "Hamusit HC",
+    "lat": 12.5286566,
+    "lon": 38.1741406,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864372",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.5452604,
+    "lon": 38.2285766,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864373",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.5941328,
+    "lon": 38.3354527,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864375",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.8946692,
+    "lon": 38.1545464,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864376",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.6691925,
+    "lon": 38.2780631,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864469",
+    "type": "clinic",
+    "name": "Shamishe HP",
+    "lat": 12.5107991,
+    "lon": 38.1343819,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864470",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.6932481,
+    "lon": 38.3407894,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864474",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.8033118,
+    "lon": 38.297452,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683864569",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.2440615,
+    "lon": 38.2672015,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683888673",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.8842101,
+    "lon": 38.3843157,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683888674",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.926006,
+    "lon": 38.5194833,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683888675",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.7029915,
+    "lon": 38.3514573,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683888676",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.677604,
+    "lon": 38.4930493,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683888677",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.749319,
+    "lon": 38.4162333,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683888870",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.6615485,
+    "lon": 38.338308,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683888871",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.7428397,
+    "lon": 38.2875337,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683888872",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.7132572,
+    "lon": 38.4560491,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683888873",
+    "type": "clinic",
+    "name": "Nefas Mewucha HC",
+    "lat": 11.7356287,
+    "lon": 38.4663315,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683888874",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.754491,
+    "lon": 38.4783027,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683888875",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.9209878,
+    "lon": 38.5072738,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683895569",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.7848282,
+    "lon": 38.2798954,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683895669",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.8977064,
+    "lon": 38.3987537,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683895670",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.7614971,
+    "lon": 38.4170027,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683895671",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.016968,
+    "lon": 38.5252574,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683895769",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.6513117,
+    "lon": 38.272643,
+    "address": ""
+  },
+  {
+    "id": "clinic_11683895869",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.6350233,
+    "lon": 38.2578079,
+    "address": ""
+  },
+  {
+    "id": "clinic_11693418670",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.0393907,
+    "lon": 38.2384509,
+    "address": ""
+  },
+  {
+    "id": "clinic_11693422669",
+    "type": "clinic",
+    "name": "Gasha Jagerie HP",
+    "lat": 13.0243873,
+    "lon": 38.1675311,
+    "address": ""
+  },
+  {
+    "id": "clinic_11693422769",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 13.0635064,
+    "lon": 38.2271155,
+    "address": ""
+  },
+  {
+    "id": "hospital_11702084969",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 7.9939811,
+    "lon": 38.6551074,
+    "address": ""
+  },
+  {
+    "id": "clinic_11728128787",
+    "type": "clinic",
+    "name": "Gura Megenasse Saint Francis Catholic Health Center",
+    "lat": 8.1337966,
+    "lon": 37.8701265,
+    "address": ""
+  },
+  {
+    "id": "clinic_11777754171",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4028935,
+    "lon": 37.9789151,
+    "address": ""
+  },
+  {
+    "id": "clinic_11777754172",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4634641,
+    "lon": 38.0063964,
+    "address": ""
+  },
+  {
+    "id": "clinic_11777754173",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4545479,
+    "lon": 38.0986598,
+    "address": ""
+  },
+  {
+    "id": "clinic_11777754269",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.5295524,
+    "lon": 38.1673644,
+    "address": ""
+  },
+  {
+    "id": "clinic_11777754369",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.3942541,
+    "lon": 38.027275,
+    "address": ""
+  },
+  {
+    "id": "clinic_11777754370",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4721278,
+    "lon": 37.7763233,
+    "address": ""
+  },
+  {
+    "id": "clinic_11777754469",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.4821111,
+    "lon": 37.8928206,
+    "address": ""
+  },
+  {
+    "id": "clinic_11782226770",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.7375604,
+    "lon": 37.9051857,
+    "address": ""
+  },
+  {
+    "id": "clinic_11782234769",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 12.7440591,
+    "lon": 37.9889686,
+    "address": ""
+  },
+  {
+    "id": "hospital_11804795480",
+    "type": "hospital",
+    "name": "Wolkite University Specialized Hospital",
+    "lat": 8.2134981,
+    "lon": 37.7944519,
+    "address": "Gubre Town"
+  },
+  {
+    "id": "hospital_11808853072",
+    "type": "hospital",
+    "name": "ራስ ደስታ ሆስፒታል",
+    "lat": 9.0451307,
+    "lon": 38.7444606,
+    "address": ""
+  },
+  {
+    "id": "clinic_11836618169",
+    "type": "clinic",
+    "name": "Unknown",
+    "lat": 11.7890008,
+    "lon": 38.5356389,
+    "address": ""
+  },
+  {
+    "id": "hospital_11883825474",
+    "type": "hospital",
+    "name": "General Jagama Kello Memorial Health Station",
+    "lat": 8.9881832,
+    "lon": 38.7231956,
+    "address": ""
+  },
+  {
+    "id": "hospital_11954649037",
+    "type": "hospital",
+    "name": "Firomsis General Hospital",
+    "lat": 7.6662796,
+    "lon": 36.8398477,
+    "address": "Jimma, Bacho Bore"
+  },
+  {
+    "id": "clinic_12144244825",
+    "type": "clinic",
+    "name": "Aleltu Medical Center",
+    "lat": 9.5572766,
+    "lon": 35.2610158,
+    "address": ""
+  },
+  {
+    "id": "clinic_12144244826",
+    "type": "clinic",
+    "name": "Ago Haro Medical Center",
+    "lat": 9.5265539,
+    "lon": 35.2506532,
+    "address": ""
+  },
+  {
+    "id": "clinic_12144244827",
+    "type": "clinic",
+    "name": "Igu Gute Medical Center",
+    "lat": 9.5551063,
+    "lon": 35.177315,
+    "address": ""
+  },
+  {
+    "id": "clinic_12144244828",
+    "type": "clinic",
+    "name": "Haro Mariam Medical Center",
+    "lat": 9.5448994,
+    "lon": 35.2287299,
+    "address": ""
+  },
+  {
+    "id": "clinic_12154118502",
+    "type": "clinic",
+    "name": "Lancet",
+    "lat": 9.0166378,
+    "lon": 38.8015518,
+    "address": ""
+  },
+  {
+    "id": "clinic_12531583502",
+    "type": "clinic",
+    "name": "Unknown",
+    "phone": "+251915437346",
+    "lat": 9.3580296,
+    "lon": 42.7962551,
+    "address": "Qomada Street"
+  },
+  {
+    "id": "police_12701892540",
+    "type": "police",
+    "name": "Police station",
+    "lat": 8.8493636,
+    "lon": 35.650989,
+    "address": ""
+  },
+  {
+    "id": "clinic_12704084873",
+    "type": "clinic",
+    "name": "Dabaso EECMY PolyClinic",
+    "lat": 8.8490389,
+    "lon": 35.6458074,
+    "address": ""
+  },
+  {
+    "id": "clinic_12704086054",
+    "type": "clinic",
+    "name": "Mitiku Hirpha Memorial Clinic",
+    "lat": 8.8467809,
+    "lon": 35.6512205,
+    "address": ""
+  },
+  {
+    "id": "hospital_12782421909",
+    "type": "hospital",
+    "name": "Danbal Health Center",
+    "lat": 9.8187091,
+    "lon": 42.6034689,
+    "address": ""
+  },
+  {
+    "id": "police_12782421954",
+    "type": "police",
+    "name": "Danbal Police Camp and Office",
+    "lat": 9.8053937,
+    "lon": 42.6045435,
+    "address": "Danbal"
+  },
+  {
+    "id": "hospital_12886353501",
+    "type": "hospital",
+    "name": "OLANA  HOSPITAL",
+    "phone": "0917777778",
+    "lat": 6.973351,
+    "lon": 39.1818426,
+    "address": "Bale Trekking Road"
+  },
+  {
+    "id": "clinic_13030953095",
+    "type": "clinic",
+    "name": "Galye Rogda clinic",
+    "lat": 8.3785807,
+    "lon": 37.7211546,
+    "address": ""
+  },
+  {
+    "id": "hospital_13146838802",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 3.5978106,
+    "lon": 39.1227399,
+    "address": ""
+  },
+  {
+    "id": "hospital_13279097104",
+    "type": "hospital",
+    "name": "Yanet Hospital",
+    "lat": 9.0208943,
+    "lon": 38.874592,
+    "address": ""
+  },
+  {
+    "id": "hospital_13408749792",
+    "type": "hospital",
+    "name": "Unknown",
+    "lat": 7.2052136,
+    "lon": 38.6102293,
+    "address": ""
+  }
+]

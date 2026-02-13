@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User, AlertTriangle, Loader2, Camera, Mic, MicOff, Image, Globe, Phone } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, AlertTriangle, Loader2, Camera, Mic, MicOff, Image, Globe, Phone, Volume2, History, Trash2, Zap, VolumeX } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { motion, AnimatePresence } from 'framer-motion';
 import AmharicVoiceInput from './AmharicVoiceInput';
+import emergencyFacilities from '@/data/ethiopia_emergency.json';
 
 interface Message {
   id: string;
@@ -20,7 +24,7 @@ interface Message {
   stationName?: string;
   stationPhone?: string;
   stationDistanceKm?: number;
-  stationType?: 'hospital' | 'police' | 'fire' | 'ambulance';
+  stationType?: 'hospital' | 'police' | 'fire' | 'ambulance' | 'clinic' | 'other';
 }
 
 interface FirstAidChatbotProps {
@@ -40,154 +44,32 @@ async function getUserLocation() {
   });
 }
 
-// Helper: Query OpenRouter API for specialized first-aid advice using DeepSeek R1 via OpenRouter
+// Helper: Query OpenAI API for specialized first-aid advice
+import { askFirstAid } from '@/services/firstAidService';
+
 async function getAIAdvice(query: string, lang: string, imageUrl?: string) {
-  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-  if (!apiKey) {
-    console.warn("OpenRouter API key (VITE_OPENROUTER_API_KEY) is missing. Falling back to local knowledge.");
-    return null;
+  // Determine the text content for the query
+  const userText = query || "What should I do for this injury?";
+
+  // Note: The current simple `askFirstAid` implementation in `firstAidService.ts`
+  // only accepts a string string. If we want to support images with OpenAI,
+  // we would need to update `askFirstAid` to accept image URLs or base64 data.
+  // For this MVP step, we will primarily send text. 
+  // If an image is present, we might want to append a note about it, 
+  // or just rely on the user's text description if the simple service structure is strictly text-only.
+  // 
+  // However, the user request specifically asked to: "Call askFirstAid(userText)".
+  // So we will stick to that contract for now.
+
+  const response = await askFirstAid(userText);
+
+  if (response) {
+    const disclaimer = lang === 'am'
+      ? '\n\n⚠️ ማስታወሻ: ይህ AI የመነጨ መረጃ ነው አጠቃላይ መመሪያ ብቻ ነው፣ ለከባድ አደጋ 991 ይደውሉ።'
+      : '\n\n⚠️ Disclaimer: This is AI-generated guidance only; for serious emergencies call 991 immediately.';
+    return response + disclaimer;
   }
-
-  const knowledgeBase = `
-  OFFICIAL FIRST AID RESOURCES & EMERGENCY DATA:
-  
-  1. ETHIO FIRST AID (ethiofirstaid.com):
-  - Provides video/audio training, blogs, and first-aid kits.
-  - Key focus: CPR, choking, bleeding, and fracture management.
-  - Contact: +251 911 123 456 (Mock)
-  
-  2. FIRE STATIONS IN ADDIS ABABA (map.et):
-  - Arada Fire Station
-  - Addis Ketema Sub City Fire Station (Mesalemia)
-  - Akaki Kaliti Fire Station
-  - Nefas Silk Lafto Fire Station
-  - Kirkos Sub City Fire Station (Kera)
-  - Bethel Fire Station
-  - HQ: Addis Ababa Fire and Emergency Management Authority
-  
-  3. GENERAL EMERGENCY NUMBERS (Ethiopia):
-  - Police: 991
-  - Traffic Police: 945
-  - Ambulance/Red Cross: 907
-  - Fire: 939
-  
-  USE THIS DATA TO ANSWER LOCATION-SPECIFIC OR RESOURCE QUESTIONS.
-  `;
-
-  const systemPrompt = "You are a professional emergency first-aid assistant for the Mella app in Ethiopia. \n" +
-    "You have access to the following LOCAL KNOWLEDGE BASE:\n" + knowledgeBase + "\n\n" +
-    "You can analyze both text and images of injuries.\n" +
-    "Provide clear, step-by-step instructions in ${lang === 'am' ? 'Amharic (with English translation below)' : 'English'}. \n" +
-    "ALWAYS prioritize safety. If the condition sounds/looks life-threatening (e.g., heavy bleeding, deep wounds, potential fractures, signs of stroke or heart attack), \n" +
-    "your FIRST sentence must be to tell the user to CALL 991 IMMEDIATELY.\n" +
-    "If an image is provided, describe what you see (e.g., \"I see a deep cut on the palm\") and provide specific first-aid steps.\n" +
-    "Give concise, actionable steps using bullet points. Do not provide risky or unverified medical advice.\n" +
-    "Always include a short Amharic summary if the output is in English.";
-
-  try {
-    const contentPayload: any[] = [{ type: "text", text: query || "What should I do for this injury?" }];
-
-    if (imageUrl) {
-      contentPayload.push({
-        type: "image_url",
-        image_url: {
-          url: imageUrl // imageUrl is already base64 from FileReader
-        }
-      });
-    }
-
-    console.log("Calling OpenRouter with model: google/gemini-2.0-flash-exp:free");
-
-    // Prepare content: use simple string for text-only, or array for multimodal
-    const payloadContent = imageUrl
-      ? contentPayload
-      : (query || "What should I do for this injury?");
-
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": "http://localhost:8080",
-        "X-Title": "Mella First Aid Assistant",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        "model": "google/gemini-2.0-flash-exp:free",
-        "messages": [
-          { "role": "system", "content": systemPrompt },
-          {
-            "role": "user",
-            "content": payloadContent
-          }
-        ],
-        "temperature": 0.3,
-        "max_tokens": 1500
-      })
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      console.error("OpenRouter API Error:", response.status, JSON.stringify(errData, null, 2));
-
-      // If error, try a stable fallback like Gemini Flash 1.5
-      console.warn("Retrying with fallback model: meta-llama/llama-3-8b-instruct:free");
-      const fallbackResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "HTTP-Referer": "http://localhost:8080",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          "model": "meta-llama/llama-3-8b-instruct:free",
-          "messages": [
-            { "role": "system", "content": systemPrompt },
-            { "role": "user", "content": payloadContent }
-          ]
-        })
-      });
-
-      if (fallbackResponse.ok) {
-        const fallbackData = await fallbackResponse.json();
-        return (fallbackData.choices?.[0]?.message?.content || null);
-      }
-      return null;
-    }
-
-    const data = await response.json();
-    let content = data.choices?.[0]?.message?.content;
-
-    if (content) {
-      // Remove any <think> tags if present in the response
-      content = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-
-      const disclaimer = lang === 'am'
-        ? '\n\n⚠️ ማስታወሻ: ይህ AI የመነጨ መረጃ ነው አጠቃላይ መመሪያ ብቻ ነው፣ ለከባድ አደጋ 991 ይደውሉ።'
-        : '\n\n⚠️ Disclaimer: This is AI-generated guidance only; for serious emergencies call 991 immediately.';
-      return content + disclaimer;
-    }
-    return null;
-  } catch (error) {
-    console.error("Fetch error calling OpenRouter:", error);
-    return null;
-  }
-}
-
-// Helper: Find closest emergency station using OpenStreetMap Nominatim API
-async function getClosestEmergencyStation(lat: number, lng: number, lang: string) {
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=emergency%20hospital%20near%20${lat},${lng}&accept-language=${lang}`
-    );
-    const data = await response.json();
-    if (data && data.length > 0) {
-      const station = data[0];
-      return `Closest emergency station: ${station.display_name}`;
-    }
-    return null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 // Helper: Haversine distance in km
@@ -202,62 +84,40 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * c;
 }
 
-// Helper: Use the same mock stations as Emergency page and pick nearest
-function findNearestMockStation(userLat: number, userLng: number, lang: string) {
-  const stations = [
-    {
-      id: '1',
-      name: lang === 'am' ? 'ጠቅላላ ሆስፒታል' : 'General Hospital',
-      type: 'hospital' as const,
-      location: { lat: userLat + 0.02, lng: userLng + 0.01 },
-      phone: '+251-11-123-4567',
-    },
-    {
-      id: '2',
-      name: lang === 'am' ? 'ማዕከላዊ ፖሊስ ጣቢያ' : 'Central Police Station',
-      type: 'police' as const,
-      location: { lat: userLat - 0.015, lng: userLng + 0.025 },
-      phone: '+251-11-765-4321',
-    },
-    {
-      id: '3',
-      name: lang === 'am' ? 'የእሳት አደጋ መከላከያ ጣቢያ' : 'Fire Department Station',
-      type: 'fire' as const,
-      location: { lat: userLat + 0.01, lng: userLng - 0.02 },
-      phone: '+251-11-987-6543',
-    },
-    {
-      id: '4',
-      name: lang === 'am' ? 'የአደጋ ጊዜ ህክምና ማዕከል' : 'Emergency Medical Center',
-      type: 'ambulance' as const,
-      location: { lat: userLat - 0.008, lng: userLng - 0.015 },
-      phone: '+251-11-456-7890',
-    },
-    {
-      id: '5',
-      name: lang === 'am' ? 'የልብ ህክምና ሆስፒታል' : 'Cardiac Emergency Hospital',
-      type: 'hospital' as const,
-      location: { lat: userLat + 0.025, lng: userLng - 0.008 },
-      phone: '+251-11-234-5678',
-    },
-  ];
-
+// Helper: Find closest emergency station using local JSON data
+function getClosestEmergencyStation(userLat: number, userLng: number) {
   let best = null as null | {
     name: string;
-    type: 'hospital' | 'police' | 'fire' | 'ambulance';
-    phone: string;
+    type: string;
+    phone?: string;
     distanceKm: number;
   };
-  for (const s of stations) {
-    const d = haversineKm(userLat, userLng, s.location.lat, s.location.lng);
+
+  for (const s of emergencyFacilities) {
+    const d = haversineKm(userLat, userLng, s.lat, s.lon);
     if (!best || d < best.distanceKm) {
-      best = { name: s.name, type: s.type, phone: s.phone, distanceKm: d };
+      // Map facility type to expected type or keep as string
+      best = {
+        name: s.name,
+        type: s.type,
+        phone: s.phone,
+        distanceKm: d
+      };
     }
   }
   return best;
 }
 
 const EMERGENCY_KEYWORDS = ['emergency', 'hospital', 'ambulance', 'bleeding', 'unconscious', 'not breathing', 'heart attack', 'stroke', 'overdose', 'poisoning', 'severe pain'];
+
+const QUICK_ACTIONS = [
+  { id: 'cut', en: '🩸 Cut', am: '🩸 መቁረጫ' },
+  { id: 'burn', en: '🔥 Burn', am: '🔥 ቃጠሎ' },
+  { id: 'choking', en: '🫁 Choking', am: '🫁 መታፈን' },
+  { id: 'bleeding', en: '🩸 Bleeding', am: '🩸 ደም መፍሰስ' },
+  { id: 'sprain', en: '🦵 Sprain', am: '🦵 መወዘዝ' },
+  { id: 'fever', en: '🌡️ Fever', am: '🌡️ ትኩሳት' },
+];
 
 // Helper: detect if a response string is the fallback guidance
 function isFallbackResponseText(response: string, lang: string) {
@@ -268,30 +128,99 @@ function isFallbackResponseText(response: string, lang: string) {
   return response.includes('ጥያቄዎን በትክክል ማስማት አልቻልኩም');
 }
 
+const STORAGE_KEY = 'mella_first_aid_messages';
+
 export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClose }) => {
   const { t, language, setLanguage } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize welcome message based on language
+  // Load messages from localStorage on mount
   useEffect(() => {
-    const welcomeMessage = language === 'en'
-      ? `🚨 IMPORTANT DISCLAIMER: ${t('disclaimer')} In case of serious emergencies, please call 991 or your local emergency services IMMEDIATELY.\n\nFor minor issues, I can offer general first aid tips. ${t('howCanIHelp')}`
-      : `🚨 አስፈላጊ ማስታወሻ: ${t('disclaimer')} በከባድ የአደጋ ጊዜ፣ እባክዎ 991 ወይም የአካባቢዎን የአደጋ ጊዜ አገልግሎቶችን ወዲያውኑ ይደውሉ።\n\nለአነስተኛ ችግሮች፣ መሠረታዊ የመጀመሪያ እርዳታ ምክሮች ሰጥት ይችላል። ${t('howCanIHelp')}`;
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Convert string timestamps back to Date objects
+        const hydrated = parsed.map((m: any) => ({
+          ...m,
+          timestamp: new Date(m.timestamp)
+        }));
+        setMessages(hydrated);
+      } catch (e) {
+        console.error('Failed to load history', e);
+      }
+    }
+  }, []);
 
-    setMessages([{
-      id: '1',
-      text: welcomeMessage,
-      sender: 'bot',
-      timestamp: new Date(),
-      type: 'text'
-    }]);
-  }, [language, t]);
+  // Save messages to localStorage when they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  const clearHistory = () => {
+    if (confirm(language === 'en' ? 'Clear chat history?' : 'የውይይት ታሪክ ይጥፋ?')) {
+      const welcomeMessage = language === 'en'
+        ? `🚨 IMPORTANT DISCLAIMER: ${t('disclaimer')} In case of serious emergencies, please call 991 or your local emergency services IMMEDIATELY.\n\nFor minor issues, I can offer general first aid tips. ${t('howCanIHelp')}`
+        : `🚨 አስፈላጊ ማስታወሻ: ${t('disclaimer')} በከባድ የአደጋ ጊዜ፣ እባክዎ 991 ወይም የአካባቢዎን የአደጋ ጊዜ አገልግሎቶችን ወዲያውኑ ይደውሉ።\n\nለአነስተኛ ችግሮች፣ መሠረታዊ የመጀመሪያ እርዳታ ምክሮች ሰጥት ይችላል። ${t('howCanIHelp')}`;
+
+      const initial = [{
+        id: '1',
+        text: welcomeMessage,
+        sender: 'bot',
+        timestamp: new Date(),
+        type: 'text'
+      }];
+      setMessages(initial as Message[]);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  };
+
+  const speak = (text: string) => {
+    if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = language === 'en' ? 'en-US' : 'am-ET';
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const stopSpeaking = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  };
+
+  // Initialize welcome message if empty
+  useEffect(() => {
+    if (messages.length === 0) {
+      const welcomeMessage = language === 'en'
+        ? `🚨 IMPORTANT DISCLAIMER: ${t('disclaimer')} In case of serious emergencies, please call 991 or your local emergency services IMMEDIATELY.\n\nFor minor issues, I can offer general first aid tips. ${t('howCanIHelp')}`
+        : `🚨 አስፈላጊ ማስታወሻ: ${t('disclaimer')} በከባድ የአደጋ ጊዜ፣ እባክዎ 991 ወይም የአካባቢዎን የአደጋ ጊዜ አገልግሎቶችን ወዲያውኑ ይደውሉ።\n\nለአነስተኛ ችግሮች፣ መሠረታዊ የመጀመሪያ እርዳታ ምክሮች ሰጥት ይችላል። ${t('howCanIHelp')}`;
+
+      setMessages([{
+        id: '1',
+        text: welcomeMessage,
+        sender: 'bot',
+        timestamp: new Date(),
+        type: 'text' as const
+      }]);
+    }
+  }, [language, t, messages.length]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -393,13 +322,32 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
 
     if (isEmergency) {
       const loc = await getUserLocation();
-      if (loc) {
-        const stationInfo = await getClosestEmergencyStation(loc.lat, loc.lng, language);
-        if (stationInfo) emergencyInfo = `\n\n📍 ${stationInfo}`;
-      } else {
-        emergencyInfo = language === 'en'
-          ? '\n\n(Location not available. Please enable location for local emergency info.)'
-          : '\n\n(አካባቢ መረጃ አልተገኘም። ለአካባቢያዊ የአደጋ መረጃ እባክዎ አካባቢ ፍቃድ ይስጡ።)';
+      const fallbackLoc = { lat: 9.0320, lng: 38.7469 };
+      const coords = loc ?? fallbackLoc;
+      const stationInfo = getClosestEmergencyStation(coords.lat, coords.lng);
+
+      if (stationInfo) {
+        const emergencyPrefix = language === 'en'
+          ? `⚠️ ACTION RECOMMENDED: Contact ${stationInfo.name} immediately (${stationInfo.distanceKm.toFixed(1)} km away).\n\n`
+          : `⚠️ ፈጣን እርምጃ: ወዲያውኑ ወደ ${stationInfo.name} ይደውሉ (~${stationInfo.distanceKm.toFixed(1)} ኪሜ ርቀት)።\n\n`;
+
+        if (finalAdvice) {
+          finalAdvice = emergencyPrefix + finalAdvice;
+        } else {
+          // If AI fails and we have an emergency, try local KB
+          finalAdvice = getFirstAidResponse(userMessage);
+          if (finalAdvice) {
+            finalAdvice = emergencyPrefix + finalAdvice;
+          } else {
+            finalAdvice = emergencyPrefix + (language === 'en'
+              ? "I am identifying this as an emergency. Please see the contact details for the nearest responder below."
+              : "ይህን እንደ አስቸኳይ ሁኔታ ለይቼዋለሁ። እባክዎን በቅርብ የሚገኘውን ምላሽ ሰጪ አድራሻ ከታች ይመልከቱ።");
+          }
+        }
+        emergencyInfo = `\n\n📍 Closest emergency station: ${stationInfo.name} (~${stationInfo.distanceKm.toFixed(1)} km)`;
+      } else if (!finalAdvice) {
+        // No station found and no AI advice
+        finalAdvice = getFirstAidResponse(userMessage);
       }
     }
 
@@ -517,24 +465,24 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = async (overrideMessage?: string) => {
+    const textToSend = overrideMessage || inputMessage;
+    if (!textToSend.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputMessage,
+      text: textToSend,
       sender: 'user',
       timestamp: new Date(),
       type: 'text'
     };
 
     setMessages(prev => [...prev, userMessage]);
-    const currentInput = inputMessage;
-    setInputMessage('');
+    if (!overrideMessage) setInputMessage('');
     setIsLoading(true);
 
     try {
-      const botResponse = await generateResponse(currentInput);
+      const botResponse = await generateResponse(textToSend);
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -552,7 +500,7 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
         const loc = await getUserLocation();
         const fallbackLoc = { lat: 9.0320, lng: 38.7469 };
         const coords = loc ?? fallbackLoc;
-        const nearest = findNearestMockStation(coords.lat, coords.lng, language);
+        const nearest = getClosestEmergencyStation(coords.lat, coords.lng);
         if (nearest) {
           const stationMessage: Message = {
             id: (Date.now() + 2).toString(),
@@ -565,7 +513,7 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
             stationName: nearest.name,
             stationPhone: nearest.phone,
             stationDistanceKm: nearest.distanceKm,
-            stationType: nearest.type,
+            stationType: nearest.type as any,
           };
           setMessages(prev => [...prev, stationMessage]);
         }
@@ -621,19 +569,39 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
               <Bot className="h-5 w-5" />
               🚨 {t('firstAidTitle')}
             </CardTitle>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
+                className="text-red-600 hover:text-red-800 h-8 w-8 p-0"
+                title={language === 'en' ? 'Switch to Amharic' : 'Switch to English'}
+              >
+                <Globe className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearHistory}
+                className="text-red-600 hover:text-red-800 h-8 w-8 p-0"
+                title={language === 'en' ? 'Clear History' : 'ታሪክ አጽዳ'}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
-              className="text-red-600 hover:text-red-800"
-              title={language === 'en' ? 'Switch to Amharic' : 'Switch to English'}
+              className="bg-red-600 hover:bg-red-700 text-white h-8 px-3 text-xs font-bold animate-pulse"
+              onClick={() => window.open('tel:991')}
             >
-              <Globe className="h-4 w-4" />
+              <Phone className="h-3 w-3 mr-1" />
+              991
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onClose} className="text-red-600 hover:text-red-800 h-8 w-8 p-0">
+              <X className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-red-600 hover:text-red-800">
-            <X className="h-4 w-4" />
-          </Button>
         </CardHeader>
 
         <Alert className="m-4 mb-2 border-red-200 bg-red-50">
@@ -649,110 +617,142 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
         <CardContent className="flex-1 p-0 flex flex-col min-h-0">
           <ScrollArea className="flex-1 p-4 min-h-0 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
             <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'
-                    }`}
-                >
-                  {message.sender === 'bot' && (
-                    <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                      <Bot className="h-4 w-4 text-red-600" />
-                    </div>
-                  )}
-                  <div
-                    className={`max-w-[85%] rounded-lg p-3 text-sm ${message.sender === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-900 border border-gray-200'
+              <AnimatePresence initial={false}>
+                {messages.map((message) => (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'
                       }`}
                   >
-                    {message.type === 'image' && message.imageUrl && (
-                      <div className="mb-2">
-                        <img
-                          src={message.imageUrl}
-                          alt="Uploaded"
-                          className="max-w-full h-32 object-cover rounded border"
-                        />
+                    {message.sender === 'bot' && (
+                      <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <Bot className="h-4 w-4 text-red-600" />
                       </div>
-                    )}
-                    {message.type === 'audio' && message.audioUrl && (
-                      <div className="mb-2">
-                        <audio controls className="w-full max-w-48">
-                          <source src={message.audioUrl} type="audio/webm" />
-                        </audio>
-                      </div>
-                    )}
-                    {/* Station card rendering */}
-                    {message.type === 'station' ? (
-                      <div>
-                        <div className="font-medium mb-1">
-                          {language === 'en' ? 'Nearest emergency service' : 'በቅርብ የሚገኝ የአደጋ አገልግሎት'}
-                        </div>
-                        <div className="text-sm mb-2">
-                          {message.stationName} {message.stationDistanceKm !== undefined && (
-                            <span className="text-gray-600">(~{message.stationDistanceKm.toFixed(1)} km)</span>
-                          )}
-                        </div>
-                        {message.stationPhone && (
-                          <div className="flex items-center gap-2">
-                            <a
-                              href={`tel:${message.stationPhone}`}
-                              className="text-blue-600 underline"
-                            >
-                              {message.stationPhone}
-                            </a>
-                            <Button
-                              size="sm"
-                              className="bg-red-600 hover:bg-red-700 text-white h-7 px-2"
-                              onClick={() => window.open(`tel:${message.stationPhone}`)}
-                            >
-                              <Phone className="h-3 w-3 mr-1" />
-                              {language === 'en' ? 'Call' : 'ይደውሉ'}
-                            </Button>
-                          </div>
-                        )}
-                        <div className="text-xs text-gray-600 mt-2">
-                          {language === 'en'
-                            ? 'This is a simulated station from the Emergency page.'
-                            : 'ይህ ከአስቸኳይ ገፅ የተለመደ ጣቢያ ማሳያ ነው።'}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="whitespace-pre-wrap">{message.text}</div>
                     )}
                     <div
-                      className={`text-xs mt-1 ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
+                      className={`max-w-[85%] rounded-lg p-3 text-sm relative group ${message.sender === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-900 border border-gray-100 shadow-sm'
                         }`}
                     >
-                      {message.timestamp.toLocaleTimeString()}
+                      {message.sender === 'bot' && (
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                            onClick={() => isSpeaking ? stopSpeaking() : speak(message.text)}
+                          >
+                            {isSpeaking ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                      )}
+                      {message.type === 'image' && message.imageUrl && (
+                        <div className="mb-2">
+                          <img
+                            src={message.imageUrl}
+                            alt="Uploaded"
+                            className="max-w-full h-32 object-cover rounded border"
+                          />
+                        </div>
+                      )}
+                      {message.type === 'audio' && message.audioUrl && (
+                        <div className="mb-2">
+                          <audio controls className="w-full max-w-48">
+                            <source src={message.audioUrl} type="audio/webm" />
+                          </audio>
+                        </div>
+                      )}
+                      {/* Station card rendering */}
+                      {message.type === 'station' ? (
+                        <div>
+                          <div className="font-medium mb-1">
+                            {language === 'en' ? 'Nearest emergency service' : 'በቅርብ የሚገኝ የአደጋ አገልግሎት'}
+                          </div>
+                          <div className="text-sm mb-2">
+                            {message.stationName} {message.stationDistanceKm !== undefined && (
+                              <span className="text-gray-600">(~{message.stationDistanceKm.toFixed(1)} km)</span>
+                            )}
+                          </div>
+                          {message.stationPhone && (
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={`tel:${message.stationPhone}`}
+                                className="text-blue-600 underline"
+                              >
+                                {message.stationPhone}
+                              </a>
+                              <Button
+                                size="sm"
+                                className="bg-red-600 hover:bg-red-700 text-white h-7 px-2"
+                                onClick={() => window.open(`tel:${message.stationPhone}`)}
+                              >
+                                <Phone className="h-3 w-3 mr-1" />
+                                {language === 'en' ? 'Call' : 'ይደውሉ'}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="markdown-content">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {message.text}
+                          </ReactMarkdown>
+                        </div>
+                      )}
+                      <div
+                        className={`text-[10px] mt-1 ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-400'
+                          }`}
+                      >
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
-                  </div>
-                  {message.sender === 'user' && (
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                      <User className="h-4 w-4 text-white" />
-                    </div>
-                  )}
-                </div>
-              ))}
+                    {message.sender === 'user' && (
+                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
               {isLoading && (
-                <div className="flex gap-3">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex gap-3"
+                >
                   <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
                     <Loader2 className="h-4 w-4 text-red-600 animate-spin" />
                   </div>
-                  <div className="bg-gray-100 rounded-lg p-3 text-sm">
-                    <div className="text-gray-600">Thinking...</div>
+                  <div className="bg-white border rounded-lg p-3 text-sm shadow-sm">
+                    <div className="flex gap-1">
+                      <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }}>.</motion.span>
+                      <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}>.</motion.span>
+                      <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}>.</motion.span>
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               )}
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
-          <div className="border-t p-4 bg-gray-50 sticky bottom-0 left-0 w-full z-10">
-            <div className="text-xs text-gray-600 mb-2 text-center">
-              {language === 'en'
-                ? '\ud83d\udca1 Try: "cut on finger", "burn from stove", "sprained ankle"'
-                : '\ud83d\udca1 \u12ed\u121e\u12ad\u1229: "\u1260\u1323\u1275 \u120b\u12ed \u1218\u1241\u1228\u1325"\u1363 "\u12a8\u121d\u12f5\u1303 \u1243\u1320\u120e"\u1363 "\u12e8\u1270\u12c8\u12d8\u12d8 \u1241\u122d\u132d\u121d\u132d\u121a\u1275"'
-              }
+          <div className="border-t p-4 bg-gray-50/50 sticky bottom-0 left-0 w-full z-10">
+            <div className="flex flex-wrap gap-2 mb-3">
+              {QUICK_ACTIONS.map((action) => (
+                <Button
+                  key={action.id}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSendMessage(action[language as 'en' | 'am'])}
+                  className="bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-[11px] h-7 px-2 py-0 border-gray-200 rounded-full transition-all shadow-sm"
+                >
+                  <Zap className="h-3 w-3 mr-1 text-yellow-500" />
+                  {action[language as 'en' | 'am']}
+                </Button>
+              ))}
             </div>
             <div className="flex gap-2 mb-2">
               <input
@@ -811,7 +811,7 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
                       const loc = await getUserLocation();
                       const fallbackLoc = { lat: 9.0320, lng: 38.7469 };
                       const coords = loc ?? fallbackLoc;
-                      const nearest = findNearestMockStation(coords.lat, coords.lng, language);
+                      const nearest = getClosestEmergencyStation(coords.lat, coords.lng);
                       if (nearest) {
                         const stationMessage: Message = {
                           id: (Date.now() + 2).toString(),
@@ -873,6 +873,14 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
           </div>
         </CardContent>
       </Card>
+      <style>{`
+        .markdown-content h1 { font-size: 1.25rem; font-weight: bold; margin-top: 0.5rem; }
+        .markdown-content h2 { font-size: 1.1rem; font-weight: bold; margin-top: 0.4rem; }
+        .markdown-content p { margin-bottom: 0.5rem; }
+        .markdown-content ul, .markdown-content ol { padding-left: 1.25rem; margin-bottom: 0.5rem; list-style-type: disc; }
+        .markdown-content li { margin-bottom: 0.25rem; }
+        .markdown-content strong { font-weight: 600; color: #b91c1c; }
+      `}</style>
     </div>
   );
 };

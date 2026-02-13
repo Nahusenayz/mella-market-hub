@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, MapPin, X, Navigation } from 'lucide-react';
 import { useLocation } from '@/contexts/LocationContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SearchHeroProps {
   searchQuery: string;
@@ -26,6 +27,7 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
   onSearchChange,
   isWorkerMode
 }) => {
+  const { t } = useLanguage();
   const [selectedEmergencyType, setSelectedEmergencyType] = useState<string | null>(null);
   const { location: contextLocation, permissionStatus } = useLocation();
 
@@ -111,10 +113,10 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
   ];
 
   const emergencyTypes = [
-    { type: 'Police', icon: '🚔', color: 'bg-blue-600 hover:bg-blue-700', label: 'Police' },
-    { type: 'Traffic', icon: '🚦', color: 'bg-yellow-600 hover:bg-yellow-700', label: 'Traffic Police' },
-    { type: 'Ambulance', icon: '🚑', color: 'bg-red-600 hover:bg-red-700', label: 'Ambulance' },
-    { type: 'Fire Station', icon: '🚒', color: 'bg-orange-600 hover:bg-orange-700', label: 'Fire Station' }
+    { type: 'Police', icon: '🚔', color: 'bg-blue-600 hover:bg-blue-700', label: t('police') },
+    { type: 'Traffic', icon: '🚦', color: 'bg-yellow-600 hover:bg-yellow-700', label: t('trafficPolice') },
+    { type: 'Ambulance', icon: '🚑', color: 'bg-red-600 hover:bg-red-700', label: t('ambulance') },
+    { type: 'Fire Station', icon: '🚒', color: 'bg-orange-600 hover:bg-orange-700', label: t('fireStation') }
   ];
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -132,21 +134,19 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
 
 
   // Update nearest stations when emergency type is selected or location changes
-  useEffect(() => {
-    if (selectedEmergencyType) {
-      const filteredStations = emergencyStations
-        .filter(station => station.type === selectedEmergencyType)
-        .map(station => ({
-          ...station,
-          distance: calculateDistance(userLocation.lat, userLocation.lng, station.lat, station.lng)
-        }))
-        .filter(station => (station.distance || 0) <= 5) // Only show stations within 5km
-        .sort((a, b) => (a.distance || 0) - (b.distance || 0))
-        .slice(0, 5); // Show top 5 nearest
+  const nearestStations = React.useMemo(() => {
+    if (!selectedEmergencyType) return [];
 
-      setNearestStations(filteredStations);
-    }
-  }, [selectedEmergencyType, userLocation]);
+    return emergencyStations
+      .filter(station => station.type === selectedEmergencyType)
+      .map(station => ({
+        ...station,
+        distance: calculateDistance(userLocation.lat, userLocation.lng, station.lat, station.lng)
+      }))
+      .filter(station => (station.distance || 0) <= 5) // Only show stations within 5km
+      .sort((a, b) => (a.distance || 0) - (b.distance || 0))
+      .slice(0, 5); // Show top 5 nearest
+  }, [selectedEmergencyType, userLocation.lat, userLocation.lng]);
 
   const handleEmergencyTypeSelect = (type: string) => {
     setSelectedEmergencyType(type);
@@ -202,11 +202,11 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
             <div className="flex items-center justify-center gap-2 mb-6">
               <span className="text-4xl">🚨</span>
               <h1 className="text-3xl md:text-5xl font-bold animate-fade-in">
-                Emergency Services
+                {t('emergencyTitle')}
               </h1>
             </div>
             <p className="text-lg md:text-xl mb-8 opacity-90">
-              Quick access to nearest emergency services in your area
+              {t('emergencyDescription')}
             </p>
 
             {/* Location Status */}
@@ -214,7 +214,7 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
               <div className="flex items-center justify-center gap-2 text-sm md:text-base">
                 <div className={`w-3 h-3 rounded-full ${isLocationTracking ? 'bg-green-400' : 'bg-gray-400'}`}></div>
                 <MapPin size={20} />
-                <span>{isLocationTracking ? 'Using your live location for accurate results' : 'Using default location'}</span>
+                <span>{isLocationTracking ? t('usingLiveLocation') : t('usingDefaultLocation')}</span>
               </div>
             </div>
 
@@ -244,7 +244,7 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
               <div className="flex items-center gap-3">
                 <span className="text-3xl">{emergencyTypes.find(e => e.type === selectedEmergencyType)?.icon}</span>
                 <h2 className="text-2xl md:text-3xl font-bold">
-                  Nearest {selectedEmergencyType} Stations
+                  {t('nearestStationsTitle', { type: t(selectedEmergencyType.toLowerCase() === 'police' ? 'police' : selectedEmergencyType.toLowerCase() === 'traffic' ? 'trafficPolice' : selectedEmergencyType.toLowerCase() === 'ambulance' ? 'ambulance' : 'fireStation') })}
                 </h2>
               </div>
             </div>
@@ -253,7 +253,7 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
             <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-3">
               <div className="flex items-center justify-center gap-2 text-sm">
                 <div className={`w-2 h-2 rounded-full ${isLocationTracking ? 'bg-green-400' : 'bg-gray-400'}`}></div>
-                <span>{isLocationTracking ? 'Showing stations near your live location' : 'Showing stations near default location'}</span>
+                <span>{isLocationTracking ? t('usingLiveLocation') : t('usingDefaultLocation')}</span>
               </div>
             </div>
 
@@ -278,7 +278,7 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
                         </div>
                         <div className="text-right">
                           <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold mb-2">
-                            #{index + 1} CLOSEST
+                            #{index + 1} {t('closest')}
                           </div>
                         </div>
                       </div>
@@ -288,16 +288,16 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
                           className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors flex-1"
                         >
                           <Phone size={20} />
-                          <span className="hidden sm:inline">Call Now</span>
-                          <span className="sm:hidden">Call</span>
+                          <span className="hidden sm:inline">{t('callNow')}</span>
+                          <span className="sm:hidden">{t('callNow')}</span>
                         </button>
                         <button
                           onClick={() => handleNavigate(station)}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors flex-1"
                         >
                           <Navigation size={20} />
-                          <span className="hidden sm:inline">Navigate</span>
-                          <span className="sm:hidden">Go</span>
+                          <span className="hidden sm:inline">{t('navigate')}</span>
+                          <span className="sm:hidden">{t('navigate')}</span>
                         </button>
                       </div>
                       <div className="mt-3 bg-gray-100 rounded-lg p-3">
@@ -316,8 +316,8 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
               <div className="text-center py-12">
                 <div className="text-white/80 mb-4">
                   <span className="text-4xl mb-2 block">🔍</span>
-                  <p>No {selectedEmergencyType.toLowerCase()} stations found within 5km of your location.</p>
-                  <p className="text-sm mt-2 opacity-75">Try moving closer to the city center or check your location settings.</p>
+                  <p>{t('noStationsFound', { type: t(selectedEmergencyType.toLowerCase() === 'police' ? 'police' : selectedEmergencyType.toLowerCase() === 'traffic' ? 'trafficPolice' : selectedEmergencyType.toLowerCase() === 'ambulance' ? 'ambulance' : 'fireStation') })}</p>
+                  <p className="text-sm mt-2 opacity-75">{t('tryMovingCenter')}</p>
                 </div>
               </div>
             )}

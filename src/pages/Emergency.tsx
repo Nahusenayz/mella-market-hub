@@ -613,8 +613,8 @@ export const Emergency: React.FC = () => {
                 <Button className="flex-1 bg-green-600 hover:bg-green-700 gap-2 h-10">
                   <Phone className="w-4 h-4" /> Contact
                 </Button>
-                <Button variant="outline" className="flex-1 gap-2 h-10" onClick={() => handleEmergencyCall('911')}>
-                  <Shield className="w-4 h-4" /> 911
+                <Button variant="outline" className="flex-1 gap-2 h-10" onClick={() => handleEmergencyCall('991')}>
+                  <Shield className="w-4 h-4" /> 991
                 </Button>
               </div>
             </div>
@@ -681,11 +681,11 @@ export const Emergency: React.FC = () => {
           </Button>
 
           <Button
-            onClick={() => handleEmergencyCall('911')}
+            onClick={() => handleEmergencyCall('991')}
             className="h-20 bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white flex-col gap-2 shadow-lg"
           >
             <Phone className="h-6 w-6" />
-            <span className="text-sm font-medium">{t('call911')}</span>
+            <span className="text-sm font-medium">{t('call911').replace('911', '991')}</span>
           </Button>
         </div>
 

@@ -7,7 +7,7 @@ export const Footer: React.FC = () => {
         <p className="text-lg font-medium">
           Made by{' '}
           <a
-            href="https://techspaceet.com/"
+            href="https://techspace-et.web.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-blue-400"
@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
           </a>
         </p>
         <p className="text-gray-400 text-sm mt-2">
-          © 2025 Mella-All In One - Ethiopian Marketplace. All rights reserved.
+          © 2026 Mella-All In One - Ethiopian Marketplace. Tech Space ET, All rights reserved.
         </p>
       </div>
     </footer>
