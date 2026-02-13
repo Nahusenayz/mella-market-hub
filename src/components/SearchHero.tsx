@@ -33,7 +33,6 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
 
   // Use context location or fallback to Addis Ababa
   const userLocation = contextLocation || { lat: 9.0320, lng: 38.7469 };
-  const [nearestStations, setNearestStations] = useState<EmergencyStation[]>([]);
   const isLocationTracking = permissionStatus === 'granted';
 
   // Emergency stations in Addis Ababa
@@ -163,7 +162,6 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
 
   const handleBack = () => {
     setSelectedEmergencyType(null);
-    setNearestStations([]);
   };
 
   if (isWorkerMode) {
