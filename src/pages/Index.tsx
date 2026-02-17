@@ -14,7 +14,8 @@ import { PostModal } from '@/components/PostModal';
 import { Footer } from '@/components/Footer';
 import { useRealTimeAds } from '@/hooks/useRealTimeAds';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { List, MapPin, Plus } from 'lucide-react';
+import { List, MapPin, Plus, AlertTriangle, Shield, HeartPulse, MessageSquarePlus, Activity } from 'lucide-react';
+import { useWorkerLocations } from '@/hooks/useWorkerLocations';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLocation as useLocationContext } from '@/contexts/LocationContext';
@@ -78,6 +79,8 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAdForm, setShowAdForm] = useState(false);
   const [editAd, setEditAd] = useState<Service | null>(null);
+  const { workers: responders } = useWorkerLocations();
+  const onlineResponders = responders.length;
 
   // Default location fallback
   const currentLocation = userLocation || { lat: 9.0320, lng: 38.7469 };
@@ -223,7 +226,105 @@ const Index = () => {
             isWorkerMode={false}
           />
 
+          {/* Real-time Responder Stats Ticker */}
+          <div className="bg-orange-600 text-white py-2 overflow-hidden whitespace-nowrap">
+            <div className="flex items-center justify-center gap-8 animate-pulse">
+              <div className="flex items-center gap-2">
+                <Activity size={16} className="text-orange-200" />
+                <span className="text-sm font-medium">{onlineResponders || 12} Responders Online in Addis Ababa</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield size={16} className="text-orange-200" />
+                <span className="text-sm font-medium">Community Safety: Active</span>
+              </div>
+            </div>
+          </div>
+
           <div className="container mx-auto px-4 py-8">
+            {/* Quick Action Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+              <button
+                onClick={() => navigate('/emergency')}
+                className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-red-500 transition-all flex flex-col items-center gap-3 text-center group"
+              >
+                <div className="p-4 bg-red-100 rounded-full group-hover:scale-110 transition-transform">
+                  <HeartPulse className="text-red-600 h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">Need a Doctor?</h3>
+                  <p className="text-xs text-gray-500">Quick medical help</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => navigate('/emergency')}
+                className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-blue-500 transition-all flex flex-col items-center gap-3 text-center group"
+              >
+                <div className="p-4 bg-blue-100 rounded-full group-hover:scale-110 transition-transform">
+                  <Shield className="text-blue-600 h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">Police/Safety</h3>
+                  <p className="text-xs text-gray-500">Emergency support</p>
+                </div>
+              </button>
+
+              <button
+                onClick={handlePostAd}
+                className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-orange-500 transition-all flex flex-col items-center gap-3 text-center group"
+              >
+                <div className="p-4 bg-orange-100 rounded-full group-hover:scale-110 transition-transform">
+                  <MessageSquarePlus className="text-orange-600 h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">Post an Ad</h3>
+                  <p className="text-xs text-gray-500">Share with community</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setSelectedCategory('Community Help')}
+                className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-green-500 transition-all flex flex-col items-center gap-3 text-center group"
+              >
+                <div className="p-4 bg-green-100 rounded-full group-hover:scale-110 transition-transform">
+                  <AlertTriangle className="text-green-600 h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">Local Alerts</h3>
+                  <p className="text-xs text-gray-500">Help the community</p>
+                </div>
+              </button>
+            </div>
+            {/* Recent Safety Alerts Feed */}
+            {filteredServices.some(s => s.category === 'Safety Alert') && (
+              <div className="mb-12">
+                <div className="flex items-center gap-2 mb-4">
+                  <AlertTriangle className="text-red-600 h-6 w-6" />
+                  <h2 className="text-xl font-bold text-gray-800">Recent Safety Alerts</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredServices
+                    .filter(s => s.category === 'Safety Alert')
+                    .slice(0, 2)
+                    .map(alert => (
+                      <div key={alert.id} className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => handlePostClick(alert)}>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-bold text-red-800">{alert.title}</h4>
+                            <p className="text-sm text-red-700 line-clamp-1">{alert.description}</p>
+                          </div>
+                          <Badge variant="destructive" className="text-[10px] py-0 px-1">URGENT</Badge>
+                        </div>
+                        <div className="mt-2 flex items-center justify-between text-xs text-red-600">
+                          <span className="flex items-center gap-1"><MapPin size={12} /> {alert.distance.toFixed(1)}km away</span>
+                          <span>Click to see details</span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
             <SearchBar
               onSearch={handleSearch}
               userLocation={currentLocation}
@@ -312,6 +413,7 @@ const Index = () => {
                     {viewMode === 'list' ? (
                       <ServiceGrid
                         services={filteredServices}
+                        loading={loading}
                         onBook={handleBookService}
                         onMessage={handleMessageUser}
                         onUserProfileClick={handleUserProfileClick}
@@ -406,6 +508,17 @@ const Index = () => {
       )}
 
       <Footer />
+
+      {/* Floating SOS Button */}
+      <button
+        onClick={() => navigate('/emergency')}
+        className="fixed bottom-6 right-6 z-50 bg-red-600 text-white p-4 rounded-full shadow-2xl hover:bg-red-700 transition-all hover:scale-110 animate-emergency-pulse flex items-center justify-center gap-2 group"
+      >
+        <AlertTriangle className="h-8 w-8" />
+        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 font-bold">
+          EMERGENCY SOS
+        </span>
+      </button>
     </div>
   );
 };

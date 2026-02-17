@@ -21,6 +21,7 @@ export default function Dashboard() {
   // UI State
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<EmergencyRequest | null>(null)
+  const [cancelledRequest, setCancelledRequest] = useState<EmergencyRequest | null>(null)
 
   // Check for new requests and play notification
   useEffect(() => {
@@ -41,8 +42,25 @@ export default function Dashboard() {
       }
       setTimeout(() => setShowNotification(false), 5000)
     }
-    prevRequestsRef.current = currentIds
-  }, [requests])
+
+    // Check if an active request was cancelled
+    const activeIds = requests.filter(r => r.status !== 'pending').map(r => r.id)
+    prevRequestsRef.current.forEach(id => {
+      // If it's not in the new list (currentIds + activeIds), it was removed
+      if (!currentIds.includes(id) && !activeIds.includes(id)) {
+        // Find if it moved to history with 'cancelled' status
+        const justCancelled = history.find(h => h.id === id && h.status === 'cancelled')
+        if (justCancelled) {
+          setCancelledRequest(justCancelled)
+          if (audioRef.current) {
+            audioRef.current.play().catch(() => { })
+          }
+        }
+      }
+    })
+
+    prevRequestsRef.current = [...currentIds, ...activeIds]
+  }, [requests, history])
 
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -1029,6 +1047,40 @@ export default function Dashboard() {
           </div>
         )}
       </Modal>
+      {/* Cancellation Alert Modal */}
+      {cancelledRequest && (
+        <Modal
+          isOpen={!!cancelledRequest}
+          onClose={() => setCancelledRequest(null)}
+          title="⚠️ Request Cancelled"
+        >
+          <div style={{ textAlign: 'center', padding: '1.5rem' }}>
+            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🛑</div>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem', color: '#dc2626' }}>
+              User Cancelled Request
+            </h3>
+            <p style={{ color: '#4b5563', marginBottom: '1.5rem' }}>
+              The emergency request from <strong>{cancelledRequest.user_profile?.full_name || 'the user'}</strong> has been cancelled.
+              You can now stop heading to their location.
+            </p>
+            <button
+              onClick={() => setCancelledRequest(null)}
+              style={{
+                width: '100%',
+                padding: '1rem',
+                background: '#111827',
+                color: 'white',
+                borderRadius: '8px',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              Acknowledge
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

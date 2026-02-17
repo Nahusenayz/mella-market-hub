@@ -15,7 +15,39 @@ const Auth = () => {
   const [userType, setUserType] = useState<'user' | 'worker'>('user');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
+
+  const calculatePasswordStrength = (pass: string) => {
+    let score = 0;
+    if (pass.length > 6) score++;
+    if (pass.length > 10) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+    switch (score) {
+      case 0:
+      case 1:
+        return { score, label: 'Weak', color: 'bg-red-500' };
+      case 2:
+      case 3:
+        return { score, label: 'Medium', color: 'bg-yellow-500' };
+      case 4:
+      case 5:
+        return { score, label: 'Strong', color: 'bg-green-500' };
+      default:
+        return { score, label: '', color: '' };
+    }
+  };
+
+  useEffect(() => {
+    if (password) {
+      setPasswordStrength(calculatePasswordStrength(password));
+    } else {
+      setPasswordStrength({ score: 0, label: '', color: '' });
+    }
+  }, [password]);
+
   const { signUp, signIn, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -29,14 +61,14 @@ const Auth = () => {
 
   const checkUserTypeAndRedirect = async () => {
     if (!user) return;
-    
+
     try {
       const { data: profile } = await supabase
         .from('profiles')
         .select('user_type')
         .eq('id', user.id)
         .single();
-      
+
       if (profile?.user_type === 'worker') {
         navigate('/worker-dashboard');
       } else {
@@ -65,7 +97,7 @@ const Auth = () => {
               user_type: userType,
             })
             .eq('email', email);
-          
+
           toast({
             title: "Success!",
             description: "Please check your email to confirm your account.",
@@ -138,11 +170,10 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => setUserType('user')}
-                    className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-colors ${
-                      userType === 'user'
-                        ? 'border-orange-500 bg-orange-50 text-orange-700'
-                        : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
+                    className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-colors ${userType === 'user'
+                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
                   >
                     <Users size={20} />
                     <span className="font-medium">Customer</span>
@@ -150,11 +181,10 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => setUserType('worker')}
-                    className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-colors ${
-                      userType === 'worker'
-                        ? 'border-orange-500 bg-orange-50 text-orange-700'
-                        : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
+                    className={`flex items-center justify-center gap-2 p-3 border rounded-lg transition-colors ${userType === 'worker'
+                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
                   >
                     <Briefcase size={20} />
                     <span className="font-medium">Service Provider</span>
@@ -237,6 +267,19 @@ const Auth = () => {
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+            {password && isSignUp && (
+              <div className="mt-2 text-xs">
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-600 font-medium">Password Strength: {passwordStrength.label}</span>
+                </div>
+                <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${passwordStrength.color}`}
+                    style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
           </div>
 
           <button
@@ -248,7 +291,19 @@ const Auth = () => {
           </button>
         </form>
 
-        <div className="text-center mt-6">
+        <div className="text-center mt-6 space-y-4">
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 text-left">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <Lock className="h-5 w-5 text-blue-400" aria-hidden="true" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-700">
+                  <span className="font-bold">Security Tip:</span> Use a unique password with a mix of letters, numbers, and symbols to keep your account safe.
+                </p>
+              </div>
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => setIsSignUp(!isSignUp)}

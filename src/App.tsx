@@ -9,6 +9,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { ChatbotFloatingButton } from "@/components/ChatbotFloatingButton";
+import { ConnectivityWatcher } from "@/components/ConnectivityWatcher";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -34,7 +35,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <div className="min-h-screen pb-16">
+              <div className="min-h-screen pb-16 md:pb-0">
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
@@ -53,6 +54,7 @@ const App = () => (
                 </Routes>
                 <BottomNavigation />
                 <ChatbotFloatingButton />
+                <ConnectivityWatcher />
               </div>
             </BrowserRouter>
           </LocationProvider>

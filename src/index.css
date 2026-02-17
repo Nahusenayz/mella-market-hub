@@ -144,6 +144,10 @@
   .text-responsive {
     @apply text-sm sm:text-base lg:text-lg;
   }
+
+  .animate-emergency-pulse {
+    animation: pulse-red 2s infinite;
+  }
 }
 
 @keyframes fade-in {

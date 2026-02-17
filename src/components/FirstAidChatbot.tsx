@@ -113,9 +113,9 @@ const EMERGENCY_KEYWORDS = ['emergency', 'hospital', 'ambulance', 'bleeding', 'u
 const QUICK_ACTIONS = [
   { id: 'cut', en: '🩸 Cut', am: '🩸 መቁረጫ' },
   { id: 'burn', en: '🔥 Burn', am: '🔥 ቃጠሎ' },
+  { id: 'hospital', en: '🏥 Nearest Hospital', am: '🏥 ቅርብ ሆስፒታል' },
   { id: 'choking', en: '🫁 Choking', am: '🫁 መታፈን' },
-  { id: 'bleeding', en: '🩸 Bleeding', am: '🩸 ደም መፍሰስ' },
-  { id: 'sprain', en: '🦵 Sprain', am: '🦵 መወዘዝ' },
+  { id: 'safety', en: '👮 Security Help', am: '👮 የደህንነት እርዳታ' },
   { id: 'fever', en: '🌡️ Fever', am: '🌡️ ትኩሳት' },
 ];
 
@@ -552,14 +552,16 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <Card
-        className="w-full max-w-md max-h-[90vh] sm:max-h-[85vh] flex flex-col bg-white shadow-2xl rounded-lg"
+        className="w-full max-w-md max-h-[90vh] sm:max-h-[85vh] flex flex-col bg-white shadow-2xl rounded-none sm:rounded-lg"
         style={{
-          height: '100%',
-          maxHeight: '90vh',
+          height: window.innerWidth < 640 ? '100%' : '100%',
+          maxHeight: window.innerWidth < 640 ? '100%' : '90vh',
           width: '100%',
-          maxWidth: '420px',
+          maxWidth: window.innerWidth < 640 ? '100%' : '420px',
           display: 'flex',
           flexDirection: 'column',
+          position: window.innerWidth < 640 ? 'fixed' : 'relative',
+          inset: window.innerWidth < 640 ? '0' : 'auto',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -614,8 +616,8 @@ export const FirstAidChatbot: React.FC<FirstAidChatbotProps> = ({ isOpen, onClos
           </AlertDescription>
         </Alert>
 
-        <CardContent className="flex-1 p-0 flex flex-col min-h-0">
-          <ScrollArea className="flex-1 p-4 min-h-0 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
+        <CardContent className="flex-1 p-0 flex flex-col min-h-0 overflow-hidden">
+          <ScrollArea className="flex-1 p-4 min-h-0 max-h-none sm:max-h-[60vh] overflow-y-auto">
             <div className="space-y-4">
               <AnimatePresence initial={false}>
                 {messages.map((message) => (

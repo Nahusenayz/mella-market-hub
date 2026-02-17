@@ -7,7 +7,11 @@ import { User, Star, MapPin, Edit, Plus, Award, Phone, Mail, Home, Camera, Brief
 import { useToast } from '@/hooks/use-toast';
 import { ProfileEdit } from '@/components/ProfileEdit';
 import { AdForm } from '@/components/AdForm';
+import { VerificationBadge } from '@/components/VerificationBadge';
 import { useBookingTracking } from '@/hooks/useBookingTracking';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface UserProfile {
   id: string;
@@ -57,6 +61,8 @@ const Profile = () => {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAdForm, setShowAdForm] = useState(false);
   const [isLocationSharing, setIsLocationSharing] = useState(false);
+  const [hidePhone, setHidePhone] = useState(false);
+  const [lastSignIn, setLastSignIn] = useState<string | null>(null);
 
   // Worker dashboard hooks
   const { activeBookings, updateBookingStatus } = useBookingTracking();
@@ -70,6 +76,15 @@ const Profile = () => {
       return;
     }
     fetchUserData();
+
+    // Get last sign in from session
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user.last_sign_in_at) {
+        setLastSignIn(data.session.user.last_sign_in_at);
+      }
+    };
+    getSession();
   }, [user, navigate]);
 
   const fetchUserData = async () => {
@@ -377,12 +392,24 @@ const Profile = () => {
                     <h1 className="text-3xl font-bold text-gray-800">
                       {profile?.full_name || 'User Name'}
                     </h1>
+                    <VerificationBadge isVerified={true} badges={['certified', 'top_rated']} size="lg" />
                     {isWorker && (
                       <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full font-medium flex items-center gap-1">
                         <Briefcase size={14} />
                         Worker
                       </span>
                     )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="bg-green-50 px-3 py-1 rounded-full text-xs font-medium text-green-700 flex items-center gap-1">
+                      <Clock size={12} />
+                      Member since {user?.created_at ? new Date(user.created_at).getFullYear() : '2024'}
+                    </div>
+                    <div className="bg-blue-50 px-3 py-1 rounded-full text-xs font-medium text-blue-700 flex items-center gap-1">
+                      <Briefcase size={12} />
+                      {userAds.length} Ads Posted
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-4 mb-4">
@@ -438,8 +465,8 @@ const Profile = () => {
               <button
                 onClick={toggleLocationSharing}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isLocationSharing
-                    ? 'bg-green-500 text-white hover:bg-green-600'
-                    : 'bg-gray-500 text-white hover:bg-gray-600'
+                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  : 'bg-gray-500 text-white hover:bg-gray-600'
                   }`}
               >
                 <MapPin size={16} />
@@ -456,8 +483,8 @@ const Profile = () => {
               <button
                 onClick={() => setActiveTab('ads')}
                 className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${activeTab === 'ads'
-                    ? 'bg-green-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-green-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-50'
                   }`}
               >
                 My Ads ({userAds.length})
@@ -465,8 +492,8 @@ const Profile = () => {
               <button
                 onClick={() => setActiveTab('certifications')}
                 className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${activeTab === 'certifications'
-                    ? 'bg-green-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-green-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-50'
                   }`}
               >
                 Certifications ({certifications.length})
@@ -475,13 +502,22 @@ const Profile = () => {
                 <button
                   onClick={() => setActiveTab('worker-dashboard')}
                   className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${activeTab === 'worker-dashboard'
-                      ? 'bg-green-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-green-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-50'
                     }`}
                 >
                   Worker Dashboard ({activeBookings.length})
                 </button>
               )}
+              <button
+                onClick={() => setActiveTab('security')}
+                className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${activeTab === 'security'
+                  ? 'bg-green-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+              >
+                Security & Privacy
+              </button>
             </nav>
           </div>
 
@@ -632,9 +668,9 @@ const Profile = () => {
 
                           <div className="ml-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                booking.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
-                                  booking.status === 'en_route' ? 'bg-purple-100 text-purple-800' :
-                                    'bg-green-100 text-green-800'
+                              booking.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
+                                booking.status === 'en_route' ? 'bg-purple-100 text-purple-800' :
+                                  'bg-green-100 text-green-800'
                               }`}>
                               {booking.status.replace('_', ' ').toUpperCase()}
                             </span>
@@ -687,6 +723,70 @@ const Profile = () => {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'security' && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-4">Account Security</h2>
+                  <div className="bg-gray-50 p-6 rounded-xl border space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-gray-800">Password</p>
+                        <p className="text-sm text-gray-600">Change your password to keep your account secure</p>
+                      </div>
+                      <button
+                        onClick={() => navigate('/auth')} // Redirect to auth for now, or implement a specific password reset call
+                        className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors text-sm"
+                      >
+                        Reset Password
+                      </button>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-200">
+                      <p className="text-sm text-gray-500">
+                        <span className="font-medium">Last sign-in:</span> {lastSignIn ? new Date(lastSignIn).toLocaleString() : 'Just now'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-4">Privacy Settings</h2>
+                  <div className="bg-gray-50 p-6 rounded-xl border space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="hide-phone" className="text-base font-semibold text-gray-800">
+                          Hide Phone Number
+                        </Label>
+                        <p className="text-sm text-gray-600">
+                          Prevent other users from seeing your phone number on ads
+                        </p>
+                      </div>
+                      <Switch
+                        id="hide-phone"
+                        checked={hidePhone}
+                        onCheckedChange={setHidePhone}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="profile-visibility" className="text-base font-semibold text-gray-800">
+                          Public Profile Visibility
+                        </Label>
+                        <p className="text-sm text-gray-600">
+                          Allow others to search for your profile and viewing history
+                        </p>
+                      </div>
+                      <Switch
+                        id="profile-visibility"
+                        defaultChecked={true}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

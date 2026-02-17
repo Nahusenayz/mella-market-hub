@@ -18,7 +18,9 @@ const categories = [
   { value: 'Catering', label: 'Catering', emoji: '🍽️' },
   { value: 'Transportation', label: 'Transportation', emoji: '🚗' },
   { value: 'Beauty', label: 'Beauty', emoji: '💄' },
-  { value: 'Fitness', label: 'Fitness', emoji: '💪' }
+  { value: 'Fitness', label: 'Fitness', emoji: '💪' },
+  { value: 'Community Help', label: 'Community Help', emoji: '🤝' },
+  { value: 'Safety Alert', label: 'Safety Alert', emoji: '⚠️' }
 ];
 
 export const CategoryFilter: React.FC<CategoryFilterProps> = ({
@@ -40,9 +42,9 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
           </option>
         ))}
       </select>
-      <ChevronDown 
-        size={20} 
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" 
+      <ChevronDown
+        size={20}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
       />
     </div>
   );

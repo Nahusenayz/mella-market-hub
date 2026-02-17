@@ -24,6 +24,7 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  Activity,
   PhoneCall,
   MapPinned,
   Users
@@ -413,15 +414,22 @@ export const Emergency: React.FC = () => {
   const cancelRequest = async () => {
     if (!activeRequest) return;
 
+    if (!window.confirm('Are you sure you want to cancel this emergency request?')) {
+      return;
+    }
+
     try {
-      await supabase
+      const { error } = await supabase
         .from('emergency_requests' as any)
         .update({ status: 'cancelled' })
         .eq('id', activeRequest.id);
 
+      if (error) throw error;
       setActiveRequest(null);
+      alert('Your request has been cancelled.');
     } catch (e) {
       console.error(e);
+      alert('Failed to cancel request. Please try again.');
     }
   };
 
@@ -533,16 +541,14 @@ export const Emergency: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {activeRequest.status === 'pending' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={cancelRequest}
-                      className="text-red-600 border-red-300 hover:bg-red-50"
-                    >
-                      <XCircle className="h-4 w-4 mr-1" /> Cancel
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={cancelRequest}
+                    className="text-red-600 border-red-300 hover:bg-red-50"
+                  >
+                    <XCircle className="h-4 w-4 mr-1" /> Cancel
+                  </Button>
                 </div>
               </div>
             </div>
@@ -615,6 +621,13 @@ export const Emergency: React.FC = () => {
                 </Button>
                 <Button variant="outline" className="flex-1 gap-2 h-10" onClick={() => handleEmergencyCall('991')}>
                   <Shield className="w-4 h-4" /> 991
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full mt-2 text-red-600 hover:text-red-700 hover:bg-red-50 gap-2"
+                  onClick={cancelRequest}
+                >
+                  <XCircle className="w-4 h-4" /> Cancel Request
                 </Button>
               </div>
             </div>
@@ -753,7 +766,7 @@ export const Emergency: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredWorkers.map((worker) => {
                 const catInfo = EMERGENCY_CATEGORIES.find(c => c.key === worker.category);
                 const timeSinceUpdate = Math.floor((Date.now() - new Date(worker.last_updated).getTime()) / 1000);
@@ -818,61 +831,89 @@ export const Emergency: React.FC = () => {
           )}
         </div>
 
-        {/* Emergency Stations */}
-        <div>
-          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <Hospital className="h-5 w-5 text-red-600" />
-            Emergency Stations
-          </h2>
-
-          {isLoadingLocation ? (
-            <div className="text-center py-8 bg-white rounded-xl">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading location...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {emergencyStations.map((station) => (
-                <Card key={station.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <div className={`p-2 rounded-full ${getStationColor(station.type)}`}>
-                          {getStationIcon(station.type)}
-                        </div>
-                        {station.name}
-                      </CardTitle>
-                      <Badge variant="secondary" className="text-xs">
-                        {station.distance.toFixed(1)} km
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-600">
-                        <p className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {station.phone}
-                        </p>
-                        <p className="mt-1 text-green-600 font-medium">
-                          Response: {station.responseTime}
-                        </p>
-                      </div>
-                      <Button
-                        onClick={() => handleEmergencyCall(station.phone)}
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                        size="sm"
-                      >
-                        <Phone className="h-4 w-4 mr-1" />
-                        Call
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+        {/* Quick-Dial Emergency Service FAB */}
+        <div className="fixed left-6 bottom-24 z-50 flex flex-col gap-3 group md:hidden">
+          <button
+            onClick={() => handleEmergencyCall('991')}
+            className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+            title="Police (991)"
+          >
+            <Shield size={20} />
+            <span className="text-xs font-bold">991</span>
+          </button>
+          <button
+            onClick={() => handleEmergencyCall('939')}
+            className="bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition-all flex items-center justify-center gap-2"
+            title="Ambulance (939)"
+          >
+            <Activity size={20} />
+            <span className="text-xs font-bold">939</span>
+          </button>
+          <button
+            onClick={() => handleEmergencyCall('912')}
+            className="bg-orange-600 text-white p-3 rounded-full shadow-lg hover:bg-orange-700 transition-all flex items-center justify-center gap-2"
+            title="Fire (912)"
+          >
+            <Flame size={20} />
+            <span className="text-xs font-bold">912</span>
+          </button>
         </div>
+      </div>
+
+      {/* Emergency Stations */}
+      <div>
+        <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <Hospital className="h-5 w-5 text-red-600" />
+          Emergency Stations
+        </h2>
+
+        {isLoadingLocation ? (
+          <div className="text-center py-8 bg-white rounded-xl">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading location...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {emergencyStations.map((station) => (
+              <Card key={station.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <div className={`p-2 rounded-full ${getStationColor(station.type)}`}>
+                        {getStationIcon(station.type)}
+                      </div>
+                      {station.name}
+                    </CardTitle>
+                    <Badge variant="secondary" className="text-xs">
+                      {station.distance.toFixed(1)} km
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      <p className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {station.phone}
+                      </p>
+                      <p className="mt-1 text-green-600 font-medium">
+                        Response: {station.responseTime}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => handleEmergencyCall(station.phone)}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                      size="sm"
+                    >
+                      <Phone className="h-4 w-4 mr-1" />
+                      Call
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Request Modal */}
@@ -1007,8 +1048,6 @@ export const Emergency: React.FC = () => {
           onClose={() => setShowFirstAidBot(false)}
         />
       )}
-
-
     </div>
   );
 };

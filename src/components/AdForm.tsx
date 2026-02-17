@@ -23,7 +23,8 @@ interface AdFormProps {
 
 const serviceCategories = [
   'Cleaning', 'Delivery', 'Tech Support', 'Home Repair', 'Tutoring',
-  'Photography', 'Catering', 'Transportation', 'Beauty', 'Fitness'
+  'Photography', 'Catering', 'Transportation', 'Beauty', 'Fitness',
+  'Community Help', 'Safety Alert'
 ];
 
 const productCategories = [
@@ -215,8 +216,8 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
                 type="button"
                 onClick={() => handleTypeChange('service')}
                 className={`p-4 rounded-xl border-2 transition-all ${formData.type === 'service'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
-                    : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                  : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                   }`}
               >
                 <div className="text-center">
@@ -229,8 +230,8 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
                 type="button"
                 onClick={() => handleTypeChange('sell')}
                 className={`p-4 rounded-xl border-2 transition-all ${formData.type === 'sell'
-                    ? 'border-green-500 bg-green-50 text-green-700 shadow-md'
-                    : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                  ? 'border-green-500 bg-green-50 text-green-700 shadow-md'
+                  : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                   }`}
               >
                 <div className="text-center">
@@ -243,8 +244,8 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
                 type="button"
                 onClick={() => handleTypeChange('rent')}
                 className={`p-4 rounded-xl border-2 transition-all ${formData.type === 'rent'
-                    ? 'border-purple-500 bg-purple-50 text-purple-700 shadow-md'
-                    : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                  ? 'border-purple-500 bg-purple-50 text-purple-700 shadow-md'
+                  : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                   }`}
               >
                 <div className="text-center">
@@ -353,7 +354,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
           </div>
 
           <div className={`p-4 rounded-lg flex items-start gap-3 ${permissionStatus === 'granted' ? 'bg-green-50' :
-              permissionStatus === 'denied' ? 'bg-red-50' : 'bg-blue-50'
+            permissionStatus === 'denied' ? 'bg-red-50' : 'bg-blue-50'
             }`}>
             {permissionStatus === 'granted' ? (
               <CheckCircle2 size={20} className="text-green-500 mt-0.5" />
