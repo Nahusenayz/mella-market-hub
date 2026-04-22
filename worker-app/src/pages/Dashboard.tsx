@@ -788,28 +788,55 @@ export default function Dashboard() {
                     <span style={{ fontSize: '1.25rem' }}>🚗</span> Start En Route & Share Location
                   </button>
                 )}
-                {r.status === 'en_route' && (
-                  <button
-                    onClick={() => updateStatus(r.id, 'completed')}
-                    className="btn-complete"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      flex: 1,
-                      justifyContent: 'center',
-                      padding: '1rem',
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '10px',
-                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-                    }}
-                  >
-                    <span style={{ fontSize: '1.25rem' }}>✓</span> Mark as Completed
-                  </button>
+                {(r.status === 'accepted' || r.status === 'en_route') && (
+                  <>
+                    <button
+                      onClick={() => updateStatus(r.id, 'completed')}
+                      className="btn-complete"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        flex: 1,
+                        justifyContent: 'center',
+                        padding: '1rem',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '10px',
+                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                      }}
+                    >
+                      <span style={{ fontSize: '1.25rem' }}>✓</span> Completed
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm("Are you sure you want to delete this emergency request?")) {
+                          updateStatus(r.id, 'cancelled');
+                        }
+                      }}
+                      className="btn-delete"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        flex: 1,
+                        justifyContent: 'center',
+                        padding: '1rem',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        background: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '10px',
+                        boxShadow: '0 4px 12px rgba(107, 114, 128, 0.3)'
+                      }}
+                    >
+                      <span style={{ fontSize: '1.25rem' }}>❌</span> Delete
+                    </button>
+                  </>
                 )}
               </div>
             </div>

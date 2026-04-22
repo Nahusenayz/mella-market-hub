@@ -23,6 +23,7 @@ import EmergencyAdminPanel from './pages/EmergencyAdminPanel';
 import AdminRegister from './pages/AdminRegister';
 import Map3D from './pages/Map3D';
 import ResponderDashboard from './pages/ResponderDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
                   <Route path="/admin-login" element={<AdminLogin />} />
                   <Route path="/emergency-admin" element={<EmergencyAdminPanel />} />
                   <Route path="/admin-register" element={<AdminRegister />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <BottomNavigation />

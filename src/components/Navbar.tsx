@@ -18,7 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const [selectedUserProfile, setSelectedUserProfile] = useState<string | null>(null);
 
   const handleSignOut = async () => {
@@ -67,6 +67,27 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
               </div>
             </div>
 
+            {/* Desktop Navigation Links */}
+            <div className="hidden md:flex items-center space-x-6 ml-6 mr-4 font-medium">
+              <button 
+                onClick={() => navigate('/')} 
+                className={`transition-colors flex items-center gap-2 ${isActive('/') ? 'text-orange-600' : 'text-gray-600 hover:text-orange-500'}`}
+              >
+                {t('home')}
+              </button>
+              <button 
+                onClick={() => navigate('/emergency')} 
+                className={`transition-colors flex items-center gap-2 ${isActive('/emergency') ? 'text-red-600 font-bold' : 'text-red-500 hover:text-red-600 font-semibold'}`}
+              >
+                {t('emergency')}
+              </button>
+              <button 
+                onClick={() => navigate('/profile')} 
+                className={`transition-colors flex items-center gap-2 ${isActive('/profile') ? 'text-orange-600' : 'text-gray-600 hover:text-orange-500'}`}
+              >
+                {t('profile')}
+              </button>
+            </div>
             {/* Center - User Search */}
             <div className="hidden md:block flex-1 max-w-md mx-8">
               <UserSearch onUserClick={handleUserSearchClick} />

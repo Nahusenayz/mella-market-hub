@@ -421,7 +421,7 @@ export const Emergency: React.FC = () => {
     try {
       const { error } = await supabase
         .from('emergency_requests' as any)
-        .update({ status: 'cancelled' })
+        .update({ status: 'cancelled', responder_id: null })
         .eq('id', activeRequest.id);
 
       if (error) throw error;
@@ -520,8 +520,8 @@ export const Emergency: React.FC = () => {
 
       {/* Active Request Banner - Enhanced with Uber-like tracking */}
       {/* Active Request Banner - Enhanced with Uber-like tracking */}
-      {/* Active Request Status Card (Pending/Accepted) - Shows standard status card */}
-      {activeRequest && activeRequest.status !== 'en_route' && (
+      {/* Active Request Status Card (Pending) - Shows standard status card */}
+      {activeRequest && activeRequest.status === 'pending' && (
         <div className="container mx-auto px-4 py-4">
           <div className={`rounded-2xl overflow-hidden border-2 ${getStatusInfo(activeRequest.status).border + ' ' + getStatusInfo(activeRequest.status).bg}`}>
             {/* Header Section */}
@@ -553,26 +553,12 @@ export const Emergency: React.FC = () => {
               </div>
             </div>
 
-            {/* Accepted Status - Show waiting for responder to start */}
-            {activeRequest.status === 'accepted' && (
-              <div className="px-4 pb-4">
-                <div className="bg-green-50 rounded-xl p-4 border border-green-200 text-center">
-                  <div className="text-4xl mb-2">✅</div>
-                  <div className="font-semibold text-green-700">Responder Accepted!</div>
-                  <div className="text-sm text-gray-600 mt-1">They will start heading to you shortly...</div>
-                  <div className="mt-3 flex items-center justify-center gap-2 text-green-600">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">Waiting for responder to start route</span>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
 
-      {/* Floating Live Tracking Popup (En Route) - Overlays on bottom right */}
-      {activeRequest && activeRequest.status === 'en_route' && (
+      {/* Floating Live Tracking Popup (Accepted / En Route) - Overlays on bottom right */}
+      {activeRequest && (activeRequest.status === 'en_route' || activeRequest.status === 'accepted') && (
         <div className="fixed bottom-0 left-0 right-0 md:bottom-4 md:right-4 md:left-auto md:w-96 z-[9999] p-2 md:p-0">
           <div className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom duration-500">
             {/* Header */}
@@ -582,7 +568,9 @@ export const Emergency: React.FC = () => {
                   <span className="text-2xl">🚑</span>
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg leading-tight">Ambulance Dispatched</h3>
+                  <h3 className="font-bold text-lg leading-tight">
+                    {activeRequest.status === 'accepted' ? 'Responder Accepted' : 'Responder Dispatched'}
+                  </h3>
                   <p className="text-blue-100/90 text-sm font-medium mt-0.5">ETA: ~4 min</p>
                 </div>
               </div>
@@ -616,9 +604,18 @@ export const Emergency: React.FC = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button className="flex-1 bg-green-600 hover:bg-green-700 gap-2 h-10">
-                  <Phone className="w-4 h-4" /> Contact
-                </Button>
+                {(() => {
+                  const responder = workers.find(w => w.worker_id === activeRequest.responder_id);
+                  const phoneNumber = responder?.profiles?.phone_number;
+                  return (
+                    <Button 
+                      className="flex-1 bg-green-600 hover:bg-green-700 gap-2 h-10"
+                      onClick={() => phoneNumber ? handleEmergencyCall(phoneNumber) : alert('Responder phone not available')}
+                    >
+                      <Phone className="w-4 h-4" /> Contact
+                    </Button>
+                  );
+                })()}
                 <Button variant="outline" className="flex-1 gap-2 h-10" onClick={() => handleEmergencyCall('991')}>
                   <Shield className="w-4 h-4" /> 991
                 </Button>

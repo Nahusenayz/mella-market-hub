@@ -13,6 +13,7 @@ export interface WorkerLocation {
     profiles?: {
         full_name: string;
         profile_image_url?: string;
+        phone_number?: string;
     };
     distance?: number;
 }
@@ -54,7 +55,7 @@ export const useWorkerLocations = (filterCategory?: string) => {
             const workerIds = (locationsData as any[]).map((loc: any) => loc.worker_id);
             const { data: profilesData, error: profilesError } = await supabase
                 .from('profiles')
-                .select('id, full_name, profile_image_url')
+                .select('id, full_name, profile_image_url, phone_number')
                 .in('id', workerIds);
 
             if (profilesError) {
@@ -75,10 +76,12 @@ export const useWorkerLocations = (filterCategory?: string) => {
                     created_at: loc.created_at,
                     profiles: profile ? {
                         full_name: profile.full_name || 'Responder',
-                        profile_image_url: profile.profile_image_url
+                        profile_image_url: profile.profile_image_url,
+                        phone_number: profile.phone_number
                     } : {
                         full_name: 'Responder',
-                        profile_image_url: undefined
+                        profile_image_url: undefined,
+                        phone_number: undefined
                     }
                 };
             });

@@ -154,13 +154,25 @@ export const BookingTracker: React.FC = () => {
                     </button>
                   )}
                   
-                  {booking.status === 'in_progress' && (
-                    <button
-                      onClick={() => updateBookingStatus(booking.id, 'completed')}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm"
-                    >
-                      Complete Service
-                    </button>
+                  {(booking.status === 'accepted' || booking.status === 'en_route' || booking.status === 'in_progress') && (
+                    <>
+                      <button
+                        onClick={() => updateBookingStatus(booking.id, 'completed')}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm"
+                      >
+                        Complete Service
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm("Are you sure you want to delete this booking?")) {
+                            updateBookingStatus(booking.id, 'cancelled');
+                          }
+                        }}
+                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm flex items-center gap-1"
+                      >
+                         Delete
+                      </button>
+                    </>
                   )}
                 </>
               )}

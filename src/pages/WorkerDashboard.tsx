@@ -4,10 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useBookingTracking } from '@/hooks/useBookingTracking';
 import { useMessages } from '@/hooks/useMessages';
+import { useEmergencyRequests } from '@/hooks/useEmergencyRequests';
+import { supabase } from '@/integrations/supabase/client';
 import { BookingTracker } from '@/components/BookingTracker';
 import { MessageThread } from '@/components/MessageThread';
 import { Navbar } from '@/components/Navbar';
-import { MapPin, Clock, Phone, Check, X, Navigation, Home } from 'lucide-react';
+import { TrackingMap } from '@/components/TrackingMap';
+import { MapPin, Clock, Phone, Check, X, Navigation, Home, Flag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const WorkerDashboard = () => {
@@ -24,6 +27,85 @@ const WorkerDashboard = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocationSharing, setIsLocationSharing] = useState(false);
 
+  const { requests: emergencyRequests, acceptRequest: acceptEmergency, declineRequest: declineEmergency, updateStatus: updateEmergencyStatus } = useEmergencyRequests();
+  const [workerCategory, setWorkerCategory] = useState<string | null>(null);
+  const [completedCount, setCompletedCount] = useState({ standard: 0, emergency: 0 });
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchStats = async () => {
+      const { count: stdCount } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('worker_id', user.id)
+        .eq('status', 'completed');
+        
+      const { count: emgCount } = await (supabase as any)
+        .from('emergency_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('responder_id', user.id)
+        .eq('status', 'completed');
+
+      setCompletedCount({
+        standard: stdCount || 0,
+        emergency: emgCount || 0
+      });
+    };
+
+    fetchStats();
+
+    const sub = supabase.channel('completed-stats')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: `worker_id=eq.${user.id}` }, fetchStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'emergency_requests', filter: `responder_id=eq.${user.id}` }, fetchStats)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sub);
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchProfile = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('badges')
+        .eq('id', user.id)
+        .single();
+      if (data && Array.isArray(data.badges)) {
+        const badgesArray = data.badges as any[];
+        const categoryBadge = badgesArray.find((b: any) => typeof b === 'object' && b !== null && 'category' in b);
+        if (categoryBadge && typeof categoryBadge === 'object' && 'category' in categoryBadge) {
+          setWorkerCategory(categoryBadge.category as string);
+        }
+      }
+    };
+    fetchProfile();
+  }, [user]);
+
+  const handleStartEmergencyRoute = async (id: string) => {
+    if (!userLocation) {
+      toast({ title: 'Location required', description: 'Enable location to start route', variant: 'destructive' });
+      return;
+    }
+    await updateEmergencyStatus(id, 'en_route', userLocation);
+    setIsLocationSharing(true);
+  };
+
+  const handleCompleteEmergency = async (id: string) => {
+    await updateEmergencyStatus(id, 'completed');
+  };
+
+  const filteredEmergencyRequests = emergencyRequests.filter(req => {
+    if (!workerCategory) return false;
+    const cat = req.category?.toLowerCase() || '';
+    if (workerCategory === 'hospital' && cat.includes('hospital')) return true;
+    if (workerCategory === 'security' && (cat.includes('security') || cat.includes('police'))) return true;
+    if (workerCategory === 'traffic' && cat.includes('traffic')) return true;
+    if (workerCategory === 'fire' && cat.includes('fire')) return true;
+    return false;
+  });
+
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -31,9 +113,9 @@ const WorkerDashboard = () => {
     }
   }, [user, navigate]);
 
-  // Get and share real-time location
+  // Get real-time location (but only share to DB if enabled)
   useEffect(() => {
-    if (navigator.geolocation && isLocationSharing) {
+    if (navigator.geolocation) {
       const watchId = navigator.geolocation.watchPosition(
         (position) => {
           const newLocation = {
@@ -42,20 +124,36 @@ const WorkerDashboard = () => {
           };
           setUserLocation(newLocation);
           
-          // Update location for all active bookings
-          activeBookings.forEach(booking => {
-            if (booking.status === 'accepted' || booking.status === 'en_route') {
-              updateBookingStatus(booking.id, booking.status, newLocation);
+          // Update location for all active bookings ONLY if sharing is enabled
+          if (isLocationSharing) {
+            if (user) {
+              supabase.from('worker_locations' as any).update({
+                location_lat: newLocation.lat,
+                location_lng: newLocation.lng,
+                last_updated: new Date().toISOString()
+              }).eq('worker_id', user.id).then(({ error }) => {
+                if (error) console.error('Error updating worker location:', error);
+              });
             }
-          });
+
+            activeBookings.forEach(booking => {
+              if (booking.status === 'accepted' || booking.status === 'en_route') {
+                updateBookingStatus(booking.id, booking.status, newLocation);
+              }
+            });
+          }
         },
         (error) => {
           console.error('Geolocation error:', error);
-          toast({
-            title: "Location Error",
-            description: "Unable to get your location. Please enable location services.",
-            variant: "destructive",
-          });
+          // Only show error if they explicitly wanted to share
+          if (isLocationSharing) {
+            toast({
+              title: "Location Error",
+              description: "Unable to get your location. Please enable location services.",
+              variant: "destructive",
+            });
+            setIsLocationSharing(false);
+          }
         },
         {
           enableHighAccuracy: true,
@@ -143,6 +241,12 @@ const WorkerDashboard = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-800">Worker Dashboard</h1>
               <p className="text-gray-600">Manage your service requests and track your earnings</p>
+              <div className="mt-2 inline-flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                <Check className="text-green-600 w-4 h-4" />
+                <span className="text-sm font-semibold text-green-700">
+                  {completedCount.standard + completedCount.emergency} Requests Completed
+                </span>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <button
@@ -169,6 +273,120 @@ const WorkerDashboard = () => {
 
         {!selectedMessageUser ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="flex flex-col gap-8">
+              {/* Emergency Requests */}
+              {workerCategory && (
+                <div className="bg-white rounded-xl shadow-lg border-2 border-red-100">
+                  <div className="p-6 border-b border-gray-200 bg-red-50 rounded-t-xl">
+                    <h2 className="text-xl font-bold text-red-800 flex items-center gap-2">
+                       <Flag size={20} />
+                       Emergency Requests <span className="capitalize text-lg">({workerCategory})</span>
+                    </h2>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {filteredEmergencyRequests.length === 0 ? (
+                      <div className="p-6 text-center text-gray-500">
+                        <Clock size={48} className="mx-auto mb-3 text-red-200" />
+                        <p>No active emergencies</p>
+                      </div>
+                    ) : (
+                      filteredEmergencyRequests.map((r) => (
+                        <div key={r.id} className="p-6 border-b border-gray-100 last:border-b-0">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-800 mb-1 capitalize">{r.category || 'Emergency'}</h3>
+                              <p className="text-gray-600 text-sm mb-2">{r.details || 'No details provided'}</p>
+                              <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  r.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  r.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
+                                  r.status === 'en_route' ? 'bg-purple-100 text-purple-800' :
+                                  r.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {r.status.replace('_', ' ').toUpperCase()}
+                                </span>
+                                {r.user_location_lat && r.user_location_lng && (
+                                  <a
+                                    className="text-blue-600 underline flex items-center gap-1"
+                                    href={`https://maps.google.com/?q=${r.user_location_lat},${r.user_location_lng}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    <MapPin size={14} /> Navigate to caller
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            {r.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => acceptEmergency(r.id)}
+                                  className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition-colors text-sm flex items-center gap-1"
+                                >
+                                  <Check size={14} /> Accept
+                                </button>
+                                <button
+                                  onClick={() => declineEmergency(r.id)}
+                                  className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-colors text-sm flex items-center gap-1"
+                                >
+                                  <X size={14} /> Decline
+                                </button>
+                              </>
+                            )}
+                            
+                            {r.status === 'accepted' && (
+                              <button
+                                onClick={() => handleStartEmergencyRoute(r.id)}
+                                className="bg-purple-500 text-white px-3 py-1 rounded-lg hover:bg-purple-600 transition-colors text-sm flex items-center gap-1"
+                              >
+                                <Navigation size={14} /> Start Route
+                              </button>
+                            )}
+                            {(r.status === 'accepted' || r.status === 'en_route') && (
+                              <>
+                                <button
+                                  onClick={() => handleCompleteEmergency(r.id)}
+                                  className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-1"
+                                >
+                                  <Check size={14} /> Mark Completed
+                                </button>
+                                <button
+                                  onClick={() => {
+                                      if (window.confirm("Are you sure you want to delete this emergency request?")) {
+                                          updateEmergencyStatus(r.id, 'cancelled');
+                                      }
+                                  }}
+                                  className="bg-gray-500 text-white px-3 py-1 rounded-lg hover:bg-gray-600 transition-colors text-sm flex items-center gap-1"
+                                >
+                                  <X size={14} /> Delete
+                                </button>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Live Location Map */}
+                          {(r.status === 'accepted' || r.status === 'en_route') && r.user_location_lat && r.user_location_lng && userLocation && (
+                            <div className="mt-4 h-64 rounded-lg overflow-hidden border border-gray-200 shadow-inner relative">
+                               <div className="absolute top-2 left-2 z-[400] bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-semibold text-gray-700 shadow-sm border border-gray-100 flex items-center gap-1">
+                                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Live Tracking
+                               </div>
+                               <TrackingMap 
+                                  userLocation={{ lat: r.user_location_lat, lng: r.user_location_lng }}
+                                  responderLocation={userLocation}
+                                  responderType={workerCategory || undefined}
+                               />
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
             {/* Active Requests */}
             <div className="bg-white rounded-xl shadow-lg">
               <div className="p-6 border-b border-gray-200">
@@ -232,6 +450,36 @@ const WorkerDashboard = () => {
                             Start Trip
                           </button>
                         )}
+                        
+                        {booking.status === 'en_route' && (
+                          <button
+                            onClick={() => updateBookingStatus(booking.id, 'in_progress')}
+                            className="bg-orange-500 text-white px-3 py-1 rounded-lg hover:bg-orange-600 transition-colors text-sm flex items-center gap-1"
+                          >
+                            <MapPin size={14} /> Start Service
+                          </button>
+                        )}
+
+                        {(booking.status === 'accepted' || booking.status === 'en_route' || booking.status === 'in_progress') && (
+                          <>
+                             <button
+                               onClick={() => updateBookingStatus(booking.id, 'completed')}
+                               className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-1"
+                             >
+                               <Check size={14} /> Complete
+                             </button>
+                             <button
+                               onClick={() => {
+                                 if (window.confirm("Are you sure you want to delete this booking?")) {
+                                   updateBookingStatus(booking.id, 'cancelled');
+                                 }
+                               }}
+                               className="bg-gray-500 text-white px-3 py-1 rounded-lg hover:bg-gray-600 transition-colors text-sm flex items-center gap-1"
+                             >
+                               <X size={14} /> Delete
+                             </button>
+                          </>
+                        )}
 
                         <button
                           onClick={() => handleMessageUser(booking.customer_id, booking.customer.full_name)}
@@ -245,6 +493,7 @@ const WorkerDashboard = () => {
                   ))
                 )}
               </div>
+            </div>
             </div>
 
             {/* Booking Tracker */}

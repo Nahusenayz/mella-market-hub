@@ -90,12 +90,16 @@ const Auth = () => {
         const result = await signUp(email, password, fullName);
         error = result.error;
         if (!error) {
-          // Update profile with user type only (remove station_category)
+          const profileUpdates: any = {
+            user_type: userType,
+          };
+          if (userType === 'worker') {
+            profileUpdates.badges = [{ category: stationCategory }];
+          }
+
           await supabase
             .from('profiles')
-            .update({
-              user_type: userType,
-            })
+            .update(profileUpdates)
             .eq('email', email);
 
           toast({
