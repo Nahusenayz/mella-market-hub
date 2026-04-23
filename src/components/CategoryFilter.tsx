@@ -20,6 +20,7 @@ const categories = [
   { value: 'Beauty', label: 'Beauty', emoji: '💄' },
   { value: 'Fitness', label: 'Fitness', emoji: '💪' },
   { value: 'Community Help', label: 'Community Help', emoji: '🤝' },
+  { value: 'Properties', label: 'Properties', emoji: '🏠' },
   { value: 'Safety Alert', label: 'Safety Alert', emoji: '⚠️' }
 ];
 

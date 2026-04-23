@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Upload, MapPin, DollarSign, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { X, Upload, MapPin, DollarSign, AlertCircle, CheckCircle2, Home } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from '@/contexts/LocationContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,7 +24,7 @@ interface AdFormProps {
 const serviceCategories = [
   'Cleaning', 'Delivery', 'Tech Support', 'Home Repair', 'Tutoring',
   'Photography', 'Catering', 'Transportation', 'Beauty', 'Fitness',
-  'Community Help', 'Safety Alert'
+  'Community Help', 'Properties', 'Safety Alert'
 ];
 
 const productCategories = [
@@ -44,7 +44,12 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
     description: adToEdit?.description || '',
     category: adToEdit?.category || serviceCategories[0],
     price: adToEdit ? String(adToEdit.price) : '',
-    type: 'service' as 'service' | 'sell' | 'rent'
+    type: 'service' as 'service' | 'sell' | 'rent',
+    property_type: 'House',
+    bedrooms: '1',
+    bathrooms: '1',
+    area_sqm: '',
+    is_furnished: false
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>(adToEdit?.image_url || '');
@@ -131,7 +136,13 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
             image_url: imageUrl,
             location_lat: userLocation.lat,
             location_lng: userLocation.lng,
-            ad_type: formData.type
+            ad_type: formData.type,
+            property_type: formData.category === 'Properties' ? formData.property_type : null,
+            listing_type: formData.category === 'Properties' ? (formData.type === 'rent' ? 'Rent' : 'Sale') : null,
+            bedrooms: formData.category === 'Properties' ? parseInt(formData.bedrooms) : null,
+            bathrooms: formData.category === 'Properties' ? parseInt(formData.bathrooms) : null,
+            area_sqm: formData.category === 'Properties' ? parseFloat(formData.area_sqm) : null,
+            is_furnished: formData.category === 'Properties' ? formData.is_furnished : null
           }
         ])
         .select()
@@ -322,6 +333,78 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
               </div>
             </div>
           </div>
+
+          {formData.category === 'Properties' && (
+            <div className="space-y-6 border-t border-b border-gray-100 py-6">
+              <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                <Home size={18} className="text-orange-500" />
+                Property Details
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Property Type</label>
+                  <select
+                    value={formData.property_type}
+                    onChange={(e) => setFormData({ ...formData, property_type: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  >
+                    <option value="House">House</option>
+                    <option value="Room">Room</option>
+                    <option value="Apartment">Apartment</option>
+                    <option value="Commercial">Commercial</option>
+                    <option value="Land">Land</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Area (sqm)</label>
+                  <input
+                    type="number"
+                    value={formData.area_sqm}
+                    onChange={(e) => setFormData({ ...formData, area_sqm: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="e.g. 150"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Bedrooms</label>
+                  <input
+                    type="number"
+                    value={formData.bedrooms}
+                    onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    min="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Bathrooms</label>
+                  <input
+                    type="number"
+                    value={formData.bathrooms}
+                    onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="is_furnished"
+                  checked={formData.is_furnished}
+                  onChange={(e) => setFormData({ ...formData, is_furnished: e.target.checked })}
+                  className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                />
+                <label htmlFor="is_furnished" className="text-sm font-medium text-gray-700">
+                  Fully Furnished
+                </label>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

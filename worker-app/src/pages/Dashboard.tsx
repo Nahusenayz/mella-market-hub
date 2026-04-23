@@ -3,6 +3,21 @@ import { supabase } from '../integrations/supabase/client'
 import { useEmergencyRequests } from '../hooks/useEmergencyRequests'
 import { useNavigate } from 'react-router-dom'
 import Modal from '../components/Modal'
+import WorkerEarnings from '../components/WorkerEarnings'
+import DemandHeatmap from '../components/DemandHeatmap'
+import { 
+  Bell, 
+  Map as MapIcon, 
+  TrendingUp, 
+  Settings, 
+  LogOut, 
+  CheckCircle, 
+  Clock, 
+  User, 
+  Award,
+  Navigation,
+  Activity
+} from 'lucide-react'
 import { EmergencyRequest } from '../hooks/useEmergencyRequests'
 
 export default function Dashboard() {
@@ -13,6 +28,7 @@ export default function Dashboard() {
   const { requests, history, loading, accept, decline, updateStatus } = useEmergencyRequests()
   const [loc, setLoc] = useState<{ lat: number; lng: number } | null>(null)
   const [isOnline, setIsOnline] = useState(true)
+  const [activeTab, setActiveTab] = useState<'requests' | 'revenue' | 'demand'>('requests')
   const [showNotification, setShowNotification] = useState(false)
   const [newRequestCount, setNewRequestCount] = useState(0)
   const prevRequestsRef = useRef<string[]>([])
@@ -46,9 +62,7 @@ export default function Dashboard() {
     // Check if an active request was cancelled
     const activeIds = requests.filter(r => r.status !== 'pending').map(r => r.id)
     prevRequestsRef.current.forEach(id => {
-      // If it's not in the new list (currentIds + activeIds), it was removed
       if (!currentIds.includes(id) && !activeIds.includes(id)) {
-        // Find if it moved to history with 'cancelled' status
         const justCancelled = history.find(h => h.id === id && h.status === 'cancelled')
         if (justCancelled) {
           setCancelledRequest(justCancelled)
@@ -81,25 +95,14 @@ export default function Dashboard() {
     })
   }, [nav])
 
-  // Location tracking effect
   useEffect(() => {
-    if (!navigator.geolocation) {
-      console.log('Geolocation not supported')
-      return
-    }
-    if (!userId) {
-      console.log('No userId yet, waiting...')
-      return
-    }
-
-    console.log('🔧 Setting up location tracking for:', userId, 'category:', userCategory)
+    if (!navigator.geolocation) return
+    if (!userId) return
 
     const saveLocation = async (newLoc: { lat: number; lng: number }) => {
       setLoc(newLoc)
-      console.log('📍 Attempting to save location:', newLoc)
-
       try {
-        const { data, error } = await supabase
+        await supabase
           .from('worker_locations' as any)
           .upsert({
             worker_id: userId,
@@ -109,15 +112,8 @@ export default function Dashboard() {
             is_available: isOnline,
             last_updated: new Date().toISOString()
           }, { onConflict: 'worker_id' })
-          .select()
-
-        if (error) {
-          console.error('❌ Error saving location:', error)
-        } else {
-          console.log('✅ Location saved successfully:', data)
-        }
       } catch (err) {
-        console.error('💥 Exception saving location:', err)
+        console.error('Error saving location:', err)
       }
     }
 
@@ -139,7 +135,7 @@ export default function Dashboard() {
     const newStatus = !isOnline
     setIsOnline(newStatus)
     if (userId && loc) {
-      const { error } = await supabase
+      await supabase
         .from('worker_locations' as any)
         .upsert({
           worker_id: userId,
@@ -149,10 +145,6 @@ export default function Dashboard() {
           is_available: newStatus,
           last_updated: new Date().toISOString()
         }, { onConflict: 'worker_id' })
-
-      if (error) {
-        console.error('Error updating status:', error)
-      }
     }
   }
 
@@ -169,7 +161,7 @@ export default function Dashboard() {
 
   const theme = getTheme(userCategory)
   const pendingRequests = requests.filter(r => r.status === 'pending')
-  const activeRequests = requests.filter(r => r.status !== 'pending')
+  const activeRequests = requests.filter(r => r.status !== 'pending' && r.status !== 'completed' && r.status !== 'cancelled')
 
   const formatTimeAgo = (date: string) => {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000)
@@ -250,861 +242,192 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="stats-grid">
-        <div className="stat-card delay-100" style={{ animationDelay: '0.1s' }}>
-          <div className="stat-number">{pendingRequests.length}</div>
-          <div className="stat-label">Pending</div>
-        </div>
-        <div className="stat-card delay-200" style={{ animationDelay: '0.2s' }}>
-          <div className="stat-number">{activeRequests.length}</div>
-          <div className="stat-label">Active</div>
-        </div>
-        <div className="stat-card delay-300" style={{ animationDelay: '0.3s' }}>
-          <div className="stat-number">{history.filter(h => h.status === 'completed').length}</div>
-          <div className="stat-label">Completed</div>
-        </div>
-        <div className="stat-card delay-400" style={{ animationDelay: '0.4s' }}>
-          <div className="stat-number" style={{ fontSize: '1.5rem' }}>
-            {loc ? '📍' : '❌'}
-          </div>
-          <div className="stat-label">{loc ? 'Location Active' : 'No GPS'}</div>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ animation: 'pulse 2s ease-in-out infinite' }}>🔴</span>
-          Pending Requests ({pendingRequests.length})
-        </h2>
-
-        {pendingRequests.length === 0 && (
-          <div style={{
-            padding: '1.5rem',
-            background: 'white',
-            borderRadius: '12px',
-            border: '1px dashed #e5e7eb',
-            textAlign: 'center',
-            color: '#9ca3af',
-            fontSize: '0.875rem'
-          }}>
-            No pending emergency requests.
-          </div>
-        )}
-
-        {pendingRequests.length > 0 && (
-          <div className="flex flex-col gap-3">
-            {pendingRequests.map((r, index) => (
-              <div key={r.id} className="request-card pending new-request" style={{
-                animationDelay: `${index * 0.1}s`,
-                borderLeft: `6px solid ${theme.color}`,
-                background: 'white',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
-                border: '1px solid #e5e7eb'
-              }}>
-                {/* User Profile Section */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #f3f4f6' }}>
-                  <div style={{
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.5rem',
-                    color: 'white',
-                    fontWeight: 700,
-                    boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)',
-                    overflow: 'hidden',
-                    flexShrink: 0
-                  }}>
-                    {r.user_profile?.profile_image_url ? (
-                      <img src={r.user_profile.profile_image_url} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      r.user_profile?.full_name?.charAt(0)?.toUpperCase() || '👤'
-                    )}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#111827' }}>
-                      {r.user_profile?.full_name || 'Anonymous User'}
-                    </div>
-                    {r.user_profile?.phone && (
-                      <a href={`tel:${r.user_profile.phone}`} style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        color: '#3b82f6',
-                        fontSize: '0.875rem',
-                        textDecoration: 'none'
-                      }}>
-                        📞 {r.user_profile.phone}
-                      </a>
-                    )}
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                      Requested {formatTimeAgo(r.created_at)}
-                    </div>
-                  </div>
-                  <span className="status-badge pending" style={{
-                    animation: 'pulse 2s ease-in-out infinite',
-                    background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-                    border: '1px solid #f59e0b'
-                  }}>
-                    ⏳ Waiting
-                  </span>
-                </div>
-
-                {/* View Details Button */}
-                <button
-                  onClick={() => setSelectedRequest(r)}
-                  className="btn-details"
-                  style={{
-                    width: '100%',
-                    marginBottom: '1rem',
-                    padding: '0.75rem',
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    fontWeight: 600,
-                    color: '#4b5563',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <span>👁️</span> View Full Details
-                </button>
-
-                {/* Emergency Details */}
-                <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <span style={{ fontSize: '1.5rem' }}>
-                      {r.category === 'ambulance' ? '🚑' : r.category === 'fire_truck' ? '🚒' : r.category === 'police' ? '👮' : r.category === 'traffic_police' ? '🚦' : r.category === 'tow_truck' ? '🏗️' : '🚨'}
-                    </span>
-                    <div style={{ fontWeight: 600, fontSize: '1rem', textTransform: 'capitalize' }}>{r.category?.replace('_', ' ') || 'Emergency'} Request</div>
-                  </div>
-                  <div style={{ color: '#6b7280', fontSize: '0.875rem', marginLeft: '2rem' }}>
-                    {r.details || 'No additional details provided'}
-                  </div>
-                </div>
-
-                {/* Location Link */}
-                {r.user_location_lat && r.user_location_lng && (
-                  <a
-                    href={`https://maps.google.com/?q=${r.user_location_lat},${r.user_location_lng}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-                      padding: '0.75rem 1rem',
-                      borderRadius: '12px',
-                      fontSize: '0.875rem',
-                      marginBottom: '1rem',
-                      border: '1px solid #bfdbfe',
-                      color: '#1e40af',
-                      fontWeight: 500
-                    }}
-                  >
-                    <span style={{ fontSize: '1.25rem' }}>📍</span>
-                    <div>
-                      <div>Navigate to caller</div>
-                      <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
-                        {r.user_location_lat.toFixed(6)}, {r.user_location_lng.toFixed(6)}
-                      </div>
-                    </div>
-                  </a>
-                )}
-
-                {/* Accept/Reject Buttons */}
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <button
-                    onClick={() => userId && accept(r.id, userId)}
-                    className="btn-accept"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      flex: 2,
-                      justifyContent: 'center',
-                      padding: '1.25rem',
-                      fontSize: '1.125rem',
-                      fontWeight: 700,
-                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                      color: 'white',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 15px rgba(16, 185, 129, 0.2)'
-                    }}
-                  >
-                    <span style={{ fontSize: '1.5rem' }}>✓</span> ACCEPT
-                  </button>
-                  <button
-                    onClick={() => decline(r.id)}
-                    className="btn-decline"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      flex: 1,
-                      justifyContent: 'center',
-                      padding: '1.25rem',
-                      fontSize: '1.125rem',
-                      fontWeight: 700,
-                      background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-                      color: 'white',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                    }}
-                  >
-                    <span style={{ fontSize: '1.5rem' }}>✗</span> REJECT
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>🎯 Active Requests ({activeRequests.length})</h2>
-        {activeRequests.length === 0 && pendingRequests.length === 0 && (
-          <div style={{ background: 'white', padding: '3rem', borderRadius: '16px', textAlign: 'center', color: '#6b7280' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💤</div>
-            <p style={{ fontWeight: 500 }}>No active requests at the moment</p>
-            <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-              {isOnline ? 'Stay online to receive new emergency requests' : 'Go online to start receiving requests'}
-            </p>
-          </div>
-        )}
-        <div className="flex flex-col gap-3">
-          {activeRequests.map((r, index) => (
-            <div key={r.id} className={`request-card ${r.status}`} style={{
-              animationDelay: `${index * 0.1}s`,
-              borderLeft: `4px solid ${r.status === 'accepted' ? '#10b981' : r.status === 'en_route' ? '#8b5cf6' : '#3b82f6'}`,
-              background: r.status === 'en_route' ? 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)' : 'white'
-            }}>
-              {/* User Profile Section for Active Requests */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>
-                <div style={{
-                  width: '50px',
-                  height: '50px',
-                  borderRadius: '50%',
-                  background: r.status === 'en_route' ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.25rem',
-                  color: 'white',
-                  fontWeight: 700,
-                  boxShadow: r.status === 'en_route' ? '0 4px 12px rgba(139, 92, 246, 0.3)' : '0 4px 12px rgba(16, 185, 129, 0.3)',
-                  overflow: 'hidden'
-                }}>
-                  {r.user_profile?.profile_image_url ? (
-                    <img src={r.user_profile.profile_image_url} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    r.user_profile?.full_name?.charAt(0)?.toUpperCase() || '👤'
-                  )}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: '1.125rem', color: '#111827' }}>
-                    {r.user_profile?.full_name || 'Anonymous User'}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                    {r.category?.replace('_', ' ')} • {formatTimeAgo(r.created_at)}
-                  </div>
-                </div>
-                <span className={`status-badge ${r.status}`} style={{
-                  background: r.status === 'en_route' ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  color: 'white',
-                  animation: r.status === 'en_route' ? 'pulse 2s ease-in-out infinite' : 'none'
-                }}>
-                  {r.status === 'en_route' ? '🚗 En Route' : '✓ Accepted'}
-                </span>
-              </div>
-
-              {/* Live Map Tracking Section - Only for en_route */}
-              {r.status === 'en_route' && r.user_location_lat && r.user_location_lng && (
-                <div style={{ marginBottom: '1rem' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.75rem',
-                    color: '#7c3aed',
-                    fontWeight: 600
-                  }}>
-                    <span style={{ animation: 'pulse 1s ease-in-out infinite' }}>📍</span>
-                    Live Tracking - Heading to User
-                  </div>
-
-                  {/* Simulated Live Map */}
-                  <div style={{
-                    width: '100%',
-                    height: '200px',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    border: '2px solid #8b5cf6',
-                    position: 'relative'
-                  }}>
-                    <iframe
-                      title="Live Tracking Map"
-                      width="100%"
-                      height="100%"
-                      frameBorder="0"
-                      style={{ border: 0 }}
-                      src={`https://www.google.com/maps/embed/v1/directions?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&origin=${loc?.lat || 9.0},${loc?.lng || 38.7}&destination=${r.user_location_lat},${r.user_location_lng}&mode=driving`}
-                      allowFullScreen
-                    />
-                    {/* Live indicator overlay */}
-                    <div style={{
-                      position: 'absolute',
-                      top: '10px',
-                      left: '10px',
-                      background: 'rgba(139, 92, 246, 0.95)',
-                      color: 'white',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}>
-                      <span style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        background: '#ef4444',
-                        animation: 'pulse 1s ease-in-out infinite'
-                      }} />
-                      LIVE
-                    </div>
-                  </div>
-
-                  {/* ETA and Distance Info */}
-                  <div style={{
-                    display: 'flex',
-                    gap: '1rem',
-                    marginTop: '0.75rem',
-                    flexWrap: 'wrap'
-                  }}>
-                    <div style={{
-                      flex: 1,
-                      background: '#f5f3ff',
-                      padding: '0.75rem',
-                      borderRadius: '10px',
-                      textAlign: 'center',
-                      minWidth: '100px'
-                    }}>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>ETA</div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#7c3aed' }}>
-                        {Math.floor(Math.random() * 10 + 3)} min
-                      </div>
-                    </div>
-                    <div style={{
-                      flex: 1,
-                      background: '#f5f3ff',
-                      padding: '0.75rem',
-                      borderRadius: '10px',
-                      textAlign: 'center',
-                      minWidth: '100px'
-                    }}>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Distance</div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#7c3aed' }}>
-                        {(Math.random() * 3 + 0.5).toFixed(1)} km
-                      </div>
-                    </div>
-                    <div style={{
-                      flex: 1,
-                      background: '#f5f3ff',
-                      padding: '0.75rem',
-                      borderRadius: '10px',
-                      textAlign: 'center',
-                      minWidth: '100px'
-                    }}>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Speed</div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#7c3aed' }}>
-                        45 km/h
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Voice Chat Section - Only for en_route */}
-              {r.status === 'en_route' && (
-                <div style={{
-                  background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  marginBottom: '1rem',
-                  border: '1px solid #6ee7b7'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '0.75rem'
-                  }}>
-                    <div style={{ fontWeight: 600, color: '#059669', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span>🎙️</span> Live Voice Chat
-                    </div>
-                    <span style={{
-                      fontSize: '0.75rem',
-                      background: '#10b981',
-                      color: 'white',
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '10px'
-                    }}>
-                      Available
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                    <button
-                      onClick={() => {
-                        alert('🎙️ Voice call initiated! In production, this would connect you with the user via WebRTC.')
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: '0.75rem',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                        color: 'white',
-                        border: 'none',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                        minWidth: '120px'
-                      }}
-                    >
-                      <span style={{ fontSize: '1.25rem' }}>📞</span> Start Call
-                    </button>
-                    <button
-                      onClick={() => {
-                        alert('💬 Message sent: "I am on my way, please stay safe!"')
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: '0.75rem',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                        color: 'white',
-                        border: 'none',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                        minWidth: '120px'
-                      }}
-                    >
-                      <span style={{ fontSize: '1.25rem' }}>💬</span> Quick Message
-                    </button>
-                    {r.user_profile?.phone && (
-                      <a
-                        href={`tel:${r.user_profile.phone}`}
-                        style={{
-                          padding: '0.75rem',
-                          borderRadius: '10px',
-                          background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-                          color: 'white',
-                          border: 'none',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.5rem',
-                          textDecoration: 'none'
-                        }}
-                      >
-                        <span style={{ fontSize: '1.25rem' }}>📱</span> Call Phone
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Request Details */}
-              <div style={{ marginBottom: '0.75rem' }}>
-                <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                  {r.details || 'No additional details'}
-                </div>
-              </div>
-
-              {/* Navigation Link */}
-              {r.user_location_lat && r.user_location_lng && (
-                <a
-                  href={`https://maps.google.com/maps?daddr=${r.user_location_lat},${r.user_location_lng}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    background: r.status === 'en_route' ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : '#eff6ff',
-                    color: r.status === 'en_route' ? 'white' : '#1e40af',
-                    padding: '0.75rem 1rem',
-                    borderRadius: '10px',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    marginBottom: '1rem',
-                    textDecoration: 'none'
-                  }}
-                >
-                  🧭 Open in Google Maps Navigation
-                </a>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
-                {r.status === 'accepted' && (
-                  <button
-                    onClick={() => loc && updateStatus(r.id, 'en_route', loc)}
-                    className="btn-enroute"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      flex: 1,
-                      justifyContent: 'center',
-                      padding: '1rem',
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '10px',
-                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
-                    }}
-                  >
-                    <span style={{ fontSize: '1.25rem' }}>🚗</span> Start En Route & Share Location
-                  </button>
-                )}
-                {(r.status === 'accepted' || r.status === 'en_route') && (
-                  <>
-                    <button
-                      onClick={() => updateStatus(r.id, 'completed')}
-                      className="btn-complete"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        flex: 1,
-                        justifyContent: 'center',
-                        padding: '1rem',
-                        fontSize: '1rem',
-                        fontWeight: 600,
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '10px',
-                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-                      }}
-                    >
-                      <span style={{ fontSize: '1.25rem' }}>✓</span> Completed
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (window.confirm("Are you sure you want to delete this emergency request?")) {
-                          updateStatus(r.id, 'cancelled');
-                        }
-                      }}
-                      className="btn-delete"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        flex: 1,
-                        justifyContent: 'center',
-                        padding: '1rem',
-                        fontSize: '1rem',
-                        fontWeight: 600,
-                        background: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '10px',
-                        boxShadow: '0 4px 12px rgba(107, 114, 128, 0.3)'
-                      }}
-                    >
-                      <span style={{ fontSize: '1.25rem' }}>❌</span> Delete
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>📋 Work History</h2>
-        {history.length === 0 && <div style={{ color: '#6b7280', fontStyle: 'italic' }}>No completed jobs yet.</div>}
-        <div className="flex flex-col gap-3">
-          {history.length === 0 && <div style={{ color: '#6b7280', fontStyle: 'italic', padding: '1rem', background: '#f9fafb', borderRadius: '12px' }}>No completed jobs yet.</div>}
-          {history.slice(0, 5).map((r, index) => (
-            <div key={r.id} className="animate-fade-in" style={{
-              background: 'white',
-              padding: '1.25rem',
-              borderRadius: '16px',
-              border: '1px solid #e5e7eb',
-              animationDelay: `${index * 0.1}s`,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-            }}>
-              <div className="flex justify-between items-center">
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '1.125rem', color: '#111827' }}>{r.category?.replace('_', ' ') || 'Emergency'}</div>
-                  <div style={{ fontSize: '0.875rem', color: '#4b5563', marginTop: '0.25rem' }}>{new Date(r.created_at).toLocaleString()}</div>
-                </div>
-                <span className={`status-badge ${r.status}`} style={{ transform: 'scale(1)', fontSize: '0.875rem', padding: '0.4rem 0.8rem' }}>
-                  {r.status === 'completed' ? '✓ Completed' : r.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-        {(history.length > 5 || (history.length > 0 && history.length <= 5)) && (
-          <button
-            className="btn-secondary"
-            style={{ width: '100%', marginTop: '1rem' }}
-            onClick={() => setShowHistoryModal(true)}
-          >
-            View all history ({history.length} total)
-          </button>
-        )}
-      </div>
-
-      {/* Work History Modal */}
-      <Modal
-        isOpen={showHistoryModal}
-        onClose={() => setShowHistoryModal(false)}
-        title={`Work History (${history.length})`}
-      >
-        <div className="flex flex-col gap-3">
-          {history.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-              No completed jobs yet.
-            </div>
-          ) : (
-            history.map((r) => (
-              <div key={r.id} style={{
-                background: '#f9fafb',
-                padding: '1rem',
-                borderRadius: '12px',
-                border: '1px solid #e5e7eb'
-              }}>
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <div style={{ fontWeight: 600, color: '#111827' }}>
-                      {r.category?.replace('_', ' ') || 'Emergency'} Request
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                      {new Date(r.created_at).toLocaleString()}
-                    </div>
-                  </div>
-                  <span className={`status-badge ${r.status}`} style={{ fontSize: '0.75rem' }}>
-                    {r.status}
-                  </span>
-                </div>
-                {r.user_profile && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <div style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
-                      background: '#e5e7eb',
-                      overflow: 'hidden'
-                    }}>
-                      {r.user_profile.profile_image_url ? (
-                        <img src={r.user_profile.profile_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>👤</div>
-                      )}
-                    </div>
-                    <span style={{ fontSize: '0.875rem', color: '#374151' }}>{r.user_profile.full_name}</span>
-                  </div>
-                )}
-                {r.details && (
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280', background: 'white', padding: '0.5rem', borderRadius: '6px' }}>
-                    {r.details}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      </Modal>
-
-      {/* Request Details Modal */}
-      <Modal
-        isOpen={!!selectedRequest}
-        onClose={() => setSelectedRequest(null)}
-        title="Emergency Request Details"
-      >
-        {selectedRequest && (
-          <div>
-            {/* Large User Profile */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              marginBottom: '1.5rem',
-              paddingBottom: '1.5rem',
-              borderBottom: '1px solid #e5e7eb'
-            }}>
-              <div style={{
-                width: '100px',
-                height: '100px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '2.5rem',
-                color: 'white',
-                marginBottom: '1rem',
-                overflow: 'hidden',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-              }}>
-                {selectedRequest.user_profile?.profile_image_url ? (
-                  <img src={selectedRequest.user_profile.profile_image_url} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  selectedRequest.user_profile?.full_name?.charAt(0)?.toUpperCase() || '👤'
-                )}
-              </div>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>
-                {selectedRequest.user_profile?.full_name || 'Anonymous User'}
-              </h3>
-              {selectedRequest.user_profile?.phone && (
-                <a href={`tel:${selectedRequest.user_profile.phone}`} style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  color: '#3b82f6',
-                  fontSize: '1.125rem',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  background: '#eff6ff',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '20px'
-                }}>
-                  📞 {selectedRequest.user_profile.phone}
-                </a>
-              )}
-            </div>
-
-            {/* Request Info */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div style={{ background: '#f9fafb', padding: '1rem', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Category</div>
-                  <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span>
-                      {selectedRequest.category === 'ambulance' ? '🚑' :
-                        selectedRequest.category === 'fire_truck' ? '🚒' :
-                          selectedRequest.category === 'police' ? '👮' :
-                            selectedRequest.category === 'traffic_police' ? '🚦' :
-                              selectedRequest.category === 'tow_truck' ? '🏗️' : '🚨'}
-                    </span>
-                    {selectedRequest.category?.replace('_', ' ') || 'Emergency'}
-                  </div>
-                </div>
-                <div style={{ background: '#f9fafb', padding: '1rem', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Time</div>
-                  <div style={{ fontWeight: 600 }}>
-                    {formatTimeAgo(selectedRequest.created_at)}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ background: '#fff1f2', padding: '1rem', borderRadius: '12px', border: '1px solid #fecdd3' }}>
-                <div style={{ fontSize: '0.75rem', color: '#9f1239', marginBottom: '0.5rem', fontWeight: 700 }}>EMERGENCY DETAILS</div>
-                <div style={{ color: '#111827', lineHeight: 1.5 }}>
-                  {selectedRequest.details || 'No additional details provided by the user.'}
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col gap-3">
-              {selectedRequest.user_location_lat && selectedRequest.user_location_lng && (
-                <a
-                  href={`https://maps.google.com/?q=${selectedRequest.user_location_lat},${selectedRequest.user_location_lng}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-secondary"
-                  style={{ justifyContent: 'center', background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe' }}
-                >
-                  📍 View Location on Map
-                </a>
-              )}
-
-              {selectedRequest.status === 'pending' && (
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => {
-                      userId && accept(selectedRequest.id, userId)
-                      setSelectedRequest(null)
-                    }}
-                    className="btn-accept"
-                    style={{ justifyContent: 'center' }}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => {
-                      decline(selectedRequest.id)
-                      setSelectedRequest(null)
-                    }}
-                    className="btn-decline"
-                    style={{ justifyContent: 'center' }}
-                  >
-                    Reject
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </Modal>
-      {/* Cancellation Alert Modal */}
-      {cancelledRequest && (
-        <Modal
-          isOpen={!!cancelledRequest}
-          onClose={() => setCancelledRequest(null)}
-          title="⚠️ Request Cancelled"
+      {/* Tabs Navigation */}
+      <div className="flex bg-white/50 backdrop-blur-md p-1 rounded-2xl mb-8 shadow-sm border border-white/20 sticky top-4 z-20">
+        <button
+          onClick={() => setActiveTab('requests')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 ${
+            activeTab === 'requests' 
+              ? 'bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg' 
+              : 'text-gray-500 hover:bg-white/50'
+          }`}
         >
-          <div style={{ textAlign: 'center', padding: '1.5rem' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🛑</div>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem', color: '#dc2626' }}>
-              User Cancelled Request
-            </h3>
-            <p style={{ color: '#4b5563', marginBottom: '1.5rem' }}>
-              The emergency request from <strong>{cancelledRequest.user_profile?.full_name || 'the user'}</strong> has been cancelled.
-              You can now stop heading to their location.
-            </p>
-            <button
-              onClick={() => setCancelledRequest(null)}
-              style={{
-                width: '100%',
-                padding: '1rem',
-                background: '#111827',
-                color: 'white',
-                borderRadius: '8px',
-                fontWeight: 600,
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              Acknowledge
-            </button>
+          <Bell size={18} />
+          <span className="font-bold">Requests</span>
+          {pendingRequests.length > 0 && (
+            <span className="bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center animate-bounce ml-2">
+              {pendingRequests.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('revenue')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 ${
+            activeTab === 'revenue' 
+              ? 'bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg' 
+              : 'text-gray-500 hover:bg-white/50'
+          }`}
+        >
+          <TrendingUp size={18} />
+          <span className="font-bold">Earnings</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('demand')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 ${
+            activeTab === 'demand' 
+              ? 'bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg' 
+              : 'text-gray-500 hover:bg-white/50'
+          }`}
+        >
+          <MapIcon size={18} />
+          <span className="font-bold">Hotspots</span>
+        </button>
+      </div>
+
+      {activeTab === 'requests' && (
+        <>
+          <div className="stats-grid">
+            <div className="stat-card delay-100" style={{ animationDelay: '0.1s' }}>
+              <div className="stat-number">{pendingRequests.length}</div>
+              <div className="stat-label">Pending</div>
+            </div>
+            <div className="stat-card delay-200" style={{ animationDelay: '0.2s' }}>
+              <div className="stat-number">{activeRequests.length}</div>
+              <div className="stat-label">Active</div>
+            </div>
+            <div className="stat-card delay-300" style={{ animationDelay: '0.3s' }}>
+              <div className="stat-number">{history.filter(h => h.status === 'completed').length}</div>
+              <div className="stat-label">Completed</div>
+            </div>
+            <div className="stat-card delay-400" style={{ animationDelay: '0.4s' }}>
+              <div className="stat-number" style={{ fontSize: '1.5rem' }}>
+                {loc ? '📍' : '❌'}
+              </div>
+              <div className="stat-label">{loc ? 'Location Active' : 'No GPS'}</div>
+            </div>
+          </div>
+          
+          <div className="glass p-6 rounded-2xl mb-8 border-l-4 border-yellow-500">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                <Award className="text-yellow-500" />
+                Achievement Progress
+              </h3>
+              <span className="text-sm font-bold text-yellow-600">Level 5 Worker</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-yellow-500 h-2 rounded-full w-[65%]"></div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">12 more jobs to become a "Top Rated Pro"</p>
+          </div>
+
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ animation: 'pulse 2s ease-in-out infinite' }}>🔴</span>
+              Pending Requests ({pendingRequests.length})
+            </h2>
+
+            {pendingRequests.length === 0 && (
+              <div className="bg-white/50 backdrop-blur-sm p-8 rounded-2xl border border-dashed border-gray-300 text-center text-gray-400">
+                No pending emergency requests.
+              </div>
+            )}
+
+            {pendingRequests.length > 0 && (
+              <div className="flex flex-col gap-3">
+                {pendingRequests.map((r, index) => (
+                  <div key={r.id} className="request-card pending" style={{ animationDelay: `${index * 0.1}s`, borderLeft: `6px solid ${theme.color}` }}>
+                    <div className="flex items-center gap-4 mb-4 pb-4 border-bottom border-gray-100">
+                      <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 text-xl font-bold">
+                        {r.user_profile?.full_name?.charAt(0).toUpperCase() || '👤'}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-800">{r.user_profile?.full_name || 'Anonymous'}</h4>
+                        <p className="text-xs text-gray-500">{formatTimeAgo(r.created_at)}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => userId && accept(r.id, userId)} className="btn-accept flex-1">ACCEPT</button>
+                      <button onClick={() => decline(r.id)} className="btn-decline p-3">✗</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>🎯 Active Requests ({activeRequests.length})</h2>
+            <div className="flex flex-col gap-3">
+              {activeRequests.map((r, index) => (
+                <div key={r.id} className={`request-card ${r.status}`} style={{ animationDelay: `${index * 0.1}s`, borderLeft: `4px solid ${theme.color}` }}>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-bold text-gray-800">{r.user_profile?.full_name || 'Anonymous'}</h4>
+                    <span className="status-badge">{r.status}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {r.status === 'accepted' && (
+                      <button onClick={() => loc && updateStatus(r.id, 'en_route', loc)} className="btn-enroute flex-1">En Route</button>
+                    )}
+                    <button onClick={() => updateStatus(r.id, 'completed')} className="btn-complete flex-1">Complete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>📋 Recent History</h2>
+            <div className="flex flex-col gap-3">
+              {history.slice(0, 3).map((r, index) => (
+                <div key={r.id} className="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
+                  <div>
+                    <p className="font-bold text-gray-800">{r.category?.replace('_', ' ')}</p>
+                    <p className="text-xs text-gray-500">{new Date(r.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <span className="text-green-600 font-bold">Completed</span>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setShowHistoryModal(true)} className="w-full mt-4 py-3 bg-gray-100 rounded-xl text-gray-600 font-bold">View Full History</button>
+          </div>
+        </>
+      )}
+
+      {activeTab === 'revenue' && (
+        <div className="animate-fade-in-up">
+          <WorkerEarnings userId={userId} />
+        </div>
+      )}
+
+      {activeTab === 'demand' && (
+        <div className="animate-fade-in-up">
+          <DemandHeatmap />
+        </div>
+      )}
+
+      {/* Modals */}
+      <Modal isOpen={showHistoryModal} onClose={() => setShowHistoryModal(false)} title="Work History">
+        <div className="flex flex-col gap-3 p-2">
+          {history.length === 0 ? <p className="text-center text-gray-400">No jobs completed yet.</p> : history.map(r => (
+            <div key={r.id} className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <div className="flex justify-between font-bold">
+                <span>{r.category?.replace('_', ' ')}</span>
+                <span className="text-xs text-gray-500">{new Date(r.created_at).toLocaleDateString()}</span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">{r.details || 'No details provided'}</p>
+            </div>
+          ))}
+        </div>
+      </Modal>
+
+      {cancelledRequest && (
+        <Modal isOpen={true} onClose={() => setCancelledRequest(null)} title="⚠️ Cancelled">
+          <div className="text-center p-6">
+            <div className="text-5xl mb-4">🛑</div>
+            <h3 className="text-xl font-bold mb-2">Request Cancelled</h3>
+            <p className="text-gray-600 mb-6 font-medium">The user has cancelled the request.</p>
+            <button onClick={() => setCancelledRequest(null)} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold shadow-xl">Acknowledge</button>
           </div>
         </Modal>
       )}

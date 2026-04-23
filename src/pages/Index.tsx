@@ -21,6 +21,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useLocation as useLocationContext } from '@/contexts/LocationContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface Service {
   id: string;
@@ -41,6 +42,12 @@ interface Service {
     is_verified?: boolean;
     badges?: string[];
   };
+  property_type?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  area_sqm?: number;
+  is_furnished?: boolean;
+  listing_type?: string;
 }
 
 const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -118,7 +125,13 @@ const Index = () => {
           lng: ad.location_lng || currentLocation.lng
         },
         user_id: ad.user_id,
-        profiles: ad.profiles
+        profiles: ad.profiles,
+        property_type: ad.property_type,
+        bedrooms: ad.bedrooms,
+        bathrooms: ad.bathrooms,
+        area_sqm: ad.area_sqm,
+        is_furnished: ad.is_furnished,
+        listing_type: ad.listing_type
       };
     });
   }, [ads, currentLocation.lat, currentLocation.lng]);
@@ -386,18 +399,28 @@ const Index = () => {
                       <span className="hidden sm:inline">{t('map3D') || '3D Map'}</span>
                     </button>
 
-                    {/* View Mode Toggle */}
-                    <div className="flex bg-white rounded-lg shadow-md overflow-hidden">
+                    <div className="flex bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
                       <button
                         onClick={() => setViewMode('list')}
-                        className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${viewMode === 'list'
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                          }`}
+                        className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
+                          viewMode === 'list'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-50'
+                        }`}
                       >
                         <List size={20} />
-                        <span className="hidden sm:inline">{t('listView')}</span>
-                        <span className="sm:hidden">{t('listView')}</span>
+                        <span className="hidden sm:inline">List</span>
+                      </button>
+                      <button
+                        onClick={() => setViewMode('map')}
+                        className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
+                          viewMode === 'map'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <MapPin size={20} />
+                        <span className="hidden sm:inline">Map</span>
                       </button>
                     </div>
                   </div>
@@ -420,7 +443,13 @@ const Index = () => {
                         onPostClick={handlePostClick}
                       />
                     ) : (
-                      null
+                      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden h-[600px] mb-8 sticky top-24">
+                        <MapView 
+                          services={filteredServices} 
+                          userLocation={currentLocation} 
+                          distanceFilter={distanceFilter} 
+                        />
+                      </div>
                     )}
                   </>
                 )}

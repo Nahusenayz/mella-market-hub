@@ -22,6 +22,12 @@ interface Service {
   distance: number;
   image: string;
   location: { lat: number; lng: number };
+  property_type?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  area_sqm?: number;
+  is_furnished?: boolean;
+  listing_type?: string;
 }
 
 interface MapViewProps {
@@ -367,21 +373,76 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
 
     // Add service markers
     services.forEach((service) => {
+      const getCategoryIcon = (cat: string) => {
+        if (cat === 'Properties') return '🏠';
+        if (cat === 'Community Help') return '🤝';
+        if (cat === 'Safety Alert') return '⚠️';
+        return '📍';
+      };
+
+      const getCategoryColor = (cat: string) => {
+        if (cat === 'Properties') return '#8b5cf6';
+        if (cat === 'Community Help') return '#10b981';
+        if (cat === 'Safety Alert') return '#dc2626';
+        return '#f97316';
+      };
+
       const serviceIcon = L.divIcon({
-        html: `<div style="background: #f97316; color: white; width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">S</div>`,
-        iconSize: [30, 30],
+        html: `
+          <div style="
+            background: ${getCategoryColor(service.category)}; 
+            color: white; 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50% 50% 50% 0; 
+            border: 2px solid white; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 18px; 
+            transform: rotate(-45deg);
+            margin-left: -18px;
+            margin-top: -36px;
+          ">
+            <div style="transform: rotate(45deg)">${getCategoryIcon(service.category)}</div>
+            <div style="
+              position: absolute;
+              bottom: -4px;
+              right: -4px;
+              width: 10px;
+              height: 10px;
+              background: ${getCategoryColor(service.category)};
+              border: 2px solid white;
+              border-radius: 50%;
+              animation: pulse 2s infinite;
+            "></div>
+          </div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
         className: 'service-marker'
       });
+
+      const propertyInfo = service.category === 'Properties' ? `
+        <div style="display: flex; gap: 8px; margin: 8px 0; padding: 4px; background: #f5f3ff; border-radius: 4px; font-size: 11px; color: #5b21b6; font-weight: 600;">
+          <span>🛏️ ${service.bedrooms || 0}</span>
+          <span>🚿 ${service.bathrooms || 0}</span>
+          <span>📐 ${service.area_sqm || 0}m²</span>
+        </div>
+      ` : '';
 
       L.marker([service.location.lat, service.location.lng], { icon: serviceIcon })
         .addTo(markersGroup.current!)
         .bindPopup(`
-          <div style="max-width: 200px;">
-            <strong>${service.title}</strong><br>
-            <small>${service.description}</small><br>
-            <strong>ETB ${service.price.toLocaleString()}</strong><br>
-            <small>by ${service.provider}</small><br>
-            <small>${service.distance.toFixed(1)}km away</small>
+          <div style="min-width: 200px; padding: 4px;">
+            <img src="${service.image}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />
+            <strong style="color: #1f2937; font-size: 14px;">${service.title}</strong>
+            ${propertyInfo}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+              <span style="font-weight: 800; color: #f97316;">ETB ${service.price.toLocaleString()}</span>
+              <span style="font-size: 11px; color: #6b7280;">${service.distance.toFixed(1)}km away</span>
+            </div>
+            <button style="width: 100%; margin-top: 10px; padding: 8px; background: #f97316; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">View Details</button>
           </div>
         `);
     });

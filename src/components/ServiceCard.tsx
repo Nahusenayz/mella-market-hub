@@ -15,6 +15,12 @@ interface Service {
   image: string;
   location: { lat: number; lng: number };
   user_id: string;
+  property_type?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  area_sqm?: number;
+  is_furnished?: boolean;
+  listing_type?: string;
   profiles?: {
     full_name: string;
     rating: number;
@@ -138,7 +144,29 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
             <MapPin size={16} className="text-orange-500" />
             <span>{service.distance.toFixed(1)} km away</span>
           </div>
+          
+          {service.category === 'Properties' && service.listing_type && (
+            <span className={`px-2 py-1 rounded text-xs font-bold ${
+              service.listing_type === 'Rent' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
+            }`}>
+              FOR {service.listing_type.toUpperCase()}
+            </span>
+          )}
         </div>
+
+        {service.category === 'Properties' && (
+          <div className="grid grid-cols-3 gap-2 mb-4 p-2 bg-orange-50 rounded-lg text-xs text-orange-800 font-medium">
+            <div className="flex items-center justify-center gap-1">
+              <span>🛏️</span> {service.bedrooms || 0} Bed
+            </div>
+            <div className="flex items-center justify-center gap-1">
+              <span>🚿</span> {service.bathrooms || 0} Bath
+            </div>
+            <div className="flex items-center justify-center gap-1">
+              <span>📐</span> {service.area_sqm || 0} m²
+            </div>
+          </div>
+        )}
         
         <div className="flex gap-2">
           {!isOwnAd && (

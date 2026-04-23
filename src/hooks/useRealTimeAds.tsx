@@ -19,6 +19,12 @@ interface Ad {
     rating: number;
     profile_image_url: string;
   } | null;
+  property_type: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  area_sqm: number | null;
+  is_furnished: boolean | null;
+  listing_type: string | null;
 }
 
 export const useRealTimeAds = () => {
@@ -53,7 +59,7 @@ export const useRealTimeAds = () => {
           rating: ad.profiles.rating || 0,
           profile_image_url: ad.profiles.profile_image_url || ''
         } : null
-      }));
+      })) as unknown as Ad[];
 
       setAds(transformedAds);
     } catch (error) {
@@ -122,7 +128,7 @@ export const useRealTimeAds = () => {
           rating: ad.profiles.rating || 0,
           profile_image_url: ad.profiles.profile_image_url || ''
         } : null
-      }));
+      })) as unknown as Ad[];
 
       // Filter by location if provided, with max 5km limit
       if (location && transformedAds.length > 0) {
