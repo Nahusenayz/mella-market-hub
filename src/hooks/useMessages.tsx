@@ -64,13 +64,13 @@ export const useMessages = (activeOtherUserId?: string) => {
             .from('profiles')
             .select('id, full_name, profile_image_url, is_verified, badges')
             .eq('id', otherUserId)
-            .single();
+            .maybeSingle();
 
           return {
             ...conv,
             other_user: {
               id: otherUserId,
-              full_name: profile?.full_name || 'Unknown User',
+              full_name: profile?.full_name || 'Mella User',
               profile_image_url: profile?.profile_image_url || '',
               is_verified: profile?.is_verified || false,
               badges: Array.isArray(profile?.badges) ? profile.badges.filter((badge): badge is string => typeof badge === 'string') : []
@@ -91,10 +91,13 @@ export const useMessages = (activeOtherUserId?: string) => {
     if (!user) return;
 
     try {
+      // Use a more robust filter: both participants must be in the sender/receiver fields
+      // This is equivalent to (sender=A OR receiver=A) AND (sender=B OR receiver=B)
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${user.id})`)
+        .filter('sender_id', 'in', `(${user.id},${otherUserId})`)
+        .filter('receiver_id', 'in', `(${user.id},${otherUserId})`)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -124,7 +127,7 @@ export const useMessages = (activeOtherUserId?: string) => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .insert({
           sender_id: user.id,
@@ -132,21 +135,30 @@ export const useMessages = (activeOtherUserId?: string) => {
           content,
           message_type: messageType,
           reply_to_message_id: replyToId
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Error sending message:', error);
         return false;
       }
 
-      // Optionally create social feed activity (if table exists)
+      // Immediately add to local state for snappier UI
+      if (activeOtherUserId === receiverId) {
+        setMessages(prev => [...prev, data]);
+      }
+
+      // Update conversations list
+      fetchConversations();
+
+      // Optionally create social feed activity
       try {
         createActivity('sent_message', {
           receiver_id: receiverId,
           preview: content.substring(0, 50) + (content.length > 50 ? '...' : '')
         }, 'private');
       } catch (err) {
-        // Silently ignore if social feed is unavailable
         console.log('Social feed activity not created');
       }
 
@@ -176,9 +188,9 @@ export const useMessages = (activeOtherUserId?: string) => {
     fetchConversations();
 
     if (user) {
-      // Set up real-time subscription for messages
+      // Use a unique channel name per user to avoid conflicts
       const channel = supabase
-        .channel('messages-changes')
+        .channel(`messages-user-${user.id}`)
         .on(
           'postgres_changes',
           {
@@ -190,12 +202,15 @@ export const useMessages = (activeOtherUserId?: string) => {
             console.log('Real-time message update:', payload);
             fetchConversations();
 
+            // Handle INSERT, UPDATE, DELETE safely
+            const msg = payload.new || payload.old;
+            if (!msg) return;
+
             // If we're currently viewing messages for a specific user, refetch them
             if (activeOtherUserId) {
-              const newMsg = payload.new;
               const isRelevant = 
-                (newMsg.sender_id === user.id && newMsg.receiver_id === activeOtherUserId) ||
-                (newMsg.sender_id === activeOtherUserId && newMsg.receiver_id === user.id);
+                (msg.sender_id === user.id && msg.receiver_id === activeOtherUserId) ||
+                (msg.sender_id === activeOtherUserId && msg.receiver_id === user.id);
               
               if (isRelevant) {
                 fetchMessages(activeOtherUserId);

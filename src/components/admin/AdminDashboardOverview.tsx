@@ -1,5 +1,4 @@
-import React from 'react';
-import { Users, Wrench, Briefcase, Clock } from 'lucide-react';
+import { Users, Wrench, Briefcase, Clock, AlertTriangle } from 'lucide-react';
 import { useAdminStats } from '@/hooks/useAdminData';
 
 const AdminDashboardOverview: React.FC = () => {
@@ -17,6 +16,12 @@ const AdminDashboardOverview: React.FC = () => {
       value: stats?.activeWorkers ?? 0,
       icon: Wrench,
       color: 'green' as const,
+    },
+    {
+      label: 'Active Emergencies',
+      value: stats?.activeEmergencies ?? 0,
+      icon: AlertTriangle,
+      color: 'red' as const,
     },
     {
       label: 'Total Jobs',

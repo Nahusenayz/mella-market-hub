@@ -9,17 +9,19 @@ export const useAdminStats = () => {
   return useQuery({
     queryKey: ['admin', 'stats'],
     queryFn: async () => {
-      const [usersRes, workersRes, jobsRes, pendingRes] = await Promise.all([
+      const [usersRes, workersRes, jobsRes, pendingRes, emergencyRes] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('user_type', 'worker'),
         supabase.from('bookings').select('id', { count: 'exact', head: true }),
         supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('emergency_requests').select('id', { count: 'exact', head: true }).neq('status', 'completed'),
       ]);
       return {
         totalUsers: usersRes.count ?? 0,
         activeWorkers: workersRes.count ?? 0,
         totalJobs: jobsRes.count ?? 0,
         pendingJobs: pendingRes.count ?? 0,
+        activeEmergencies: emergencyRes.count ?? 0,
       };
     },
     refetchInterval: 30000,
@@ -214,6 +216,49 @@ export const useAdminReports = () => {
       };
     },
     refetchInterval: 60000,
+  });
+};
+
+// ─── Emergencies ───
+export const useAdminEmergencies = (page: number) => {
+  return useQuery({
+    queryKey: ['admin', 'emergencies', page],
+    queryFn: async () => {
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data, error, count } = await supabase
+        .from('emergency_requests')
+        .select(`
+          *,
+          user_profile:profiles!emergency_requests_user_id_fkey(full_name, phone_number),
+          worker_profile:profiles!emergency_requests_worker_id_fkey(full_name, phone_number)
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
+      return { data: data ?? [], totalCount: count ?? 0 };
+    },
+    refetchInterval: 10000, // Refresh every 10s for emergencies
+  });
+};
+
+export const useUpdateEmergency = () => {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, unknown> }) => {
+      const { error } = await supabase.from('emergency_requests').update(updates).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin'] });
+      toast({ title: 'Emergency updated successfully' });
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Update failed', description: err.message, variant: 'destructive' });
+    },
   });
 };
 

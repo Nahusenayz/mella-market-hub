@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { supabase } from '@/integrations/supabase/client';
 import AdminSidebar, { type AdminSection } from '@/components/admin/AdminSidebar';
 import AdminDashboardOverview from '@/components/admin/AdminDashboardOverview';
 import AdminUsersTable from '@/components/admin/AdminUsersTable';
@@ -9,7 +10,8 @@ import AdminWorkersTable from '@/components/admin/AdminWorkersTable';
 import AdminJobsTable from '@/components/admin/AdminJobsTable';
 import AdminPaymentsTable from '@/components/admin/AdminPaymentsTable';
 import AdminReports from '@/components/admin/AdminReports';
-import { ShieldX, Loader2 } from 'lucide-react';
+import AdminEmergenciesTable from '@/components/admin/AdminEmergenciesTable';
+import { ShieldX, Loader2, ShieldCheck, Lock, User as UserIcon } from 'lucide-react';
 import '@/styles/admin.css';
 
 const AdminDashboard: React.FC = () => {
@@ -17,26 +19,105 @@ const AdminDashboard: React.FC = () => {
   const { isAdmin, isLoading, profile } = useAdminAuth();
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Login states
+  const [loginUser, setLoginUser] = useState('');
+  const [loginPass, setLoginPass] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    setLoginError('');
+    
+    // Map 'admin' to a full email if needed for Supabase Auth
+    const email = loginUser.includes('@') ? loginUser : `${loginUser}@mella.com`;
+    
+    const { error } = await supabase.auth.signInWithPassword({ 
+      email: email, 
+      password: loginPass 
+    });
+
+    if (error) {
+      setLoginError('Invalid credentials. Please check your username and password.');
+      setLoginLoading(false);
+    }
+  };
 
   // Loading state
   if (isLoading) {
     return (
       <div className="admin-access-denied">
-        <Loader2 size={40} style={{ animation: 'spin 1s linear infinite', color: '#6366f1' }} />
-        <p>Verifying admin access…</p>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        <Loader2 size={40} className="animate-spin text-orange-500" />
+        <p className="mt-4">Verifying admin access…</p>
       </div>
     );
   }
 
-  // Access denied
+  // Access denied / Login form
   if (!isAdmin) {
     return (
-      <div className="admin-access-denied">
-        <ShieldX size={48} style={{ color: '#ef4444' }} />
-        <h2>Access Denied</h2>
-        <p>You don't have permission to access the admin dashboard.</p>
-        <Link to="/">← Back to Home</Link>
+      <div className="min-h-screen flex items-center justify-center bg-[#0f172a] p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ShieldCheck className="text-orange-600" size={32} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Mella Admin Portal</h2>
+            <p className="text-gray-500 mt-1">Please sign in to manage the platform</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-6">
+            {loginError && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 text-sm text-red-700">
+                {loginError}
+              </div>
+            )}
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+              <div className="relative">
+                <UserIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  placeholder="admin"
+                  value={loginUser}
+                  onChange={e => setLoginUser(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <div className="relative">
+                <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="password"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  placeholder="••••••••"
+                  value={loginPass}
+                  onChange={e => setLoginPass(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50"
+              disabled={loginLoading}
+            >
+              {loginLoading ? 'Authenticating...' : 'Sign In'}
+            </button>
+          </form>
+
+          <p className="mt-8 text-center text-xs text-gray-400 uppercase tracking-widest">
+            Protected by Mella Security
+          </p>
+        </div>
       </div>
     );
   }
@@ -49,6 +130,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminUsersTable />;
       case 'workers':
         return <AdminWorkersTable />;
+      case 'emergencies':
+        return <AdminEmergenciesTable />;
       case 'jobs':
         return <AdminJobsTable />;
       case 'payments':

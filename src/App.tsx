@@ -48,10 +48,7 @@ const App = () => (
                   <Route path="/worker-dashboard" element={<WorkerDashboard />} />
                   <Route path="/responder" element={<ResponderDashboard />} />
                   <Route path="/map3d" element={<Map3D />} />
-                  <Route path="/admin-login" element={<AdminLogin />} />
-                  <Route path="/emergency-admin" element={<EmergencyAdminPanel />} />
-                  <Route path="/admin-register" element={<AdminRegister />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin-login" element={<AdminDashboard />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <BottomNavigation />

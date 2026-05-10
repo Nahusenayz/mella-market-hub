@@ -20,7 +20,7 @@ const AdminLogin: React.FC = () => {
       return;
     }
     // Optionally: fetch user profile and check for admin role here
-    navigate('/emergency-admin');
+    navigate('/admin');
   };
 
   return (

@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   X,
+  AlertTriangle,
 } from 'lucide-react';
 
 export type AdminSection =
@@ -17,6 +18,7 @@ export type AdminSection =
   | 'workers'
   | 'jobs'
   | 'payments'
+  | 'emergencies'
   | 'reports';
 
 interface AdminSidebarProps {
@@ -32,6 +34,7 @@ const navItems: { key: AdminSection; label: string; icon: React.ElementType }[] 
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'users', label: 'Users', icon: Users },
   { key: 'workers', label: 'Workers', icon: Wrench },
+  { key: 'emergencies', label: 'Emergencies', icon: AlertTriangle },
   { key: 'jobs', label: 'Jobs', icon: Briefcase },
   { key: 'payments', label: 'Payments', icon: CreditCard },
   { key: 'reports', label: 'Reports', icon: BarChart3 },
