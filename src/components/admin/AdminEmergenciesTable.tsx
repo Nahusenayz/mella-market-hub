@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAdminEmergencies, useUpdateEmergency } from '@/hooks/useAdminData';
-import { AlertTriangle, MapPin, Phone, User, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { AlertTriangle, MapPin, Phone, User, CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 const AdminEmergenciesTable: React.FC = () => {
