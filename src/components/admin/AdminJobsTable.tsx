@@ -21,14 +21,8 @@ const AdminJobsTable: React.FC = () => {
     updateJob.mutate({ id, updates: { status: newStatus } });
   };
 
-  const handleCancel = (id: string) => {
-    updateJob.mutate({ id, updates: { status: 'cancelled' } });
-  };
-
-  const handleForceAssign = (id: string) => {
-    // In a real scenario, you'd open a modal to pick a worker
-    // For now, just mark as active
-    updateJob.mutate({ id, updates: { status: 'active' } });
+  const handleToggleActive = (id: string, currentStatus: boolean) => {
+    updateJob.mutate({ id, updates: { is_active: !currentStatus } });
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -36,49 +30,28 @@ const AdminJobsTable: React.FC = () => {
     return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
-  const getStatusBadgeColor = (status: string | null): string => {
-    switch (status) {
-      case 'completed': return 'green';
-      case 'active': case 'in_progress': return 'blue';
-      case 'pending': return 'yellow';
-      case 'cancelled': return 'red';
-      default: return 'gray';
-    }
-  };
-
   return (
     <div>
       <div className="admin-content-header">
-        <h2>Jobs Management</h2>
-        <p>Monitor and manage all service bookings</p>
+        <h2>User Posts (Jobs)</h2>
+        <p>Monitor all service listings and marketplace posts</p>
       </div>
 
       <div className="admin-table-container">
         <div className="admin-table-toolbar">
-          <h3>Jobs ({data?.totalCount ?? 0})</h3>
-          <div className="admin-filter-tabs">
-            {statusFilters.map((f) => (
-              <button
-                key={f.key}
-                className={`admin-filter-tab ${statusFilter === f.key ? 'active' : ''}`}
-                onClick={() => { setStatusFilter(f.key); setPage(0); }}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+          <h3>Total Posts ({data?.totalCount ?? 0})</h3>
         </div>
 
         <div style={{ overflowX: 'auto' }}>
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Job ID</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Price</th>
                 <th>Status</th>
-                <th>Payment</th>
-                <th>Amount</th>
                 <th>Created</th>
-                <th>Actions</th>
+                <th>Visibility</th>
               </tr>
             </thead>
             <tbody>
@@ -95,48 +68,30 @@ const AdminJobsTable: React.FC = () => {
               ) : data?.data.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
-                    No jobs found
+                    No posts found. Start by adding a test service in the Supabase SQL editor.
                   </td>
                 </tr>
               ) : (
-                data?.data.map((job) => (
-                  <tr key={job.id}>
-                    <td style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                      {job.id.slice(0, 8)}…
-                    </td>
+                data?.data.map((post) => (
+                  <tr key={post.id}>
+                    <td style={{ fontWeight: 600 }}>{post.title}</td>
                     <td>
-                      <select
-                        className="admin-inline-select"
-                        value={job.status || 'pending'}
-                        onChange={(e) => handleStatusChange(job.id, e.target.value)}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="active">Active</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                      <span className="admin-badge blue">{post.category}</span>
                     </td>
+                    <td>{post.price != null ? `$${post.price.toFixed(2)}` : '—'}</td>
                     <td>
-                      <span className={`admin-badge ${job.payment_status === 'paid' ? 'green' : 'yellow'}`}>
-                        {job.payment_status || 'unpaid'}
+                      <span className={`admin-badge ${post.status === 'active' || post.is_active ? 'green' : 'yellow'}`}>
+                        {post.status || (post.is_active ? 'Active' : 'Draft')}
                       </span>
                     </td>
-                    <td>{job.total_amount != null ? `$${job.total_amount.toFixed(2)}` : '—'}</td>
-                    <td>{formatDate(job.created_at)}</td>
+                    <td>{formatDate(post.created_at)}</td>
                     <td>
-                      <div className="admin-actions-cell">
-                        {job.status === 'pending' && (
-                          <button className="admin-action-btn success" onClick={() => handleForceAssign(job.id)}>
-                            Force Assign
-                          </button>
-                        )}
-                        {job.status !== 'cancelled' && job.status !== 'completed' && (
-                          <button className="admin-action-btn danger" onClick={() => handleCancel(job.id)}>
-                            Cancel
-                          </button>
-                        )}
-                      </div>
+                      <button 
+                        className={`admin-action-btn ${post.is_active ? 'danger' : 'success'}`}
+                        onClick={() => handleToggleActive(post.id, post.is_active)}
+                      >
+                        {post.is_active ? 'Deactivate' : 'Activate'}
+                      </button>
                     </td>
                   </tr>
                 ))

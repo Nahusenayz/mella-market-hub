@@ -26,10 +26,10 @@ export const useAdminStats = () => {
 
       const [totalUsers, activeWorkers, totalJobs, pendingJobs, activeEmergencies] = await Promise.all([
         getCount(supabase.from('profiles').select('id', { count: 'exact', head: true })),
-        getCount(supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('user_type', 'worker')),
-        getCount(supabase.from('bookings').select('id', { count: 'exact', head: true })),
+        getCount(supabase.from('profiles').select('id', { count: 'exact', head: true }).or('user_type.eq.worker,user_type.eq.responder,user_type.eq.tow_truck')),
+        getCount(supabase.from('ads').select('id', { count: 'exact', head: true })),
         getCount(supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'pending')),
-        getCount(supabase.from('emergency_requests').select('id', { count: 'exact', head: true }).neq('status', 'completed')),
+        getCount(supabase.from('emergency_requests').select('id', { count: 'exact', head: true })),
       ]);
 
       return {
@@ -83,7 +83,7 @@ export const useUpdateUser = () => {
   });
 };
 
-// ─── Workers (profiles with user_type='worker') ───
+// ─── Workers (All Responder Types) ───
 export const useAdminWorkers = (page: number) => {
   return useQuery({
     queryKey: ['admin', 'workers', page],
@@ -94,7 +94,7 @@ export const useAdminWorkers = (page: number) => {
       const { data, error, count } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' })
-        .eq('user_type', 'worker')
+        .or('user_type.eq.worker,user_type.eq.responder,user_type.eq.tow_truck,user_type.eq.traffic,user_type.eq.hospital,user_type.eq.security,user_type.eq.fire')
         .order('created_at', { ascending: false })
         .range(from, to);
 
@@ -105,8 +105,8 @@ export const useAdminWorkers = (page: number) => {
   });
 };
 
-// ─── Jobs (bookings) ───
-export const useAdminJobs = (page: number, statusFilter: string) => {
+// ─── Jobs (All User Ads/Posts) ───
+export const useAdminJobs = (page: number, statusFilter: string = 'all') => {
   return useQuery({
     queryKey: ['admin', 'jobs', page, statusFilter],
     queryFn: async () => {
@@ -114,7 +114,7 @@ export const useAdminJobs = (page: number, statusFilter: string) => {
       const to = from + PAGE_SIZE - 1;
 
       let query = supabase
-        .from('bookings')
+        .from('ads')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(from, to);
@@ -136,12 +136,12 @@ export const useUpdateJob = () => {
   const { toast } = useToast();
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Record<string, unknown> }) => {
-      const { error } = await supabase.from('bookings').update(updates).eq('id', id);
+      const { error } = await supabase.from('ads').update(updates).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin'] });
-      toast({ title: 'Job updated successfully' });
+      toast({ title: 'Post updated successfully' });
     },
     onError: (err: Error) => {
       toast({ title: 'Update failed', description: err.message, variant: 'destructive' });
@@ -260,7 +260,7 @@ export const useAdminEmergencies = (page: number) => {
       if (error) throw error;
       return { data: data ?? [], totalCount: count ?? 0 };
     },
-    refetchInterval: 5000, // Refresh every 5s for emergencies
+    refetchInterval: 5000,
   });
 };
 
