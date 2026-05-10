@@ -9,19 +9,35 @@ export const useAdminStats = () => {
   return useQuery({
     queryKey: ['admin', 'stats'],
     queryFn: async () => {
-      const [usersRes, workersRes, jobsRes, pendingRes, emergencyRes] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('user_type', 'worker'),
-        supabase.from('bookings').select('id', { count: 'exact', head: true }),
-        supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('emergency_requests').select('id', { count: 'exact', head: true }).neq('status', 'completed'),
+      // Helper to fetch count safely
+      const getCount = async (query: any) => {
+        try {
+          const { count, error } = await query;
+          if (error) {
+            console.error('Supabase query error:', error);
+            return 0;
+          }
+          return count ?? 0;
+        } catch (err) {
+          console.error('Failed to fetch count:', err);
+          return 0;
+        }
+      };
+
+      const [totalUsers, activeWorkers, totalJobs, pendingJobs, activeEmergencies] = await Promise.all([
+        getCount(supabase.from('profiles').select('id', { count: 'exact', head: true })),
+        getCount(supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('user_type', 'worker')),
+        getCount(supabase.from('bookings').select('id', { count: 'exact', head: true })),
+        getCount(supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'pending')),
+        getCount(supabase.from('emergency_requests').select('id', { count: 'exact', head: true }).neq('status', 'completed')),
       ]);
+
       return {
-        totalUsers: usersRes.count ?? 0,
-        activeWorkers: workersRes.count ?? 0,
-        totalJobs: jobsRes.count ?? 0,
-        pendingJobs: pendingRes.count ?? 0,
-        activeEmergencies: emergencyRes.count ?? 0,
+        totalUsers,
+        activeWorkers,
+        totalJobs,
+        pendingJobs,
+        activeEmergencies,
       };
     },
     refetchInterval: 5000,
