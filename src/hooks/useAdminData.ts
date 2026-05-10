@@ -24,7 +24,7 @@ export const useAdminStats = () => {
         activeEmergencies: emergencyRes.count ?? 0,
       };
     },
-    refetchInterval: 30000,
+    refetchInterval: 5000,
   });
 };
 
@@ -38,13 +38,14 @@ export const useAdminUsers = (page: number) => {
 
       const { data, error, count } = await supabase
         .from('profiles')
-        .select('id, full_name, phone_number, user_type, is_verified, created_at', { count: 'exact' })
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(from, to);
 
       if (error) throw error;
       return { data: data ?? [], totalCount: count ?? 0 };
     },
+    refetchInterval: 5000,
   });
 };
 
@@ -76,7 +77,7 @@ export const useAdminWorkers = (page: number) => {
 
       const { data, error, count } = await supabase
         .from('profiles')
-        .select('id, full_name, phone_number, user_type, is_verified, created_at, rating', { count: 'exact' })
+        .select('*', { count: 'exact' })
         .eq('user_type', 'worker')
         .order('created_at', { ascending: false })
         .range(from, to);
@@ -84,6 +85,7 @@ export const useAdminWorkers = (page: number) => {
       if (error) throw error;
       return { data: data ?? [], totalCount: count ?? 0 };
     },
+    refetchInterval: 5000,
   });
 };
 
@@ -97,7 +99,7 @@ export const useAdminJobs = (page: number, statusFilter: string) => {
 
       let query = supabase
         .from('bookings')
-        .select('id, ad_id, customer_id, worker_id, status, payment_status, total_amount, created_at, booking_date', { count: 'exact' })
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(from, to);
 
@@ -109,6 +111,7 @@ export const useAdminJobs = (page: number, statusFilter: string) => {
       if (error) throw error;
       return { data: data ?? [], totalCount: count ?? 0 };
     },
+    refetchInterval: 5000,
   });
 };
 
@@ -140,13 +143,14 @@ export const useAdminPayments = (page: number) => {
 
       const { data, error, count } = await supabase
         .from('payment_transactions')
-        .select('id, user_id, booking_id, amount, currency, payment_method, status, transaction_id, created_at', { count: 'exact' })
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(from, to);
 
       if (error) throw error;
       return { data: data ?? [], totalCount: count ?? 0 };
     },
+    refetchInterval: 5000,
   });
 };
 
@@ -215,7 +219,7 @@ export const useAdminReports = () => {
         })),
       };
     },
-    refetchInterval: 60000,
+    refetchInterval: 5000,
   });
 };
 
@@ -240,7 +244,7 @@ export const useAdminEmergencies = (page: number) => {
       if (error) throw error;
       return { data: data ?? [], totalCount: count ?? 0 };
     },
-    refetchInterval: 10000, // Refresh every 10s for emergencies
+    refetchInterval: 5000, // Refresh every 5s for emergencies
   });
 };
 
