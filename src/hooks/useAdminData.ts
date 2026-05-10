@@ -26,7 +26,7 @@ export const useAdminStats = () => {
 
       const [totalUsers, activeWorkers, totalJobs, pendingJobs, activeEmergencies] = await Promise.all([
         getCount(supabase.from('profiles').select('id', { count: 'exact', head: true })),
-        getCount(supabase.from('profiles').select('id', { count: 'exact', head: true }).or('user_type.eq.worker,user_type.eq.responder,user_type.eq.tow_truck')),
+        getCount(supabase.from('profiles').select('id', { count: 'exact', head: true }).not('user_type', 'eq', 'user').not('user_type', 'eq', 'admin')),
         getCount(supabase.from('ads').select('id', { count: 'exact', head: true })),
         getCount(supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'pending')),
         getCount(supabase.from('emergency_requests').select('id', { count: 'exact', head: true })),
@@ -94,7 +94,8 @@ export const useAdminWorkers = (page: number) => {
       const { data, error, count } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' })
-        .or('user_type.eq.worker,user_type.eq.responder,user_type.eq.tow_truck,user_type.eq.traffic,user_type.eq.hospital,user_type.eq.security,user_type.eq.fire')
+        .not('user_type', 'eq', 'user')
+        .not('user_type', 'eq', 'admin')
         .order('created_at', { ascending: false })
         .range(from, to);
 
