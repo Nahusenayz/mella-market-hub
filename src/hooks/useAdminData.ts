@@ -231,8 +231,8 @@ export const useAdminEmergencies = (page: number) => {
         .from('emergency_requests')
         .select(`
           *,
-          user_profile:profiles!emergency_requests_user_id_fkey(full_name, phone_number),
-          worker_profile:profiles!emergency_requests_worker_id_fkey(full_name, phone_number)
+          user_profile:profiles!user_id(full_name, phone_number),
+          worker_profile:profiles!responder_id(full_name, phone_number)
         `, { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(from, to);

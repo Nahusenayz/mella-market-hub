@@ -114,7 +114,14 @@ const AdminDashboard: React.FC = () => {
             </button>
           </form>
 
-          <p className="mt-8 text-center text-xs text-gray-400 uppercase tracking-widest">
+          <p className="mt-4 text-center text-sm text-gray-500">
+            Don't have an admin account?{' '}
+            <a href="/admin-register" className="text-orange-500 hover:text-orange-600 font-medium">
+              Register here
+            </a>
+          </p>
+
+          <p className="mt-4 text-center text-xs text-gray-400 uppercase tracking-widest">
             Protected by Mella Security
           </p>
         </div>
