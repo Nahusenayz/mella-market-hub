@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 
 const AdminEmergenciesTable: React.FC = () => {
   const [page, setPage] = useState(0);
-  const { data, isLoading } = useAdminEmergencies(page);
+  const { data, isLoading, isError } = useAdminEmergencies(page);
   const updateEmergency = useUpdateEmergency();
 
   const handleStatusChange = (id: string, newStatus: string) => {
@@ -25,7 +25,17 @@ const AdminEmergenciesTable: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center">Loading emergencies...</div>;
+    return <div className="p-8 text-center"><Loader2 className="animate-spin inline mr-2" /> Loading emergencies...</div>;
+  }
+
+  if (isError) {
+    return (
+      <div className="p-8 text-center bg-red-50 border border-red-200 rounded-xl m-4">
+        <AlertTriangle className="mx-auto text-red-500 mb-2" size={40} />
+        <h3 className="text-red-800 font-bold">Emergency Table Not Found</h3>
+        <p className="text-red-600 text-sm mt-1">Please ensure the 'emergency_requests' table exists in your Supabase project.</p>
+      </div>
+    );
   }
 
   return (
@@ -82,8 +92,8 @@ const AdminEmergenciesTable: React.FC = () => {
                     <MapPin size={12} /> Map View
                   </a>
                 </td>
-                <td>
-                  {req.worker_id ? (
+                 <td>
+                  {req.responder_id ? (
                     <div className="flex flex-col">
                       <span className="text-sm">{req.worker_profile?.full_name || 'Responder'}</span>
                       <span className="text-xs text-gray-500">{req.worker_profile?.phone_number}</span>

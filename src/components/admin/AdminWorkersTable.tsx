@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useAdminWorkers, useUpdateUser } from '@/hooks/useAdminData';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 const AdminWorkersTable: React.FC = () => {
   const [page, setPage] = useState(0);
-  const { data, isLoading } = useAdminWorkers(page);
+  const { data, isLoading, isError } = useAdminWorkers(page);
   const updateUser = useUpdateUser();
 
   const totalPages = data ? Math.ceil(data.totalCount / 10) : 0;
@@ -56,7 +57,16 @@ const AdminWorkersTable: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
+              {isError ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
+                    <div className="bg-red-50 p-4 rounded-lg inline-block border border-red-100">
+                      <AlertTriangle className="mx-auto text-red-500 mb-2" />
+                      <p className="text-red-700 font-medium">Table missing or access denied</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
                     {Array.from({ length: 6 }).map((_, j) => (
