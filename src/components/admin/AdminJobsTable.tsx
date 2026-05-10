@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAdminJobs, useUpdateJob } from '@/hooks/useAdminData';
+import { AdminAddForm } from './AdminAddForm';
 
 const statusFilters = [
   { key: 'all', label: 'All' },
@@ -33,8 +34,13 @@ const AdminJobsTable: React.FC = () => {
   return (
     <div>
       <div className="admin-content-header">
-        <h2>User Posts (Jobs)</h2>
-        <p>Monitor all service listings and marketplace posts</p>
+        <div className="flex justify-between items-center w-full">
+          <div>
+            <h2>User Posts (Jobs)</h2>
+            <p>Monitor all service listings and marketplace posts</p>
+          </div>
+          <AdminAddForm type="job" />
+        </div>
       </div>
 
       <div className="admin-table-container">

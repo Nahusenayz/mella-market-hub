@@ -65,6 +65,26 @@ export const useAdminUsers = (page: number) => {
   });
 };
 
+export const useCreateUser = () => {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (newUser: any) => {
+      const { data, error } = await supabase.from('profiles').insert([newUser]).select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'users'] });
+      qc.invalidateQueries({ queryKey: ['admin', 'workers'] });
+      toast({ title: 'User created successfully' });
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Creation failed', description: err.message, variant: 'destructive' });
+    },
+  });
+};
+
 export const useUpdateUser = () => {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -129,6 +149,25 @@ export const useAdminJobs = (page: number, statusFilter: string = 'all') => {
       return { data: data ?? [], totalCount: count ?? 0 };
     },
     refetchInterval: 5000,
+  });
+};
+
+export const useCreateJob = () => {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (newJob: any) => {
+      const { data, error } = await supabase.from('ads').insert([newJob]).select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'jobs'] });
+      toast({ title: 'Post created successfully' });
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Creation failed', description: err.message, variant: 'destructive' });
+    },
   });
 };
 

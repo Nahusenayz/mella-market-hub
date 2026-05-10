@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAdminWorkers, useUpdateUser } from '@/hooks/useAdminData';
 import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AdminAddForm } from './AdminAddForm';
 
 const AdminWorkersTable: React.FC = () => {
   const [page, setPage] = useState(0);
@@ -35,8 +36,13 @@ const AdminWorkersTable: React.FC = () => {
   return (
     <div>
       <div className="admin-content-header">
-        <h2>Workers Management</h2>
-        <p>Manage and verify service workers</p>
+        <div className="flex justify-between items-center w-full">
+          <div>
+            <h2>Workers Management</h2>
+            <p>Manage and verify service workers</p>
+          </div>
+          <AdminAddForm type="worker" />
+        </div>
       </div>
 
       <div className="admin-table-container">

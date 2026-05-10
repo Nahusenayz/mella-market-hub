@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAdminUsers, useUpdateUser } from '@/hooks/useAdminData';
+import { AdminAddForm } from './AdminAddForm';
 
 const AdminUsersTable: React.FC = () => {
   const [page, setPage] = useState(0);
@@ -28,8 +29,13 @@ const AdminUsersTable: React.FC = () => {
   return (
     <div>
       <div className="admin-content-header">
-        <h2>Users Management</h2>
-        <p>View and manage all registered users</p>
+        <div className="flex justify-between items-center w-full">
+          <div>
+            <h2>Users Management</h2>
+            <p>View and manage all registered users</p>
+          </div>
+          <AdminAddForm type="user" />
+        </div>
       </div>
 
       <div className="admin-table-container">
