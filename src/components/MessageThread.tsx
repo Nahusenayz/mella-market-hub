@@ -10,17 +10,19 @@ interface MessageThreadProps {
   otherUserName: string;
   otherUserImage?: string;
   onBack: () => void;
+  initialMessage?: string;
 }
 
 export const MessageThread: React.FC<MessageThreadProps> = ({
   otherUserId,
   otherUserName,
   otherUserImage,
-  onBack
+  onBack,
+  initialMessage
 }) => {
   const { user } = useAuth();
-  const { messages, fetchMessages, sendMessage } = useMessages();
-  const [newMessage, setNewMessage] = useState('');
+  const { messages, fetchMessages, sendMessage } = useMessages(otherUserId);
+  const [newMessage, setNewMessage] = useState(initialMessage || '');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

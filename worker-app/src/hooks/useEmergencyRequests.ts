@@ -14,6 +14,7 @@ export type EmergencyRequest = {
   responder_location_lng: number | null
   created_at: string
   updated_at: string | null
+  estimated_price?: number | null
   // User profile information
   user_profile?: {
     full_name: string | null
@@ -78,10 +79,21 @@ export function useEmergencyRequests() {
 
         if (profiles) {
           const profileMap = new Map(profiles.map((p: any) => [p.id, p]))
-          filteredData = filteredData.map(r => ({
-            ...r,
-            user_profile: profileMap.get(r.user_id) || null
-          }))
+          filteredData = filteredData.map(r => {
+            let price = null;
+            try {
+              if (r.details?.startsWith('{')) {
+                const parsed = JSON.parse(r.details);
+                price = parsed.price;
+              }
+            } catch (e) {}
+            
+            return {
+              ...r,
+              user_profile: profileMap.get(r.user_id) || null,
+              estimated_price: price
+            };
+          })
         }
       }
 
@@ -99,7 +111,17 @@ export function useEmergencyRequests() {
           .limit(50)
 
         if (historyError) console.error(historyError)
-        setHistory((historyData || []) as EmergencyRequest[])
+        const historyWithPrice = (historyData || []).map((r: any) => {
+          let price = null;
+          try {
+            if (r.details?.startsWith('{')) {
+              const parsed = JSON.parse(r.details);
+              price = parsed.price;
+            }
+          } catch (e) {}
+          return { ...r, estimated_price: price };
+        });
+        setHistory(historyWithPrice as EmergencyRequest[])
       }
 
       setLoading(false)

@@ -33,7 +33,7 @@ interface ConversationWithProfile extends Conversation {
   };
 }
 
-export const useMessages = () => {
+export const useMessages = (activeOtherUserId?: string) => {
   const { user } = useAuth();
   const { createActivity } = useSocialFeed();
   const [conversations, setConversations] = useState<ConversationWithProfile[]>([]);
@@ -186,17 +186,20 @@ export const useMessages = () => {
             schema: 'public',
             table: 'messages'
           },
-          (payload) => {
+          (payload: any) => {
             console.log('Real-time message update:', payload);
             fetchConversations();
 
-            // If we're currently viewing messages, refetch them
-            if (messages.length > 0) {
-              const firstMessage = messages[0];
-              const otherUserId = firstMessage.sender_id === user.id
-                ? firstMessage.receiver_id
-                : firstMessage.sender_id;
-              fetchMessages(otherUserId);
+            // If we're currently viewing messages for a specific user, refetch them
+            if (activeOtherUserId) {
+              const newMsg = payload.new;
+              const isRelevant = 
+                (newMsg.sender_id === user.id && newMsg.receiver_id === activeOtherUserId) ||
+                (newMsg.sender_id === activeOtherUserId && newMsg.receiver_id === user.id);
+              
+              if (isRelevant) {
+                fetchMessages(activeOtherUserId);
+              }
             }
           }
         )
@@ -206,7 +209,7 @@ export const useMessages = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [user]);
+  }, [user, activeOtherUserId]);
 
   return {
     conversations,

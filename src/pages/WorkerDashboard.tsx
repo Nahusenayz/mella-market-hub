@@ -103,6 +103,7 @@ const WorkerDashboard = () => {
     if (workerCategory === 'security' && (cat.includes('security') || cat.includes('police'))) return true;
     if (workerCategory === 'traffic' && cat.includes('traffic')) return true;
     if (workerCategory === 'fire' && cat.includes('fire')) return true;
+    if (workerCategory === 'tow_truck' && cat.includes('tow')) return true;
     return false;
   });
 
@@ -305,6 +306,11 @@ const WorkerDashboard = () => {
                                 }`}>
                                   {r.status.replace('_', ' ').toUpperCase()}
                                 </span>
+                                {r.details?.startsWith('{') && (
+                                  <span className="font-bold text-green-600">
+                                    ETB {JSON.parse(r.details).price?.toLocaleString()}
+                                  </span>
+                                )}
                                 {r.user_location_lat && r.user_location_lng && (
                                   <a
                                     className="text-blue-600 underline flex items-center gap-1"

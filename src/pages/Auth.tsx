@@ -2,14 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Eye, EyeOff, Briefcase, Users } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, Briefcase, Users, ChevronLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs } from '@/components/ui/tabs';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [authMethod, setAuthMethod] = useState<'phone' | 'email'>('phone');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [userType, setUserType] = useState<'user' | 'worker'>('user');
@@ -87,7 +90,8 @@ const Auth = () => {
     try {
       let error;
       if (isSignUp) {
-        const result = await signUp(email, password, fullName);
+        const identifier = authMethod === 'email' ? email : phoneNumber;
+        const result = await signUp(identifier, password, fullName, authMethod === 'phone');
         error = result.error;
         if (!error) {
           const profileUpdates: any = {
@@ -97,18 +101,28 @@ const Auth = () => {
             profileUpdates.badges = [{ category: stationCategory }];
           }
 
-          await supabase
-            .from('profiles')
-            .update(profileUpdates)
-            .eq('email', email);
+          if (authMethod === 'email') {
+            await supabase
+              .from('profiles')
+              .update(profileUpdates)
+              .eq('email', email);
+          } else {
+            await supabase
+              .from('profiles')
+              .update(profileUpdates)
+              .eq('phone_number', phoneNumber);
+          }
 
           toast({
             title: "Success!",
-            description: "Please check your email to confirm your account.",
+            description: authMethod === 'email' 
+              ? "Please check your email to confirm your account." 
+              : "Your account has been created successfully.",
           });
         }
       } else {
-        const result = await signIn(email, password);
+        const identifier = authMethod === 'email' ? email : phoneNumber;
+        const result = await signIn(identifier, password, authMethod === 'phone');
         error = result.error;
         if (!error) {
           toast({
@@ -121,7 +135,7 @@ const Auth = () => {
       if (error) {
         let message = error.message;
         if (error.message.includes('User already registered')) {
-          message = "This email is already registered. Please sign in or use a different email.";
+          message = `This ${authMethod} is already registered. Please sign in or use a different ${authMethod}.`;
         }
         toast({
           title: "Error",
@@ -149,7 +163,17 @@ const Auth = () => {
   const [stationCategory, setStationCategory] = useState(EMERGENCY_CATEGORIES[0].key);
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-orange-50 to-yellow-50 flex items-center justify-center p-4 pb-20">
+    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-orange-50 to-yellow-50 flex flex-col items-center justify-center p-4 pb-20 relative">
+      <div className="absolute top-4 left-4">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-gray-600 hover:text-orange-600 transition-colors"
+        >
+          <ChevronLeft size={20} />
+          <span>Back</span>
+        </Button>
+      </div>
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent mb-2">
@@ -234,19 +258,56 @@ const Auth = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
+              Sign up with
             </label>
-            <div className="relative">
-              <Mail size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                placeholder="Enter your email"
-              />
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <button
+                type="button"
+                onClick={() => setAuthMethod('phone')}
+                className={`p-2 border rounded-lg transition-colors text-sm font-medium ${authMethod === 'phone'
+                  ? 'border-orange-500 bg-orange-50 text-orange-700'
+                  : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+              >
+                Phone Number
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthMethod('email')}
+                className={`p-2 border rounded-lg transition-colors text-sm font-medium ${authMethod === 'email'
+                  ? 'border-orange-500 bg-orange-50 text-orange-700'
+                  : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+              >
+                Email Address
+              </button>
             </div>
+
+            {authMethod === 'phone' ? (
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">+251</span>
+                <input
+                  type="tel"
+                  required
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                  className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="9XXXXXXXX"
+                />
+              </div>
+            ) : (
+              <div className="relative">
+                <Mail size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="Enter your email"
+                />
+              </div>
+            )}
           </div>
 
           <div>

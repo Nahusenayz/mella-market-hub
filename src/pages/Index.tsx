@@ -12,9 +12,10 @@ import { UserProfileModal } from '@/components/UserProfile';
 import { AdForm } from '@/components/AdForm';
 import { PostModal } from '@/components/PostModal';
 import { Footer } from '@/components/Footer';
+import { TowTruckFlow } from '@/components/TowTruckFlow';
 import { useRealTimeAds } from '@/hooks/useRealTimeAds';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { List, MapPin, Plus, AlertTriangle, Shield, HeartPulse, MessageSquarePlus, Activity } from 'lucide-react';
+import { List, MapPin, Plus, AlertTriangle, Shield, HeartPulse, MessageSquarePlus, Activity, Truck } from 'lucide-react';
 import { useWorkerLocations } from '@/hooks/useWorkerLocations';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -79,12 +80,14 @@ const Index = () => {
     id: string;
     name: string;
     image?: string;
+    initialMessage?: string;
   } | null>(null);
   const [selectedUserProfile, setSelectedUserProfile] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAdForm, setShowAdForm] = useState(false);
+  const [showTowTruck, setShowTowTruck] = useState(false);
   const [editAd, setEditAd] = useState<Service | null>(null);
   const { workers: responders } = useWorkerLocations();
   const onlineResponders = responders.length;
@@ -176,8 +179,8 @@ const Index = () => {
     setSelectedService(service);
   };
 
-  const handleMessageUser = (userId: string, userName: string, userImage?: string) => {
-    setSelectedMessageUser({ id: userId, name: userName, image: userImage });
+  const handleMessageUser = (userId: string, userName: string, userImage?: string, initialMessage?: string) => {
+    setSelectedMessageUser({ id: userId, name: userName, image: userImage, initialMessage });
   };
 
   const handleUserProfileClick = (userId: string) => {
@@ -283,28 +286,28 @@ const Index = () => {
               </button>
 
               <button
-                onClick={handlePostAd}
+                onClick={() => setShowTowTruck(true)}
                 className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-orange-500 transition-all flex flex-col items-center gap-3 text-center group"
               >
                 <div className="p-4 bg-orange-100 rounded-full group-hover:scale-110 transition-transform">
-                  <MessageSquarePlus className="text-orange-600 h-8 w-8" />
+                  <Truck className="text-orange-600 h-8 w-8" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800">Post an Ad</h3>
-                  <p className="text-xs text-gray-500">Share with community</p>
+                  <h3 className="font-bold text-gray-800">Tow Truck</h3>
+                  <p className="text-xs text-gray-500">Vehicle breakdown</p>
                 </div>
               </button>
 
               <button
-                onClick={() => setSelectedCategory('Community Help')}
-                className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-green-500 transition-all flex flex-col items-center gap-3 text-center group"
+                onClick={() => navigate('/emergency')}
+                className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-yellow-500 transition-all flex flex-col items-center gap-3 text-center group"
               >
-                <div className="p-4 bg-green-100 rounded-full group-hover:scale-110 transition-transform">
-                  <AlertTriangle className="text-green-600 h-8 w-8" />
+                <div className="p-4 bg-yellow-100 rounded-full group-hover:scale-110 transition-transform">
+                  <Activity className="text-yellow-600 h-8 w-8" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800">Local Alerts</h3>
-                  <p className="text-xs text-gray-500">Help the community</p>
+                  <h3 className="font-bold text-gray-800">Traffic Status</h3>
+                  <p className="text-xs text-gray-500">Real-time updates</p>
                 </div>
               </button>
             </div>
@@ -466,6 +469,7 @@ const Index = () => {
               otherUserId={selectedMessageUser.id}
               otherUserName={selectedMessageUser.name}
               otherUserImage={selectedMessageUser.image}
+              initialMessage={selectedMessageUser.initialMessage}
               onBack={handleCloseMessage}
             />
           </div>
@@ -483,7 +487,12 @@ const Index = () => {
           }}
           onMessage={() => {
             handleClosePost();
-            handleMessageUser(selectedPost.user_id, selectedPost.provider, selectedPost.profiles?.profile_image_url);
+            handleMessageUser(
+              selectedPost.user_id, 
+              selectedPost.provider, 
+              selectedPost.profiles?.profile_image_url,
+              `Hi, I'm interested in your post: ${selectedPost.title}. Is it still available?`
+            );
           }}
           onEdit={user?.id === selectedPost.user_id ? () => {
             setEditAd(selectedPost);
@@ -533,6 +542,13 @@ const Index = () => {
             setEditAd(null);
             toast({ title: 'Success!', description: 'Post updated successfully.' });
           }}
+        />
+      )}
+
+      {showTowTruck && (
+        <TowTruckFlow
+          userLocation={currentLocation}
+          onClose={() => setShowTowTruck(false)}
         />
       )}
 

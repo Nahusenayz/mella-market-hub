@@ -30,7 +30,7 @@ interface UserAd {
 interface UserProfileModalProps {
   userId: string;
   onClose: () => void;
-  onMessage?: (userId: string, userName: string) => void;
+  onMessage?: (userId: string, userName: string, userImage?: string) => void;
 }
 
 export const UserProfileModal: React.FC<UserProfileModalProps> = ({ 
@@ -88,7 +88,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
   const handleMessage = () => {
     if (profile && onMessage) {
-      onMessage(userId, profile.full_name);
+      onMessage(userId, profile.full_name, profile.profile_image_url);
       onClose();
     }
   };

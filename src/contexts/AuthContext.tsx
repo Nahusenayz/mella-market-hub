@@ -7,8 +7,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (emailOrPhone: string, password: string, fullName: string, isPhone?: boolean) => Promise<{ error: any }>;
+  signIn: (emailOrPhone: string, password: string, isPhone?: boolean) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -49,26 +49,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (emailOrPhone: string, password: string, fullName: string, isPhone = false) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
-      console.log('Signing up with redirect URL:', redirectUrl);
+      console.log(`Signing up with ${isPhone ? 'phone' : 'email'}:`, emailOrPhone);
       
-      const { error } = await supabase.auth.signUp({
-        email,
+      const signUpParams: any = {
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName
           }
         }
-      });
+      };
+
+      if (isPhone) {
+        signUpParams.phone = emailOrPhone;
+      } else {
+        signUpParams.email = emailOrPhone;
+        signUpParams.options.emailRedirectTo = redirectUrl;
+      }
+
+      const { error } = await supabase.auth.signUp(signUpParams);
       
       if (error) {
         console.error('Signup error:', error);
       } else {
-        console.log('Signup successful, check email for confirmation');
+        console.log('Signup successful');
       }
       
       return { error };
@@ -78,14 +85,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (emailOrPhone: string, password: string, isPhone = false) => {
     try {
-      console.log('Signing in with email:', email);
+      console.log(`Signing in with ${isPhone ? 'phone' : 'email'}:`, emailOrPhone);
       
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      const signInParams: any = {
         password,
-      });
+      };
+
+      if (isPhone) {
+        signInParams.phone = emailOrPhone;
+      } else {
+        signInParams.email = emailOrPhone;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword(signInParams);
       
       if (error) {
         console.error('Signin error:', error);

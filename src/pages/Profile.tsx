@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from '@/contexts/LocationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { User, Star, MapPin, Edit, Plus, Award, Phone, Mail, Home, Camera, Briefcase, Clock, Check, X, Navigation } from 'lucide-react';
+import { User, Star, MapPin, Edit, Plus, Award, Phone, Mail, Home, Camera, Briefcase, Clock, Check, X, Navigation, ChevronLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ProfileEdit } from '@/components/ProfileEdit';
 import { AdForm } from '@/components/AdForm';
@@ -338,13 +338,22 @@ const Profile = () => {
       <header className="bg-white shadow-lg border-b-4 border-green-600">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg transition-colors"
-            >
-              <Home size={20} />
-              <span className="font-medium">Home</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg transition-colors"
+              >
+                <ChevronLeft size={20} />
+                <span className="font-medium">Back</span>
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 text-gray-600 hover:bg-green-50 px-3 py-2 rounded-lg transition-colors"
+              >
+                <Home size={20} />
+                <span className="font-medium">Home</span>
+              </button>
+            </div>
             <h1 className="text-xl font-bold text-gray-800">My Profile</h1>
             <div className="w-20"></div>
           </div>

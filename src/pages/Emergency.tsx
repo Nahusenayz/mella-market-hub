@@ -27,8 +27,10 @@ import {
   Activity,
   PhoneCall,
   MapPinned,
-  Users
+  Users,
+  ChevronLeft
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useWorkerLocations } from '@/hooks/useWorkerLocations';
 
@@ -62,6 +64,7 @@ const EMERGENCY_CATEGORIES = [
 ];
 
 export const Emergency: React.FC = () => {
+  const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
   const [userLocation, setUserLocation] = useState({ lat: 9.0320, lng: 38.7469 });
   const [emergencyStations, setEmergencyStations] = useState<EmergencyStation[]>([]);
@@ -495,6 +498,14 @@ export const Emergency: React.FC = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="text-white hover:bg-white/20 mr-2"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
               <div className="p-2 bg-white/20 rounded-xl backdrop-blur">
                 <AlertTriangle className="h-8 w-8" />
               </div>

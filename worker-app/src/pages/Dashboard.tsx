@@ -344,6 +344,11 @@ export default function Dashboard() {
                       <div className="flex-1">
                         <h4 className="font-bold text-gray-800">{r.user_profile?.full_name || 'Anonymous'}</h4>
                         <p className="text-xs text-gray-500">{formatTimeAgo(r.created_at)}</p>
+                        {r.estimated_price && (
+                          <div className="mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded inline-block">
+                            EST. PRICE: ETB {r.estimated_price.toLocaleString()}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2">
