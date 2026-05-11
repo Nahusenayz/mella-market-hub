@@ -64,7 +64,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       if (isPhone) {
-        signUpParams.phone = emailOrPhone;
+        // Prototype hack: use dummy email to avoid SMS requirement
+        signUpParams.email = `${emailOrPhone}@mella.temp`;
+        signUpParams.options.emailRedirectTo = redirectUrl;
       } else {
         signUpParams.email = emailOrPhone;
         signUpParams.options.emailRedirectTo = redirectUrl;
@@ -94,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       if (isPhone) {
-        signInParams.phone = emailOrPhone;
+        signInParams.email = `${emailOrPhone}@mella.temp`;
       } else {
         signInParams.email = emailOrPhone;
       }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { EmergencyAssistant } from '@/components/EmergencyAssistant';
 import { FirstAidChatbot } from '@/components/FirstAidChatbot';
@@ -28,7 +29,9 @@ import {
   PhoneCall,
   MapPinned,
   Users,
-  ChevronLeft
+  ChevronLeft,
+  LogOut,
+  MessageSquare
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,6 +69,25 @@ const EMERGENCY_CATEGORIES = [
 export const Emergency: React.FC = () => {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
+  const { user, signOut } = useAuth();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
   const [userLocation, setUserLocation] = useState({ lat: 9.0320, lng: 38.7469 });
   const [emergencyStations, setEmergencyStations] = useState<EmergencyStation[]>([]);
   const [showEmergencyAssistant, setShowEmergencyAssistant] = useState(false);
@@ -328,6 +350,8 @@ export const Emergency: React.FC = () => {
         details: `Emergency ${worker.category} assistance requested. Responder: ${worker.profiles?.full_name || 'Available'}`,
         user_location_lat: userLocation.lat,
         user_location_lng: userLocation.lng,
+        responder_id: worker.worker_id,
+        estimated_price: worker.service_fee || 0
       };
 
       console.log('Request data:', requestData);
@@ -382,6 +406,8 @@ export const Emergency: React.FC = () => {
         details: requestDetails || `Emergency ${selectedCategory || selectedWorker?.category} assistance requested`,
         user_location_lat: userLocation.lat,
         user_location_lng: userLocation.lng,
+        responder_id: selectedWorker?.worker_id || targetWorkerId,
+        estimated_price: selectedWorker?.service_fee || 0
       };
 
       console.log('Request data:', requestData);
@@ -524,6 +550,67 @@ export const Emergency: React.FC = () => {
                 <Globe className="h-4 w-4 mr-2" />
                 {language === 'en' ? 'አማርኛ' : 'English'}
               </Button>
+
+              {user && (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-2 hover:bg-white/10 p-2 rounded-lg transition-colors"
+                  >
+                    {user.user_metadata?.avatar_url ? (
+                      <img
+                        src={user.user_metadata.avatar_url}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full object-cover border border-white/20"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Profile Dropdown */}
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 animate-in fade-in zoom-in duration-200 overflow-hidden text-gray-800">
+                      <div className="py-1">
+                        <div className="px-4 py-2 border-b border-gray-50 bg-gray-50/50">
+                          <p className="text-sm font-bold truncate">{user.user_metadata?.full_name || 'User'}</p>
+                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            navigate('/profile');
+                            setIsDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                        >
+                          <User size={18} className="text-red-600" />
+                          <span className="text-sm font-medium">My Profile</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigate('/messages');
+                            setIsDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                        >
+                          <MessageSquare size={18} className="text-red-600" />
+                          <span className="text-sm font-medium">Messages</span>
+                        </button>
+                        <div className="h-px bg-gray-100 my-1" />
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-3 text-red-600 transition-colors"
+                        >
+                          <LogOut size={18} />
+                          <span className="text-sm font-bold">Sign Out</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -808,6 +895,12 @@ export const Emergency: React.FC = () => {
                               {isRecentlyUpdated ? 'Live' : 'Last seen ' + Math.floor(timeSinceUpdate / 60) + 'm ago'}
                             </span>
                           </div>
+                          {worker.service_fee !== undefined && (
+                            <div className="mt-2 flex items-center gap-1 text-orange-700 font-bold text-sm bg-orange-50 px-2 py-1 rounded-md w-fit">
+                              <span className="text-xs opacity-70">Service Fee:</span>
+                              {worker.service_fee} ETB
+                            </div>
+                          )}
                         </div>
                       </div>
 

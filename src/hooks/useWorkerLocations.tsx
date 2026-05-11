@@ -8,6 +8,7 @@ export interface WorkerLocation {
     location_lat: number;
     location_lng: number;
     is_available: boolean;
+    service_fee?: number;
     last_updated: string;
     created_at: string;
     profiles?: {
@@ -30,7 +31,7 @@ export const useWorkerLocations = (filterCategory?: string) => {
             // Fetch worker locations
             const { data: locationsData, error: locationsError } = await supabase
                 .from('worker_locations' as any)
-                .select('*')
+                .select('*, profiles:worker_id(full_name, profile_image_url, phone_number)')
                 .eq('is_available', true);
 
             console.log('📍 Worker locations response:', { data: locationsData, error: locationsError });
@@ -62,9 +63,7 @@ export const useWorkerLocations = (filterCategory?: string) => {
                 console.error('Error fetching profiles:', profilesError);
             }
 
-            // Combine location and profile data
             const workersWithProfiles: WorkerLocation[] = (locationsData as any[]).map((loc: any) => {
-                const profile = (profilesData as any[])?.find((p: any) => p.id === loc.worker_id);
                 return {
                     id: loc.id,
                     worker_id: loc.worker_id,
@@ -74,15 +73,16 @@ export const useWorkerLocations = (filterCategory?: string) => {
                     is_available: loc.is_available,
                     last_updated: loc.last_updated,
                     created_at: loc.created_at,
-                    profiles: profile ? {
-                        full_name: profile.full_name || 'Responder',
-                        profile_image_url: profile.profile_image_url,
-                        phone_number: profile.phone_number
+                    profiles: loc.profiles ? {
+                        full_name: loc.profiles.full_name || 'Responder',
+                        profile_image_url: loc.profiles.profile_image_url,
+                        phone_number: loc.profiles.phone_number
                     } : {
                         full_name: 'Responder',
                         profile_image_url: undefined,
                         phone_number: undefined
-                    }
+                    },
+                    service_fee: loc.service_fee
                 };
             });
 

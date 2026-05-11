@@ -58,6 +58,7 @@ const AdminWorkersTable: React.FC = () => {
                 <th>Phone</th>
                 <th>Verification</th>
                 <th>Rating</th>
+                <th>Category</th>
                 <th>Joined</th>
                 <th>Actions</th>
               </tr>
@@ -106,6 +107,11 @@ const AdminWorkersTable: React.FC = () => {
                     <td>
                       <span className={`admin-badge ${(worker.rating ?? 0) >= 4 ? 'green' : (worker.rating ?? 0) >= 2.5 ? 'yellow' : 'gray'}`}>
                         ★ {worker.rating?.toFixed(1) ?? 'N/A'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="admin-badge gray" style={{ textTransform: 'capitalize' }}>
+                        {(worker as any).worker_locations?.[0]?.category?.replace('_', ' ') || '—'}
                       </span>
                     </td>
                     <td>{formatDate(worker.created_at)}</td>

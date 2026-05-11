@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotificationSystem } from './NotificationSystem';
@@ -20,6 +20,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
   const { user, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const [selectedUserProfile, setSelectedUserProfile] = useState<string | null>(null);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -131,10 +144,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                   </button>
 
                   {/* Profile Dropdown */}
-                  <div className="relative group">
+                  <div className="relative" ref={dropdownRef}>
                     <button
                       className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                      onClick={() => navigate('/profile')}
+                      onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                     >
                       {user.user_metadata?.avatar_url ? (
                         <img
@@ -153,32 +166,43 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                     </button>
 
                     {/* Dropdown Menu */}
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                      <div className="py-2">
-                        <button
-                          onClick={() => navigate('/profile')}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"
-                        >
-                          <User size={16} />
-                          My Profile
-                        </button>
-                        <button
-                          onClick={() => navigate('/messages')}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"
-                        >
-                          <MessageSquare size={16} />
-                          Messages
-                        </button>
-                        <hr className="my-2" />
-                        <button
-                          onClick={handleSignOut}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600"
-                        >
-                          <LogOut size={16} />
-                          Sign Out
-                        </button>
+                    {isProfileDropdownOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 animate-in fade-in zoom-in duration-200">
+                        <div className="py-2">
+                          <button
+                            onClick={() => {
+                              navigate('/profile');
+                              setIsProfileDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                          >
+                            <User size={16} />
+                            My Profile
+                          </button>
+                          <button
+                            onClick={() => {
+                              navigate('/messages');
+                              setIsProfileDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                          >
+                            <MessageSquare size={16} />
+                            Messages
+                          </button>
+                          <hr className="my-2" />
+                          <button
+                            onClick={() => {
+                              handleSignOut();
+                              setIsProfileDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                          >
+                            <LogOut size={16} />
+                            Sign Out
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </>
               ) : (

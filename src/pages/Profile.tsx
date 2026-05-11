@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from '@/contexts/LocationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { User, Star, MapPin, Edit, Plus, Award, Phone, Mail, Home, Camera, Briefcase, Clock, Check, X, Navigation, ChevronLeft } from 'lucide-react';
+import { User, Star, MapPin, Edit, Plus, Award, Phone, Mail, Home, Camera, Briefcase, Clock, Check, X, Navigation, ChevronLeft, LogOut, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ProfileEdit } from '@/components/ProfileEdit';
 import { AdForm } from '@/components/AdForm';
@@ -48,7 +48,7 @@ interface Certification {
 }
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { location: userLocationFromContext } = useLocation(); // Get location from context
@@ -63,6 +63,24 @@ const Profile = () => {
   const [isLocationSharing, setIsLocationSharing] = useState(false);
   const [hidePhone, setHidePhone] = useState(false);
   const [lastSignIn, setLastSignIn] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   // Worker dashboard hooks
   const { activeBookings, updateBookingStatus } = useBookingTracking();
@@ -355,7 +373,61 @@ const Profile = () => {
               </button>
             </div>
             <h1 className="text-xl font-bold text-gray-800">My Profile</h1>
-            <div className="w-20"></div>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 hover:bg-green-50 p-2 rounded-lg transition-colors"
+              >
+                {profile?.profile_image_url ? (
+                  <img
+                    src={profile.profile_image_url}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full object-cover border border-green-200"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <User size={16} className="text-green-600" />
+                  </div>
+                )}
+              </button>
+
+              {/* Profile Dropdown */}
+              {isDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 animate-in fade-in zoom-in duration-200 overflow-hidden">
+                  <div className="py-1">
+                    <div className="px-4 py-2 border-b border-gray-50 bg-gray-50/50">
+                      <p className="text-sm font-bold text-gray-800 truncate">{profile?.full_name || 'User'}</p>
+                      <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                    </div>
+                    <button
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="w-full text-left px-4 py-2.5 hover:bg-green-50 flex items-center gap-3 text-gray-700 transition-colors"
+                    >
+                      <User size={18} className="text-green-600" />
+                      <span className="text-sm font-medium">My Profile</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate('/messages');
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-green-50 flex items-center gap-3 text-gray-700 transition-colors"
+                    >
+                      <MessageSquare size={18} className="text-green-600" />
+                      <span className="text-sm font-medium">Messages</span>
+                    </button>
+                    <div className="h-px bg-gray-100 my-1" />
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-3 text-red-600 transition-colors"
+                    >
+                      <LogOut size={18} />
+                      <span className="text-sm font-bold">Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>

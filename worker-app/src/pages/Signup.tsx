@@ -12,6 +12,9 @@ export default function Signup() {
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
+    const [signUpMethod, setSignUpMethod] = useState<'email' | 'phone'>('email')
+    const [phone, setPhone] = useState('')
+    const [serviceFee, setServiceFee] = useState('')
     const [step, setStep] = useState(1) // Multi-step form
     const [locationGranted, setLocationGranted] = useState(false)
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
@@ -68,8 +71,7 @@ export default function Signup() {
 
         setLoading(true)
 
-        const { data, error } = await supabase.auth.signUp({
-            email,
+        const signUpData: any = {
             password,
             options: {
                 data: {
@@ -80,7 +82,16 @@ export default function Signup() {
                     location_lng: userLocation?.lng
                 }
             }
-        })
+        }
+
+        if (signUpMethod === 'email') {
+            signUpData.email = email
+        } else {
+            // Prototype hack: use dummy email to avoid SMS requirement
+            signUpData.email = `${phone}@mella.temp`
+        }
+
+        const { data, error } = await supabase.auth.signUp(signUpData)
 
         if (error) {
             setLoading(false)
@@ -102,6 +113,7 @@ export default function Signup() {
                     location_lat: userLocation.lat,
                     location_lng: userLocation.lng,
                     is_available: true,
+                    service_fee: serviceFee ? parseFloat(serviceFee) : 0,
                     last_updated: new Date().toISOString()
                 }, { onConflict: 'worker_id' })
 
@@ -257,6 +269,33 @@ export default function Signup() {
                                     ))}
                                 </div>
                             </div>
+
+                            {category === 'tow_truck' && (
+                                <div className="form-group delay-300">
+                                    <label>Base Service Fee (ETB)</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <span style={{
+                                            position: 'absolute',
+                                            left: '1rem',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            fontSize: '1.25rem',
+                                            opacity: 0.5
+                                        }}>💰</span>
+                                        <input
+                                            placeholder="e.g. 500"
+                                            type="number"
+                                            value={serviceFee}
+                                            onChange={e => setServiceFee(e.target.value)}
+                                            required={category === 'tow_truck'}
+                                            style={{ paddingLeft: '3rem' }}
+                                        />
+                                    </div>
+                                    <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem' }}>
+                                        Set your starting price for towing services.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -325,25 +364,94 @@ export default function Signup() {
                     {step === 3 && (
                         <div className="animate-fade-in">
                             <div className="form-group delay-100">
-                                <label>Email Address</label>
-                                <div style={{ position: 'relative' }}>
-                                    <span style={{
-                                        position: 'absolute',
-                                        left: '1rem',
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        fontSize: '1.25rem',
-                                        opacity: 0.5
-                                    }}>📧</span>
-                                    <input
-                                        placeholder="responder@example.com"
-                                        type="email"
-                                        value={email}
-                                        onChange={e => setEmail(e.target.value)}
-                                        required
-                                        style={{ paddingLeft: '3rem' }}
-                                    />
+                                <div style={{ 
+                                    display: 'flex', 
+                                    background: '#f3f4f6', 
+                                    padding: '0.25rem', 
+                                    borderRadius: '10px',
+                                    marginBottom: '1.5rem'
+                                }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSignUpMethod('email')}
+                                        style={{
+                                            flex: 1,
+                                            padding: '0.5rem',
+                                            borderRadius: '8px',
+                                            border: 'none',
+                                            background: signUpMethod === 'email' ? 'white' : 'transparent',
+                                            fontWeight: 600,
+                                            fontSize: '0.875rem',
+                                            boxShadow: signUpMethod === 'email' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Email
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSignUpMethod('phone')}
+                                        style={{
+                                            flex: 1,
+                                            padding: '0.5rem',
+                                            borderRadius: '8px',
+                                            border: 'none',
+                                            background: signUpMethod === 'phone' ? 'white' : 'transparent',
+                                            fontWeight: 600,
+                                            fontSize: '0.875rem',
+                                            boxShadow: signUpMethod === 'phone' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Phone
+                                    </button>
                                 </div>
+
+                                {signUpMethod === 'email' ? (
+                                    <>
+                                        <label>Email Address</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <span style={{
+                                                position: 'absolute',
+                                                left: '1rem',
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                fontSize: '1.25rem',
+                                                opacity: 0.5
+                                            }}>📧</span>
+                                            <input
+                                                placeholder="responder@example.com"
+                                                type="email"
+                                                value={email}
+                                                onChange={e => setEmail(e.target.value)}
+                                                required={signUpMethod === 'email'}
+                                                style={{ paddingLeft: '3rem' }}
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <label>Phone Number</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <span style={{
+                                                position: 'absolute',
+                                                left: '1rem',
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                fontSize: '1.25rem',
+                                                opacity: 0.5
+                                            }}>📞</span>
+                                            <input
+                                                placeholder="+251 911..."
+                                                type="tel"
+                                                value={phone}
+                                                onChange={e => setPhone(e.target.value)}
+                                                required={signUpMethod === 'phone'}
+                                                style={{ paddingLeft: '3rem' }}
+                                            />
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
                             <div className="form-group delay-200">

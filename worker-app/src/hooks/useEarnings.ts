@@ -34,21 +34,12 @@ export const useEarnings = (userId: string | null) => {
         if (error) throw error;
         if (emergencyError) throw emergencyError;
 
-        // Parse prices from emergency requests
-        const parsedEmergencyJobs = (emergencyData || []).map(r => {
-          let price = 0;
-          try {
-            if (r.details?.startsWith('{')) {
-              const parsed = JSON.parse(r.details);
-              price = parsed.price || 0;
-            }
-          } catch (e) {}
-          return {
-            total_amount: price,
-            created_at: r.created_at,
-            title: `Emergency ${r.category?.replace('_', ' ')}`
-          };
-        });
+        // Use estimated_price from emergency requests
+        const parsedEmergencyJobs = (emergencyData || []).map(r => ({
+          total_amount: Number(r.estimated_price) || 0,
+          created_at: r.created_at,
+          title: `Emergency ${r.category?.replace('_', ' ')}`
+        }));
 
         const allJobs = [
           ...data.map(job => ({

@@ -113,7 +113,7 @@ export const useAdminWorkers = (page: number) => {
 
       const { data, error, count } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact' })
+        .select('*, worker_locations:worker_locations(category)', { count: 'exact' })
         .not('user_type', 'eq', 'user')
         .not('user_type', 'eq', 'admin')
         .order('created_at', { ascending: false })
