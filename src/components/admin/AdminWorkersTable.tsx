@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAdminWorkers, useUpdateUser } from '@/hooks/useAdminData';
+import { useAdminWorkers, useUpdateUser, useDeleteUser } from '@/hooks/useAdminData';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { AdminAddForm } from './AdminAddForm';
 
@@ -7,6 +7,7 @@ const AdminWorkersTable: React.FC = () => {
   const [page, setPage] = useState(0);
   const { data, isLoading, isError } = useAdminWorkers(page);
   const updateUser = useUpdateUser();
+  const deleteUser = useDeleteUser();
 
   const totalPages = data ? Math.ceil(data.totalCount / 10) : 0;
 
@@ -16,6 +17,12 @@ const AdminWorkersTable: React.FC = () => {
 
   const handleSuspend = (id: string) => {
     updateUser.mutate({ id, updates: { user_type: 'suspended_worker' } });
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('Are you sure you want to permanently delete this worker? This action cannot be undone.')) {
+      deleteUser.mutate(id);
+    }
   };
 
   const handleVerificationChange = (id: string, verified: boolean) => {
@@ -122,8 +129,11 @@ const AdminWorkersTable: React.FC = () => {
                             Verify
                           </button>
                         )}
-                        <button className="admin-action-btn danger" onClick={() => handleSuspend(worker.id)}>
+                        <button className="admin-action-btn yellow" onClick={() => handleSuspend(worker.id)}>
                           Suspend
+                        </button>
+                        <button className="admin-action-btn danger" onClick={() => handleDelete(worker.id)}>
+                          Delete
                         </button>
                       </div>
                     </td>

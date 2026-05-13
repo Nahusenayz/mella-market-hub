@@ -28,7 +28,7 @@ BEGIN
     id, 
     email, 
     phone_number,
-    full_name, 
+    full_name,
     user_type
   )
   VALUES (
@@ -51,3 +51,46 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- 4. Add fallback_order column for request reassignment
+ALTER TABLE public.emergency_requests
+ADD COLUMN IF NOT EXISTS fallback_order INTEGER DEFAULT 0;
+
+-- 5. Add declined_responder_ids array to track responders who declined
+ALTER TABLE public.emergency_requests
+ADD COLUMN IF NOT EXISTS declined_responder_ids UUID[] DEFAULT '{}';
+
+-- 6. Create trigger function for declining requests
+CREATE OR REPLACE FUNCTION public.handle_emergency_request_decline()
+RETURNS TRIGGER AS $$
+DECLARE
+  next_responder_id UUID;
+  request RECORD;
+BEGIN
+  request := NEW;
+  IF NEW.status = 'declined' AND OLD.status <> 'declined' THEN
+    -- Find next available responder not in declined list
+    SELECT wl.worker_id INTO next_responder_id
+    FROM worker_locations wl
+    WHERE wl.is_available = true
+      AND wl.worker_id <> request.responder_id
+      AND NOT (wl.worker_id = ANY (request.declined_responder_ids))
+    ORDER BY wl.created_at ASC
+    LIMIT 1;
+
+    IF next_responder_id IS NOT NULL THEN
+      NEW.responder_id := next_responder_id;
+      NEW.status := 'pending';
+      NEW.fallback_order := COALESCE(NEW.fallback_order,0) + 1;
+      NEW.declined_responder_ids := array_append(NEW.declined_responder_ids, request.responder_id);
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 7. Attach trigger to emergency_requests updates
+CREATE TRIGGER trg_emergency_request_decline
+BEFORE UPDATE ON public.emergency_requests
+FOR EACH ROW
+WHEN (NEW.status = 'declined')
+EXECUTE FUNCTION public.handle_emergency_request_decline();

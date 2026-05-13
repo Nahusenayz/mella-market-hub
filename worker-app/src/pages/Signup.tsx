@@ -44,7 +44,10 @@ export default function Signup() {
             },
             (error) => {
                 console.error('Location error:', error)
-                setError('Location access denied. You can still register but your location won\'t be shown to users.')
+                // Use default Addis Ababa location if permission denied
+                setUserLocation({ lat: 9.0320, lng: 38.7469 })
+                setLocationGranted(false)
+                setError('Location access denied. Using default location (Addis Ababa). You can update this later in your dashboard.')
             },
             { enableHighAccuracy: true, timeout: 10000 }
         )
@@ -99,29 +102,31 @@ export default function Signup() {
             return
         }
 
-        // Wait a moment for the profile trigger to create the profile
-        if (data.user && userLocation) {
+        // Try to insert worker location (always happens now since userLocation is guaranteed)
+        if (data.user) {
             // Small delay to ensure profile is created by trigger
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            await new Promise(resolve => setTimeout(resolve, 1500))
 
-            // Try to insert worker location
+            const finalLocation = userLocation || { lat: 9.0320, lng: 38.7469 }
+
+            console.log('📍 Saving worker location:', finalLocation)
+
             const { error: locError } = await supabase
                 .from('worker_locations')
                 .upsert({
                     worker_id: data.user.id,
                     category: category,
-                    location_lat: userLocation.lat,
-                    location_lng: userLocation.lng,
+                    location_lat: finalLocation.lat,
+                    location_lng: finalLocation.lng,
                     is_available: true,
                     service_fee: serviceFee ? parseFloat(serviceFee) : 0,
                     last_updated: new Date().toISOString()
                 }, { onConflict: 'worker_id' })
 
             if (locError) {
-                console.error('Error saving worker location:', locError)
-                // Don't block signup for this error
+                console.error('❌ Error saving worker location:', locError)
             } else {
-                console.log('Worker location saved successfully!')
+                console.log('✅ Worker location saved successfully!')
             }
         }
 

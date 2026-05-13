@@ -103,6 +103,36 @@ export const useUpdateUser = () => {
   });
 };
 
+export const useDeleteUser = () => {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Use RPC to bypass potential URL blockers
+      const { error } = await supabase.rpc('delete_profile_safely', { p_profile_id: id });
+      
+      if (error) {
+        console.error('RPC Delete failed:', error);
+        if (error.code === 'P0001' || error.message?.includes('not found')) {
+          throw new Error('Database deletion function not found. Please run the provided SQL migration in your Supabase dashboard.');
+        }
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'users'] });
+      toast({ title: 'User deleted successfully' });
+    },
+    onError: (err: Error) => {
+      toast({ 
+        title: 'Delete failed', 
+        description: err.message, 
+        variant: 'destructive' 
+      });
+    },
+  });
+};
+
 // ─── Workers (All Responder Types) ───
 export const useAdminWorkers = (page: number) => {
   return useQuery({
@@ -185,6 +215,37 @@ export const useUpdateJob = () => {
     },
     onError: (err: Error) => {
       toast({ title: 'Update failed', description: err.message, variant: 'destructive' });
+    },
+  });
+};
+
+export const useDeleteJob = () => {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Use RPC to bypass 'ads' keyword blockers in URL
+      const { error } = await supabase.rpc('delete_ad_safely', { p_ad_id: id });
+      
+      if (error) {
+        console.error('RPC Delete failed:', error);
+        // If RPC fails, it's likely because the function wasn't created yet
+        if (error.code === 'P0001' || error.message?.includes('not found')) {
+          throw new Error('Database deletion function not found. Please run the provided SQL migration in your Supabase dashboard.');
+        }
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'jobs'] });
+      toast({ title: 'Post deleted successfully' });
+    },
+    onError: (err: Error) => {
+      toast({ 
+        title: 'Delete failed', 
+        description: err.message, 
+        variant: 'destructive' 
+      });
     },
   });
 };

@@ -36,6 +36,7 @@ export default function Dashboard() {
 
   // UI State
   const [showHistoryModal, setShowHistoryModal] = useState(false)
+  const [locationError, setLocationError] = useState<string | null>(null)
   const [selectedRequest, setSelectedRequest] = useState<EmergencyRequest | null>(null)
   const [cancelledRequest, setCancelledRequest] = useState<EmergencyRequest | null>(null)
 
@@ -124,12 +125,31 @@ export default function Dashboard() {
           lng: position.coords.longitude
         })
       },
-      (err) => { console.error('Geolocation error:', err) },
+      (err) => { 
+        console.warn('ℹ️ Geolocation access restricted. Using default location.');
+        setLocationError('Location access denied. Using default location (Addis Ababa).');
+        // If GPS is denied, we still want to show as Online
+        if (!loc) {
+          setLoc({ lat: 9.0320, lng: 38.7469 }); // Addis Ababa fallback
+        }
+      },
       { enableHighAccuracy: true, maximumAge: 60000 }
     )
 
-    return () => navigator.geolocation.clearWatch(watchId)
-  }, [userId, userCategory, isOnline])
+    // Heartbeat to keep status "Online" in real-time even if standing still or GPS denied
+    const heartbeatId = setInterval(() => {
+      if (isOnline) {
+        const currentLoc = loc || { lat: 9.0320, lng: 38.7469 };
+        console.log('💓 Sending heartbeat status update...');
+        saveLocation(currentLoc);
+      }
+    }, 30000); // Every 30 seconds for faster updates during testing
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+      clearInterval(heartbeatId);
+    }
+  }, [userId, userCategory, isOnline, loc])
 
   const toggleOnlineStatus = async () => {
     const newStatus = !isOnline
@@ -301,11 +321,21 @@ export default function Dashboard() {
             </div>
             <div className="stat-card delay-400" style={{ animationDelay: '0.4s' }}>
               <div className="stat-number" style={{ fontSize: '1.5rem' }}>
-                {loc ? '📍' : '❌'}
+                {loc && !locationError ? '📍' : '⚠️'}
               </div>
-              <div className="stat-label">{loc ? 'Location Active' : 'No GPS'}</div>
+              <div className="stat-label">{loc && !locationError ? 'Location Active' : 'GPS Denied'}</div>
             </div>
           </div>
+          
+          {locationError && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 animate-pulse">
+              <span className="text-amber-500 text-xl">📍</span>
+              <div>
+                <p className="text-sm font-bold text-amber-800">Location Access Restricted</p>
+                <p className="text-xs text-amber-600">Using default map location. Please enable GPS for better accuracy.</p>
+              </div>
+            </div>
+          )}
           
           <div className="glass p-6 rounded-2xl mb-8 border-l-4 border-yellow-500">
             <div className="flex items-center justify-between mb-4">
@@ -375,6 +405,13 @@ export default function Dashboard() {
                       <button onClick={() => loc && updateStatus(r.id, 'en_route', loc)} className="btn-enroute flex-1">En Route</button>
                     )}
                     <button onClick={() => updateStatus(r.id, 'completed')} className="btn-complete flex-1">Complete</button>
+                    <button 
+                      onClick={() => updateStatus(r.id, 'cancelled')} 
+                      className="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-colors"
+                      title="Cancel Request"
+                    >
+                      ✗
+                    </button>
                   </div>
                 </div>
               ))}

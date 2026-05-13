@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAdminJobs, useUpdateJob } from '@/hooks/useAdminData';
+import { useAdminJobs, useUpdateJob, useDeleteJob } from '@/hooks/useAdminData';
 import { AdminAddForm } from './AdminAddForm';
 
 const statusFilters = [
@@ -15,6 +15,7 @@ const AdminJobsTable: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const { data, isLoading } = useAdminJobs(page, statusFilter);
   const updateJob = useUpdateJob();
+  const deleteJob = useDeleteJob();
 
   const totalPages = data ? Math.ceil(data.totalCount / 10) : 0;
 
@@ -24,6 +25,12 @@ const AdminJobsTable: React.FC = () => {
 
   const handleToggleActive = (id: string, currentStatus: boolean) => {
     updateJob.mutate({ id, updates: { is_active: !currentStatus } });
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      deleteJob.mutate(id);
+    }
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -57,13 +64,13 @@ const AdminJobsTable: React.FC = () => {
                 <th>Price</th>
                 <th>Status</th>
                 <th>Created</th>
-                <th>Visibility</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>
+                   <tr key={i}>
                     {Array.from({ length: 6 }).map((_, j) => (
                       <td key={j}>
                         <div className="admin-skeleton" style={{ height: '1rem', width: '80%' }} />
@@ -92,12 +99,20 @@ const AdminJobsTable: React.FC = () => {
                     </td>
                     <td>{formatDate(post.created_at)}</td>
                     <td>
-                      <button 
-                        className={`admin-action-btn ${post.is_active ? 'danger' : 'success'}`}
-                        onClick={() => handleToggleActive(post.id, post.is_active)}
-                      >
-                        {post.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
+                      <div className="admin-actions-cell">
+                        <button 
+                          className={`admin-action-btn ${post.is_active ? 'yellow' : 'success'}`}
+                          onClick={() => handleToggleActive(post.id, post.is_active)}
+                        >
+                          {post.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button 
+                          className="admin-action-btn danger"
+                          onClick={() => handleDelete(post.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

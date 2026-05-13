@@ -33,9 +33,10 @@ import {
   LogOut,
   MessageSquare
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useWorkerLocations } from '@/hooks/useWorkerLocations';
+import { useToast } from '@/hooks/use-toast';
 
 interface EmergencyStation {
   id: string;
@@ -68,8 +69,10 @@ const EMERGENCY_CATEGORIES = [
 
 export const Emergency: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, language, setLanguage } = useLanguage();
   const { user, signOut } = useAuth();
+  const { toast } = useToast();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -99,11 +102,18 @@ export const Emergency: React.FC = () => {
   const [activeRequest, setActiveRequest] = useState<ActiveRequest | null>(null);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
-  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<string>(location.state?.category || 'all');
+  
+  // Also set selectedCategory for the request form if a specific category was passed
+  useEffect(() => {
+    if (location.state?.category) {
+      setSelectedCategory(location.state.category);
+    }
+  }, [location.state]);
   const mapRef = useRef<HTMLDivElement>(null);
 
   // Fetch available workers
-  const { workers, loading: workersLoading, getNearbyWorkers, refetch: refetchWorkers } = useWorkerLocations();
+  const { workers, loading: workersLoading, error: workersError, getNearbyWorkers, refetch: refetchWorkers } = useWorkerLocations();
 
   // Get user's real-time location
   useEffect(() => {
@@ -131,6 +141,7 @@ export const Emergency: React.FC = () => {
       );
 
       return () => navigator.geolocation.clearWatch(watchId);
+
     } else {
       setIsLoadingLocation(false);
       generateNearbyEmergencyStations(userLocation);
@@ -152,7 +163,42 @@ export const Emergency: React.FC = () => {
           filter: `id=eq.${activeRequest.id}`
         },
         (payload) => {
-          setActiveRequest(payload.new as ActiveRequest);
+          const newData = payload.new as ActiveRequest;
+          const oldData = activeRequest;
+          
+          console.log('🔄 Request update received:', { old: oldData.status, new: newData.status });
+          
+          if (newData.status !== oldData.status) {
+            if (newData.status === 'accepted') {
+              toast({
+                title: "🚨 Request Accepted!",
+                description: "A responder has accepted your request and is preparing to assist you.",
+                variant: "default",
+              });
+            } else if (newData.status === 'en_route') {
+              toast({
+                title: "🚑 Responder En Route",
+                description: "The responder is on their way to your location.",
+                variant: "default",
+              });
+            } else if (newData.status === 'cancelled') {
+              toast({
+                title: "⚠️ Request Cancelled",
+                description: "Your emergency request has been cancelled.",
+                variant: "destructive",
+              });
+              setActiveRequest(null); // Clear it if cancelled
+              return;
+            } else if (newData.status === 'pending' && oldData.status !== 'pending') {
+              toast({
+                title: "🔄 Request Re-queued",
+                description: "The previous responder was unable to attend. Your request is back in the queue for the next available responder.",
+                variant: "default",
+              });
+            }
+          }
+          
+          setActiveRequest(newData);
         }
       )
       .subscribe();
@@ -468,7 +514,7 @@ export const Emergency: React.FC = () => {
 
   // Transform workers for map display
   const transformWorkersForMap = () => {
-    const nearbyWorkers = getNearbyWorkers(userLocation.lat, userLocation.lng, 50);
+    const nearbyWorkers = getNearbyWorkers(userLocation.lat, userLocation.lng, 1000);
     return nearbyWorkers.map(worker => {
       const catInfo = EMERGENCY_CATEGORIES.find(c => c.key === worker.category);
       return {
@@ -506,7 +552,7 @@ export const Emergency: React.FC = () => {
   };
 
   // Get all workers and filter by category
-  const allWorkers = getNearbyWorkers(userLocation.lat, userLocation.lng, 100);
+  const allWorkers = getNearbyWorkers(userLocation.lat, userLocation.lng, 1000);
   const filteredWorkers = filterCategory === 'all'
     ? allWorkers
     : allWorkers.filter(w => w.category === filterCategory);
@@ -807,13 +853,13 @@ export const Emergency: React.FC = () => {
             <MapView
               services={transformWorkersForMap()}
               userLocation={userLocation}
-              distanceFilter={50}
+              distanceFilter={1000}
             />
           </div>
         </div>
 
         {/* Available Responders Section */}
-        <div className="mb-8">
+        <div className="mb-8 max-h-[600px] overflow-y-auto">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
               <User className="h-5 w-5 text-orange-600" />
@@ -847,6 +893,15 @@ export const Emergency: React.FC = () => {
             </div>
           </div>
 
+          {workersError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Error loading responders: {workersError}. Please try refreshing the page.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {workersLoading ? (
             <div className="flex items-center justify-center py-12 bg-white rounded-xl">
               <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
@@ -865,7 +920,9 @@ export const Emergency: React.FC = () => {
               {filteredWorkers.map((worker) => {
                 const catInfo = EMERGENCY_CATEGORIES.find(c => c.key === worker.category);
                 const timeSinceUpdate = Math.floor((Date.now() - new Date(worker.last_updated).getTime()) / 1000);
-                const isRecentlyUpdated = timeSinceUpdate < 300; // Within 5 minutes
+                const isRecentlyUpdated = timeSinceUpdate < 120; // Within 2 minutes for "Live" heartbeat
+                // Only consider them "Online" if they are available AND have checked in recently (within 5 minutes)
+                const isOnline = worker.is_available && timeSinceUpdate < 300; 
 
                 return (
                   <Card
@@ -881,9 +938,23 @@ export const Emergency: React.FC = () => {
                           {catInfo?.icon || '👷'}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-800 truncate">
-                            {worker.profiles?.full_name || 'Available Responder'}
-                          </h3>
+                          <div className="flex flex-col gap-1">
+                            <h3 className="font-semibold text-gray-800 truncate">
+                              {worker.profiles?.full_name || 'Available Responder'}
+                            </h3>
+                            <div className="flex items-center gap-2">
+                              <span className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded ${isOnline ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                                {isOnline ? 'ONLINE' : 'OFFLINE'}
+                              </span>
+                              {isRecentlyUpdated && (
+                                <span className="text-[10px] text-orange-600 font-medium flex items-center gap-0.5">
+                                  <span className="w-1 h-1 bg-orange-500 rounded-full" />
+                                  LIVE
+                                </span>
+                              )}
+                            </div>
+                          </div>
                           <p className="text-sm text-gray-500">{catInfo?.label || worker.category}</p>
                           <div className="flex items-center gap-3 mt-1">
                             <Badge variant="secondary" className="text-xs">

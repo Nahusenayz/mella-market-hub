@@ -80,6 +80,9 @@ export const TowTruckFlow: React.FC<TowTruckFlowProps> = ({ userLocation, onClos
         address: selectedGarage.address
       });
 
+      // Only set responder_id if it's a valid UUID (not one of our static string IDs)
+      const isRealWorker = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedGarage.id);
+
       const { data, error } = await supabase
         .from('emergency_requests' as any)
         .insert({
@@ -88,7 +91,9 @@ export const TowTruckFlow: React.FC<TowTruckFlowProps> = ({ userLocation, onClos
           details: details,
           user_location_lat: userLocation.lat,
           user_location_lng: userLocation.lng,
-          status: 'pending'
+          status: 'pending',
+          estimated_price: price,
+          responder_id: isRealWorker ? selectedGarage.id : null
         })
         .select()
         .single();
@@ -102,7 +107,9 @@ export const TowTruckFlow: React.FC<TowTruckFlowProps> = ({ userLocation, onClos
       
       toast({
         title: "Request Sent",
-        description: "Your request has been sent to the tow truck operator.",
+        description: isRealWorker 
+          ? `Your request has been sent to ${selectedGarage.name}.` 
+          : "Your request has been logged. We will contact you shortly.",
       });
     } catch (error: any) {
       console.error('Error creating request:', error);
@@ -111,6 +118,26 @@ export const TowTruckFlow: React.FC<TowTruckFlowProps> = ({ userLocation, onClos
         description: error.message || "Failed to send request. Please try again.",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!activeRequestId) return;
+    try {
+      const { error } = await supabase
+        .from('emergency_requests' as any)
+        .update({ status: 'cancelled' })
+        .eq('id', activeRequestId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Request Cancelled",
+        description: "Your tow truck request has been cancelled.",
+      });
+      onClose();
+    } catch (error: any) {
+      console.error('Error cancelling request:', error);
     }
   };
 
@@ -393,7 +420,7 @@ export const TowTruckFlow: React.FC<TowTruckFlowProps> = ({ userLocation, onClos
                   </div>
                 </div>
                 
-                <Button variant="outline" className="w-full text-red-600 border-red-100 hover:bg-red-50" onClick={onClose}>
+                <Button variant="outline" className="w-full text-red-600 border-red-100 hover:bg-red-50" onClick={handleCancel}>
                   Cancel Request
                 </Button>
               </div>

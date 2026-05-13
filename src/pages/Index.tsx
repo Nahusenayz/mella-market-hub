@@ -240,6 +240,7 @@ const Index = () => {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             isWorkerMode={false}
+            onTowTruckClick={() => setShowTowTruck(true)}
           />
 
           {/* Real-time Responder Stats Ticker */}
@@ -257,60 +258,7 @@ const Index = () => {
           </div>
 
           <div className="container mx-auto px-4 py-8">
-            {/* Quick Action Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-              <button
-                onClick={() => navigate('/emergency')}
-                className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-red-500 transition-all flex flex-col items-center gap-3 text-center group"
-              >
-                <div className="p-4 bg-red-100 rounded-full group-hover:scale-110 transition-transform">
-                  <HeartPulse className="text-red-600 h-8 w-8" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">Need a Doctor?</h3>
-                  <p className="text-xs text-gray-500">Quick medical help</p>
-                </div>
-              </button>
 
-              <button
-                onClick={() => navigate('/emergency')}
-                className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-blue-500 transition-all flex flex-col items-center gap-3 text-center group"
-              >
-                <div className="p-4 bg-blue-100 rounded-full group-hover:scale-110 transition-transform">
-                  <Shield className="text-blue-600 h-8 w-8" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">Police/Safety</h3>
-                  <p className="text-xs text-gray-500">Emergency support</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setShowTowTruck(true)}
-                className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-orange-500 transition-all flex flex-col items-center gap-3 text-center group"
-              >
-                <div className="p-4 bg-orange-100 rounded-full group-hover:scale-110 transition-transform">
-                  <Truck className="text-orange-600 h-8 w-8" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">Tow Truck</h3>
-                  <p className="text-xs text-gray-500">Vehicle breakdown</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => navigate('/emergency')}
-                className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-yellow-500 transition-all flex flex-col items-center gap-3 text-center group"
-              >
-                <div className="p-4 bg-yellow-100 rounded-full group-hover:scale-110 transition-transform">
-                  <Activity className="text-yellow-600 h-8 w-8" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">Traffic Status</h3>
-                  <p className="text-xs text-gray-500">Real-time updates</p>
-                </div>
-              </button>
-            </div>
             {/* Recent Safety Alerts Feed */}
             {filteredServices.some(s => s.category === 'Safety Alert') && (
               <div className="mb-12">
@@ -554,14 +502,14 @@ const Index = () => {
 
       <Footer />
 
-      {/* Floating SOS Button */}
+      {/* Floating SOS Button - Smaller */}
       <button
         onClick={() => navigate('/emergency')}
-        className="fixed bottom-6 right-6 z-50 bg-red-600 text-white p-4 rounded-full shadow-2xl hover:bg-red-700 transition-all hover:scale-110 animate-emergency-pulse flex items-center justify-center gap-2 group"
+        className="fixed bottom-4 right-4 z-50 bg-red-600 text-white p-3 rounded-full shadow-2xl hover:bg-red-700 transition-all hover:scale-110 animate-emergency-pulse flex items-center justify-center gap-1.5 group"
       >
-        <AlertTriangle className="h-8 w-8" />
-        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 font-bold">
-          EMERGENCY SOS
+        <AlertTriangle className="h-6 w-6" />
+        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 font-bold text-xs">
+          SOS
         </span>
       </button>
     </div>

@@ -39,10 +39,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Initial session check:', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Verify profile still exists and is not disabled
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (error || !profile || profile.user_type === 'disabled') {
+          console.warn('User profile missing or disabled, signing out...');
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+        } else {
+          setSession(session);
+          setUser(session.user);
+        }
+      } else {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
+      
       setLoading(false);
     });
 

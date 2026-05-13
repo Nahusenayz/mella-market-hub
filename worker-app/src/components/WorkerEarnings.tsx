@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useEarnings } from '../hooks/useEarnings';
-import { TrendingUp, DollarSign, Calendar, Briefcase } from 'lucide-react';
+import { TrendingUp, DollarSign, Calendar, Briefcase, Clock } from 'lucide-react';
 
 interface WorkerEarningsProps {
   userId: string | null;
@@ -16,86 +16,75 @@ const WorkerEarnings: React.FC<WorkerEarningsProps> = ({ userId }) => {
   const maxAmount = Math.max(...earnings.monthlyData.map(d => d.amount), 1);
 
   return (
-    <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass p-6 rounded-2xl border-l-4 border-orange-500 shadow-lg">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-orange-100 rounded-xl text-orange-600">
-              <DollarSign size={24} />
-            </div>
+    <div className="animate-fade-in-up">
+      <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/40 shadow-2xl overflow-hidden">
+        {/* Header Summary */}
+        <div className="p-8 bg-gradient-to-br from-orange-500/10 to-transparent border-b border-white/20">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
-              <p className="text-sm text-gray-500 font-medium">Total Earnings</p>
-              <h3 className="text-2xl font-bold text-gray-800">ETB {earnings.total.toLocaleString()}</h3>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Total Balance</p>
+              <h2 className="text-4xl font-black text-gray-900 tracking-tight">
+                <span className="text-orange-500 mr-2">ETB</span>
+                {earnings.total.toLocaleString()}
+              </h2>
             </div>
-          </div>
-        </div>
-
-        <div className="glass p-6 rounded-2xl border-l-4 border-green-500 shadow-lg">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-100 rounded-xl text-green-600">
-              <TrendingUp size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">This Month</p>
-              <h3 className="text-2xl font-bold text-gray-800">ETB {earnings.thisMonth.toLocaleString()}</h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="glass p-6 rounded-2xl border-l-4 border-blue-500 shadow-lg">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
-              <Briefcase size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Avg / Job</p>
-              <h3 className="text-2xl font-bold text-gray-800">ETB {Math.round(earnings.averagePerJob).toLocaleString()}</h3>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Chart and Recent Jobs */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass p-6 rounded-2xl shadow-xl">
-          <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-            <Calendar size={20} className="text-orange-500" />
-            Monthly Revenue
-          </h3>
-          <div className="h-48 flex items-end justify-between gap-2 px-2">
-            {earnings.monthlyData.map((data, idx) => (
-              <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
-                <div 
-                  className="w-full bg-gradient-to-t from-orange-500 to-orange-400 rounded-t-lg transition-all duration-500 group-hover:from-orange-600 group-hover:to-orange-500 relative"
-                  style={{ height: `${(data.amount / maxAmount) * 100}%`, minHeight: data.amount > 0 ? '4px' : '0' }}
-                >
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                    ETB {data.amount.toLocaleString()}
-                  </div>
-                </div>
-                <span className="text-[10px] text-gray-400 font-bold uppercase">{data.month}</span>
+            <div className="flex gap-2">
+              <div className="px-4 py-2 bg-white/50 rounded-2xl border border-white/40 text-center">
+                <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Monthly</p>
+                <p className="text-sm font-black text-green-600">{earnings.thisMonth.toLocaleString()}</p>
               </div>
-            ))}
+              <div className="px-4 py-2 bg-white/50 rounded-2xl border border-white/40 text-center">
+                <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Average</p>
+                <p className="text-sm font-black text-blue-600">{Math.round(earnings.averagePerJob).toLocaleString()}</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="glass p-6 rounded-2xl shadow-xl">
+        {/* Transaction History List */}
+        <div className="p-6 sm:p-8">
           <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
             <TrendingUp size={20} className="text-orange-500" />
-            Recent Income
+            Transaction History
           </h3>
+          
           <div className="space-y-4">
-            {earnings.recentJobs.length > 0 ? earnings.recentJobs.map((job, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 hover:bg-orange-50 rounded-xl transition-colors border border-transparent hover:border-orange-100">
-                <div>
-                  <p className="font-bold text-gray-800">{job.title}</p>
-                  <p className="text-xs text-gray-500">{job.date}</p>
+            {earnings.recentJobs.length > 0 ? (
+              earnings.recentJobs.map((job, idx) => (
+                <div 
+                  key={idx} 
+                  className="group flex items-center justify-between p-4 bg-white/30 hover:bg-white/60 rounded-3xl border border-white/20 hover:border-white/50 transition-all duration-300 shadow-sm hover:shadow-md"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-12 h-12 bg-white/80 rounded-2xl flex items-center justify-center text-orange-500 shadow-inner group-hover:scale-110 transition-transform">
+                      <DollarSign size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-gray-800 truncate text-sm sm:text-base">{job.title}</p>
+                      <div className="flex items-center gap-2 text-[10px] sm:text-xs text-gray-500 font-medium">
+                        <Calendar size={12} />
+                        <span>{job.date}</span>
+                        <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                        <Clock size={12} />
+                        <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right ml-4">
+                    <p className="font-black text-base sm:text-lg text-green-600 leading-none">
+                      + {job.amount.toLocaleString()}
+                    </p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mt-1">ETB</p>
+                  </div>
                 </div>
-                <p className="font-bold text-green-600">+ ETB {job.amount.toLocaleString()}</p>
+              ))
+            ) : (
+              <div className="text-center py-20 text-gray-400">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp size={32} />
+                </div>
+                <p className="font-medium italic">No transactions found yet</p>
               </div>
-            )) : (
-              <div className="text-center py-10 text-gray-400 italic">No completed jobs yet</div>
             )}
           </div>
         </div>

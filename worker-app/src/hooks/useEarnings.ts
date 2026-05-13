@@ -21,6 +21,7 @@ export const useEarnings = (userId: string | null) => {
       try {
         const { data, error } = await supabase
           .from('bookings')
+          .select('*, ads(title)')
           .eq('worker_id', userId)
           .eq('payment_status', 'completed');
 
@@ -34,12 +35,26 @@ export const useEarnings = (userId: string | null) => {
         if (error) throw error;
         if (emergencyError) throw emergencyError;
 
-        // Use estimated_price from emergency requests
-        const parsedEmergencyJobs = (emergencyData || []).map(r => ({
-          total_amount: Number(r.estimated_price) || 0,
-          created_at: r.created_at,
-          title: `Emergency ${r.category?.replace('_', ' ')}`
-        }));
+        // Use estimated_price from emergency requests or fallback to details JSON
+        const parsedEmergencyJobs = (emergencyData || []).map(r => {
+          let price = Number(r.estimated_price) || 0;
+          
+          // Fallback to details JSON if estimated_price is not set
+          if (price === 0 && r.details) {
+            try {
+              const details = JSON.parse(r.details);
+              price = Number(details.price) || 0;
+            } catch (e) {
+              console.warn('Failed to parse details for emergency request', r.id);
+            }
+          }
+
+          return {
+            total_amount: price,
+            created_at: r.created_at,
+            title: `Emergency ${r.category?.replace('_', ' ')}`
+          };
+        });
 
         const allJobs = [
           ...data.map(job => ({

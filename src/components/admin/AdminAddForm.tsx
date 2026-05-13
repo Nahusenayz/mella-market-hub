@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from 'lucide-react';
 import { useCreateUser, useCreateJob } from '@/hooks/useAdminData';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AdminAddFormProps {
   type: 'user' | 'worker' | 'job';
@@ -16,6 +17,7 @@ export const AdminAddForm: React.FC<AdminAddFormProps> = ({ type }) => {
   const [isOpen, setIsOpen] = useState(false);
   const createUser = useCreateUser();
   const createJob = useCreateJob();
+  const { user } = useAuth();
   
   // Form States
   const [formData, setFormData] = useState<any>({});
@@ -37,6 +39,7 @@ export const AdminAddForm: React.FC<AdminAddFormProps> = ({ type }) => {
       } else {
         const payload = {
           id: crypto.randomUUID(),
+          user_id: user?.id, // Link to current admin user
           title: formData.title,
           category: formData.category,
           price: parseFloat(formData.price || '0'),

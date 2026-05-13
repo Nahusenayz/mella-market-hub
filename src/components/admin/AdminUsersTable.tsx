@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useAdminUsers, useUpdateUser } from '@/hooks/useAdminData';
+import { useAdminUsers, useUpdateUser, useDeleteUser } from '@/hooks/useAdminData';
 import { AdminAddForm } from './AdminAddForm';
 
 const AdminUsersTable: React.FC = () => {
   const [page, setPage] = useState(0);
   const { data, isLoading } = useAdminUsers(page);
   const updateUser = useUpdateUser();
+  const deleteUser = useDeleteUser();
 
   const totalPages = data ? Math.ceil(data.totalCount / 10) : 0;
 
@@ -19,6 +20,12 @@ const AdminUsersTable: React.FC = () => {
 
   const handleDisable = (id: string) => {
     updateUser.mutate({ id, updates: { user_type: 'disabled' } });
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('Are you sure you want to permanently delete this user? This cannot be undone.')) {
+      deleteUser.mutate(id);
+    }
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -103,10 +110,13 @@ const AdminUsersTable: React.FC = () => {
                           </button>
                         )}
                         {user.user_type !== 'disabled' && (
-                          <button className="admin-action-btn danger" onClick={() => handleDisable(user.id)}>
+                          <button className="admin-action-btn yellow" onClick={() => handleDisable(user.id)}>
                             Disable
                           </button>
                         )}
+                        <button className="admin-action-btn danger" onClick={() => handleDelete(user.id)}>
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>

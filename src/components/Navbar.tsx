@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NotificationSystem } from './NotificationSystem';
 import { UserSearch } from './UserSearch';
 import { UserProfileModal } from './UserProfile';
-import { User, LogOut, MessageSquare, Home, Plus, Globe } from 'lucide-react';
+import { User, LogOut, MessageSquare, Home, Plus, Globe, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { Button } from '@/components/ui/button';
@@ -80,30 +80,63 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
               </div>
             </div>
 
-            {/* Desktop Navigation Links */}
-            <div className="hidden md:flex items-center space-x-6 ml-6 mr-4 font-medium">
+            {/* Navigation Links - Horizontal on all screens */}
+            <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-6 ml-2 sm:ml-6 mr-2 sm:mr-4 font-medium overflow-x-auto no-scrollbar py-1">
               <button 
                 onClick={() => navigate('/')} 
-                className={`transition-colors flex items-center gap-2 ${isActive('/') ? 'text-orange-600' : 'text-gray-600 hover:text-orange-500'}`}
+                className={`transition-colors flex items-center gap-1 text-[10px] sm:text-xs md:text-sm whitespace-nowrap ${isActive('/') ? 'text-orange-600' : 'text-gray-600 hover:text-orange-500'}`}
               >
-                {t('home')}
+                <Home size={14} className="sm:hidden" />
+                <span>{t('home')}</span>
               </button>
               <button 
                 onClick={() => navigate('/emergency')} 
-                className={`transition-colors flex items-center gap-2 ${isActive('/emergency') ? 'text-red-600 font-bold' : 'text-red-500 hover:text-red-600 font-semibold'}`}
+                className={`transition-colors flex items-center gap-1 text-[10px] sm:text-xs md:text-sm whitespace-nowrap ${isActive('/emergency') ? 'text-red-600 font-bold' : 'text-red-500 hover:text-red-600 font-semibold'}`}
               >
-                {t('emergency')}
+                <AlertTriangle size={14} className="sm:hidden" />
+                <span>{t('emergency')}</span>
               </button>
               <button 
                 onClick={() => navigate('/profile')} 
-                className={`transition-colors flex items-center gap-2 ${isActive('/profile') ? 'text-orange-600' : 'text-gray-600 hover:text-orange-500'}`}
+                className={`transition-colors flex items-center gap-1 text-[10px] sm:text-xs md:text-sm whitespace-nowrap ${isActive('/profile') ? 'text-orange-600' : 'text-gray-600 hover:text-orange-500'}`}
               >
-                {t('profile')}
+                <User size={14} className="sm:hidden" />
+                <span>{t('profile')}</span>
               </button>
             </div>
-            {/* Center - User Search */}
-            <div className="hidden md:block flex-1 max-w-md mx-8">
-              <UserSearch onUserClick={handleUserSearchClick} />
+            
+            {/* Quick Emergency Shortcuts - Unified Size and Centered (Mobile Only) */}
+            <div className="flex-1 flex justify-center mx-2 sm:mx-6 overflow-hidden md:hidden">
+              <div className="flex items-center gap-1 sm:gap-3 px-1.5 sm:px-4 py-1.5 bg-gray-50/50 rounded-xl border border-gray-100 overflow-x-auto no-scrollbar w-full max-w-2xl justify-center sm:justify-around">
+                <button 
+                  onClick={() => navigate('/emergency', { state: { category: 'police' } })}
+                  className="flex flex-col items-center justify-center min-w-[50px] sm:flex-1 h-9 sm:h-11 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
+                >
+                  <span className="text-sm sm:text-lg leading-none">🚔</span>
+                  <span className="text-[7px] sm:text-[9px] font-bold text-gray-500 uppercase leading-none mt-1">Police</span>
+                </button>
+                <button 
+                  onClick={() => navigate('/emergency', { state: { category: 'traffic_police' } })}
+                  className="flex flex-col items-center justify-center min-w-[50px] sm:flex-1 h-9 sm:h-11 rounded-lg hover:bg-orange-50 transition-colors flex-shrink-0"
+                >
+                  <span className="text-sm sm:text-lg leading-none">🚦</span>
+                  <span className="text-[7px] sm:text-[9px] font-bold text-gray-500 uppercase leading-none mt-1">Traffic</span>
+                </button>
+                <button 
+                  onClick={() => navigate('/emergency', { state: { category: 'ambulance' } })}
+                  className="flex flex-col items-center justify-center min-w-[50px] sm:flex-1 h-9 sm:h-11 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
+                >
+                  <span className="text-sm sm:text-lg leading-none">🚑</span>
+                  <span className="text-[7px] sm:text-[9px] font-bold text-gray-500 uppercase leading-none mt-1">Medic</span>
+                </button>
+                <button 
+                  onClick={() => navigate('/emergency', { state: { category: 'fire_truck' } })}
+                  className="flex flex-col items-center justify-center min-w-[50px] sm:flex-1 h-9 sm:h-11 rounded-lg hover:bg-orange-50 transition-colors flex-shrink-0"
+                >
+                  <span className="text-sm sm:text-lg leading-none">🚒</span>
+                  <span className="text-[7px] sm:text-[9px] font-bold text-gray-500 uppercase leading-none mt-1">Fire</span>
+                </button>
+              </div>
             </div>
 
             {/* Right Side */}

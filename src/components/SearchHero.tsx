@@ -8,6 +8,7 @@ interface SearchHeroProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   isWorkerMode: boolean;
+  onTowTruckClick?: () => void;
 }
 
 interface EmergencyStation {
@@ -25,7 +26,8 @@ interface EmergencyStation {
 export const SearchHero: React.FC<SearchHeroProps> = ({
   searchQuery,
   onSearchChange,
-  isWorkerMode
+  isWorkerMode,
+  onTowTruckClick
 }) => {
   const { t } = useLanguage();
   const [selectedEmergencyType, setSelectedEmergencyType] = useState<string | null>(null);
@@ -115,7 +117,8 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
     { type: 'Police', icon: '🚔', color: 'bg-blue-600 hover:bg-blue-700', label: t('police') },
     { type: 'Traffic', icon: '🚦', color: 'bg-yellow-600 hover:bg-yellow-700', label: t('trafficPolice') },
     { type: 'Ambulance', icon: '🚑', color: 'bg-red-600 hover:bg-red-700', label: t('ambulance') },
-    { type: 'Fire Station', icon: '🚒', color: 'bg-orange-600 hover:bg-orange-700', label: t('fireStation') }
+    { type: 'Fire Station', icon: '🚒', color: 'bg-orange-600 hover:bg-orange-700', label: t('fireStation') },
+    { type: 'Tow Truck', icon: '🏗️', color: 'bg-blue-600 hover:bg-blue-700', label: 'Tow Truck' }
   ];
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -148,6 +151,10 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
   }, [selectedEmergencyType, userLocation.lat, userLocation.lng]);
 
   const handleEmergencyTypeSelect = (type: string) => {
+    if (type === 'Tow Truck' && onTowTruckClick) {
+      onTowTruckClick();
+      return;
+    }
     setSelectedEmergencyType(type);
   };
 
@@ -192,39 +199,39 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
   }
 
   return (
-    <div className="bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white min-h-[60vh]">
-      <div className="container mx-auto px-4 py-8">
+    <div className="bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white min-h-[40vh] sm:min-h-[45vh]">
+      <div className="container mx-auto px-4 py-4 sm:py-6">
         {!selectedEmergencyType ? (
           // Emergency Type Selection
           <div className="text-center max-w-4xl mx-auto">
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <span className="text-4xl">🚨</span>
-              <h1 className="text-3xl md:text-5xl font-bold animate-fade-in">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="text-2xl sm:text-3xl">🚨</span>
+              <h1 className="text-2xl md:text-4xl font-bold animate-fade-in">
                 {t('emergencyTitle')}
               </h1>
             </div>
-            <p className="text-lg md:text-xl mb-8 opacity-90">
+            <p className="text-base md:text-lg mb-6 opacity-90 max-w-2xl mx-auto">
               {t('emergencyDescription')}
             </p>
-
-            {/* Location Status */}
-            <div className="mb-8 bg-white/10 backdrop-blur-sm rounded-2xl p-4 max-w-2xl mx-auto">
-              <div className="flex items-center justify-center gap-2 text-sm md:text-base">
-                <div className={`w-3 h-3 rounded-full ${isLocationTracking ? 'bg-green-400' : 'bg-gray-400'}`}></div>
-                <MapPin size={20} />
+ 
+            {/* Location Status - Smaller */}
+            <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-2 sm:p-3 max-w-lg mx-auto">
+              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm">
+                <div className={`w-2 h-2 rounded-full ${isLocationTracking ? 'bg-green-400' : 'bg-gray-400'}`}></div>
+                <MapPin size={16} />
                 <span>{isLocationTracking ? t('usingLiveLocation') : t('usingDefaultLocation')}</span>
               </div>
             </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto">
+ 
+            <div className="grid grid-cols-3 md:flex md:justify-center gap-2 sm:gap-4 max-w-4xl mx-auto pb-4">
               {emergencyTypes.map((emergency) => (
                 <button
                   key={emergency.type}
                   onClick={() => handleEmergencyTypeSelect(emergency.type)}
-                  className={`${emergency.color} text-white p-6 md:p-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex flex-col items-center gap-3 border-2 border-white/20`}
+                  className={`${emergency.color} text-white p-3 sm:p-4 md:px-6 md:py-5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex flex-col items-center gap-1 sm:gap-2 border-2 border-white/10 md:min-w-[120px]`}
                 >
-                  <span className="text-4xl md:text-5xl">{emergency.icon}</span>
-                  <span className="text-sm md:text-base font-bold">{emergency.label}</span>
+                  <span className="text-2xl sm:text-3xl">{emergency.icon}</span>
+                  <span className="text-[10px] sm:text-xs md:text-sm font-bold uppercase tracking-wider">{emergency.label}</span>
                 </button>
               ))}
             </div>

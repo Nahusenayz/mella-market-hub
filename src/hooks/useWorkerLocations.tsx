@@ -38,6 +38,10 @@ export const useWorkerLocations = (filterCategory?: string) => {
 
             if (locationsError) {
                 console.error('❌ Error fetching worker locations:', locationsError);
+                // Alert if it's a serious error like RLS or connection
+                if (locationsError.code !== 'PGRST116') { // PGRST116 is just "no rows found" sometimes
+                    console.warn('⚠️ Supabase Error:', locationsError.message);
+                }
                 setError(locationsError.message);
                 setLoading(false);
                 return;
@@ -50,20 +54,40 @@ export const useWorkerLocations = (filterCategory?: string) => {
                 return;
             }
 
-            console.log('✅ Found workers:', locationsData.length);
+            console.log('📡 Supabase Response - locationsData:', locationsData);
+            console.log('❌ Supabase Response - locationsError:', locationsError);
 
-            // Fetch profile data for each worker
-            const workerIds = (locationsData as any[]).map((loc: any) => loc.worker_id);
+            if (!locationsData || locationsData.length === 0) {
+                console.log('ℹ️ No active workers found in database.');
+                setWorkers([]);
+                setLoading(false);
+                return;
+            }
+
+            // Fetch profiles separately to be safe and merge them
+            const workerIds = locationsData.map((loc: any) => loc.worker_id);
+            console.log('🆔 Worker IDs to fetch profiles for:', workerIds);
+
             const { data: profilesData, error: profilesError } = await supabase
                 .from('profiles')
                 .select('id, full_name, profile_image_url, phone_number')
                 .in('id', workerIds);
 
+            console.log('👤 Profiles response:', { data: profilesData, error: profilesError });
+
             if (profilesError) {
-                console.error('Error fetching profiles:', profilesError);
+                console.error('❌ Error fetching profiles:', profilesError);
             }
 
             const workersWithProfiles: WorkerLocation[] = (locationsData as any[]).map((loc: any) => {
+                // Find profile in profilesData if join failed or was restricted
+                const profile = profilesData?.find(p => p.id === loc.worker_id) || loc.profiles;
+                
+                console.log(`👷 Processing worker ${loc.worker_id}:`, { 
+                    hasLocProfile: !!loc.profiles, 
+                    hasManualProfile: !!(profilesData?.find(p => p.id === loc.worker_id)),
+                    category: loc.category 
+                });
                 return {
                     id: loc.id,
                     worker_id: loc.worker_id,
@@ -73,10 +97,10 @@ export const useWorkerLocations = (filterCategory?: string) => {
                     is_available: loc.is_available,
                     last_updated: loc.last_updated,
                     created_at: loc.created_at,
-                    profiles: loc.profiles ? {
-                        full_name: loc.profiles.full_name || 'Responder',
-                        profile_image_url: loc.profiles.profile_image_url,
-                        phone_number: loc.profiles.phone_number
+                    profiles: profile ? {
+                        full_name: profile.full_name || 'Responder',
+                        profile_image_url: profile.profile_image_url,
+                        phone_number: profile.phone_number
                     } : {
                         full_name: 'Responder',
                         profile_image_url: undefined,
@@ -96,12 +120,14 @@ export const useWorkerLocations = (filterCategory?: string) => {
         }
     }, [filterCategory]);
 
+    // Initial fetch
     useEffect(() => {
         fetchWorkers();
 
-        // Set up real-time subscription for worker_locations
+        // Set up real-time subscription for worker locations and availability
+        console.log('📡 Subscribing to real-time worker updates...');
         const channel = supabase
-            .channel('worker-locations-changes')
+            .channel('worker-locations-realtime')
             .on(
                 'postgres_changes',
                 {

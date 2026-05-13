@@ -18,7 +18,7 @@ export type EmergencyRequest = {
   // User profile information
   user_profile?: {
     full_name: string | null
-    phone: string | null
+    phone_number: string | null
     profile_image_url: string | null
   }
 }
@@ -29,6 +29,7 @@ export function useEmergencyRequests() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [userCategory, setUserCategory] = useState<string | null>(null)
+  const [declinedIds, setDeclinedIds] = useState<string[]>([])
 
   // Get user info on mount
   useEffect(() => {
@@ -58,11 +59,17 @@ export function useEmergencyRequests() {
 
       // Filter pending requests to only show matching category
       let filteredData = (activeData || []) as EmergencyRequest[]
+      // Filter out requests this worker has already declined in this session
+      filteredData = filteredData.filter(r => !declinedIds.includes(r.id))
+
       if (userCategory) {
         filteredData = filteredData.filter(r => {
           // Show pending requests for matching category or no category
           if (r.status === 'pending') {
-            return !r.category || r.category === userCategory
+            const matchesCategory = !r.category || r.category === userCategory
+            const isUnassigned = !r.responder_id
+            const isAssignedToMe = r.responder_id === userId
+            return matchesCategory && (isUnassigned || isAssignedToMe)
           }
           // Show accepted/en_route requests only if assigned to this responder
           return r.responder_id === userId
@@ -74,12 +81,13 @@ export function useEmergencyRequests() {
         const userIds = [...new Set(filteredData.map(r => r.user_id))]
         const { data: profiles } = await supabase
           .from('profiles' as any)
-          .select('id, full_name, phone, profile_image_url')
+          .select('id, full_name, phone_number, profile_image_url')
           .in('id', userIds)
 
         if (profiles) {
           const profileMap = new Map(profiles.map((p: any) => [p.id, p]))
           filteredData = filteredData.map(r => {
+            const profile = profileMap.get(r.user_id) as any;
             let price = null;
             try {
               if (r.details?.startsWith('{')) {
@@ -90,7 +98,11 @@ export function useEmergencyRequests() {
             
             return {
               ...r,
-              user_profile: profileMap.get(r.user_id) || null,
+              user_profile: profile ? {
+                full_name: profile.full_name,
+                phone_number: profile.phone_number,
+                profile_image_url: profile.profile_image_url
+              } : null,
               estimated_price: price
             };
           })
@@ -140,7 +152,7 @@ export function useEmergencyRequests() {
         .eq('id', id)
         .single()
 
-      if (checkData?.status !== 'pending' || checkData?.responder_id) {
+      if (checkData?.status !== 'pending' || (checkData?.responder_id && checkData?.responder_id !== responderId)) {
         alert('This request has already been taken by another responder')
         fetchRequests()
         return
@@ -154,7 +166,7 @@ export function useEmergencyRequests() {
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
-        .is('responder_id', null)
+        .or(`responder_id.is.null,responder_id.eq.${responderId}`)
         .eq('status', 'pending')
 
       if (error) {
@@ -170,18 +182,24 @@ export function useEmergencyRequests() {
 
   const decline = async (id: string) => {
     try {
-      // For decline, we just hide it from this responder's view
-      // The request stays pending for other responders
+      // If a worker declines, we reset it to pending and clear responder_id 
+      // so other responders in that category can take it
       const { error } = await supabase
         .from('emergency_requests' as any)
         .update({
-          status: 'declined',
+          status: 'pending',
+          responder_id: null,
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
         .eq('status', 'pending')
 
-      if (error) console.error('Error declining:', error)
+      if (error) {
+        console.error('Error declining:', error)
+      } else {
+        setDeclinedIds(prev => [...prev, id])
+        alert('Request declined. It will be sent to other responders.')
+      }
       fetchRequests()
     } catch (e) {
       console.error('Error declining:', e)
@@ -194,9 +212,15 @@ export function useEmergencyRequests() {
     location?: { lat: number; lng: number }
   ) => {
     try {
+      const isWorkerCancellation = status === 'cancelled';
       const update: any = {
-        status,
+        status: isWorkerCancellation ? 'pending' : status,
         updated_at: new Date().toISOString()
+      }
+
+      // If worker cancels, we MUST set responder_id to null explicitly
+      if (isWorkerCancellation) {
+        update.responder_id = null;
       }
 
       if (location) {
@@ -209,7 +233,23 @@ export function useEmergencyRequests() {
         .update(update)
         .eq('id', id)
 
-      if (error) console.error('Error updating status:', error)
+      if (error) {
+        console.error('Error updating status:', error)
+      } else {
+        if (status === 'cancelled') {
+          // Add to local history before it disappears from the server-side history query
+          const cancelledItem = requests.find(r => r.id === id);
+          if (cancelledItem) {
+            setHistory(prev => [{
+              ...cancelledItem,
+              status: 'declined',
+              updated_at: new Date().toISOString()
+            }, ...prev]);
+          }
+          setDeclinedIds(prev => [...prev, id])
+          alert('Request re-queued. It is now available for other responders.')
+        }
+      }
       fetchRequests()
     } catch (e) {
       console.error('Error updating status:', e)
