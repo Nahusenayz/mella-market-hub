@@ -24,9 +24,10 @@ export const useWorkerLocations = (filterCategory?: string) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchWorkers = useCallback(async () => {
+    const fetchWorkers = useCallback(async (retryCount = 0) => {
         try {
-            console.log('🔍 Fetching workers from worker_locations table...');
+            if (retryCount === 0) setLoading(true);
+            console.log(`🔍 Fetching workers (attempt ${retryCount + 1})...`);
 
             // Fetch worker locations
             const { data: locationsData, error: locationsError } = await supabase
@@ -34,31 +35,21 @@ export const useWorkerLocations = (filterCategory?: string) => {
                 .select('*, profiles:worker_id(full_name, profile_image_url, phone_number)')
                 .eq('is_available', true);
 
-            console.log('📍 Worker locations response:', { data: locationsData, error: locationsError });
-
             if (locationsError) {
                 console.error('❌ Error fetching worker locations:', locationsError);
-                // Alert if it's a serious error like RLS or connection
-                if (locationsError.code !== 'PGRST116') { // PGRST116 is just "no rows found" sometimes
-                    console.warn('⚠️ Supabase Error:', locationsError.message);
+                
+                // Retry on network errors
+                if (locationsError.message?.includes('fetch') && retryCount < 3) {
+                    setTimeout(() => fetchWorkers(retryCount + 1), 2000);
+                    return;
                 }
+
                 setError(locationsError.message);
                 setLoading(false);
                 return;
             }
 
             if (!locationsData || locationsData.length === 0) {
-                console.log('📭 No workers found in worker_locations table');
-                setWorkers([]);
-                setLoading(false);
-                return;
-            }
-
-            console.log('📡 Supabase Response - locationsData:', locationsData);
-            console.log('❌ Supabase Response - locationsError:', locationsError);
-
-            if (!locationsData || locationsData.length === 0) {
-                console.log('ℹ️ No active workers found in database.');
                 setWorkers([]);
                 setLoading(false);
                 return;
@@ -66,28 +57,17 @@ export const useWorkerLocations = (filterCategory?: string) => {
 
             // Fetch profiles separately to be safe and merge them
             const workerIds = locationsData.map((loc: any) => loc.worker_id);
-            console.log('🆔 Worker IDs to fetch profiles for:', workerIds);
-
             const { data: profilesData, error: profilesError } = await supabase
                 .from('profiles')
                 .select('id, full_name, profile_image_url, phone_number')
                 .in('id', workerIds);
-
-            console.log('👤 Profiles response:', { data: profilesData, error: profilesError });
 
             if (profilesError) {
                 console.error('❌ Error fetching profiles:', profilesError);
             }
 
             const workersWithProfiles: WorkerLocation[] = (locationsData as any[]).map((loc: any) => {
-                // Find profile in profilesData if join failed or was restricted
                 const profile = profilesData?.find(p => p.id === loc.worker_id) || loc.profiles;
-                
-                console.log(`👷 Processing worker ${loc.worker_id}:`, { 
-                    hasLocProfile: !!loc.profiles, 
-                    hasManualProfile: !!(profilesData?.find(p => p.id === loc.worker_id)),
-                    category: loc.category 
-                });
                 return {
                     id: loc.id,
                     worker_id: loc.worker_id,
@@ -112,11 +92,15 @@ export const useWorkerLocations = (filterCategory?: string) => {
 
             setWorkers(workersWithProfiles);
             setError(null);
+            setLoading(false);
         } catch (e: any) {
             console.error('💥 Error fetching workers:', e);
-            setError(e.message);
-        } finally {
-            setLoading(false);
+            if (e.message?.includes('fetch') && retryCount < 3) {
+                setTimeout(() => fetchWorkers(retryCount + 1), 2000);
+            } else {
+                setError(e.message);
+                setLoading(false);
+            }
         }
     }, [filterCategory]);
 

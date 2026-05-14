@@ -389,42 +389,55 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
 
       const serviceIcon = L.divIcon({
         html: `
-          <div style="
-            background: ${getCategoryColor(service.category)}; 
-            color: white; 
-            width: 36px; 
-            height: 36px; 
-            border-radius: 50% 50% 50% 0; 
-            border: 2px solid white; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 18px; 
-            transform: rotate(-45deg);
-            margin-left: -18px;
-            margin-top: -36px;
-          ">
-            <div style="transform: rotate(45deg)">${getCategoryIcon(service.category)}</div>
+          <div style="position: relative;">
+            <div style="
+              background: ${getCategoryColor(service.category)}; 
+              color: white; 
+              width: 40px; 
+              height: 40px; 
+              border-radius: 50%; 
+              border: 3px solid white; 
+              box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              font-size: 20px; 
+              transition: all 0.3s ease;
+            ">
+              ${getCategoryIcon(service.category)}
+            </div>
+            <!-- Live Indicator Ring -->
             <div style="
               position: absolute;
-              bottom: -4px;
-              right: -4px;
-              width: 10px;
-              height: 10px;
-              background: ${getCategoryColor(service.category)};
+              top: -5px;
+              left: -5px;
+              width: 50px;
+              height: 50px;
+              border: 2px solid ${getCategoryColor(service.category)};
+              border-radius: 50%;
+              animation: pulse-live 2s infinite;
+              opacity: 0.5;
+            "></div>
+            <!-- Active Status Dot -->
+            <div style="
+              position: absolute;
+              bottom: 0;
+              right: 0;
+              width: 12px;
+              height: 12px;
+              background: #10b981;
               border: 2px solid white;
               border-radius: 50%;
-              animation: pulse 2s infinite;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             "></div>
           </div>`,
-        iconSize: [36, 36],
-        iconAnchor: [18, 36],
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
         className: 'service-marker'
       });
 
       const propertyInfo = service.category === 'Properties' ? `
-        <div style="display: flex; gap: 8px; margin: 8px 0; padding: 4px; background: #f5f3ff; border-radius: 4px; font-size: 11px; color: #5b21b6; font-weight: 600;">
+        <div style="display: flex; gap: 8px; margin: 8px 0; padding: 6px; background: #f5f3ff; border-radius: 8px; font-size: 11px; color: #5b21b6; font-weight: 700; border: 1px solid #ddd6fe;">
           <span>🛏️ ${service.bedrooms || 0}</span>
           <span>🚿 ${service.bathrooms || 0}</span>
           <span>📐 ${service.area_sqm || 0}m²</span>
@@ -434,17 +447,34 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
       L.marker([service.location.lat, service.location.lng], { icon: serviceIcon })
         .addTo(markersGroup.current!)
         .bindPopup(`
-          <div style="min-width: 200px; padding: 4px;">
-            <img src="${service.image}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />
-            <strong style="color: #1f2937; font-size: 14px;">${service.title}</strong>
-            ${propertyInfo}
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-              <span style="font-weight: 800; color: #f97316;">ETB ${service.price.toLocaleString()}</span>
-              <span style="font-size: 11px; color: #6b7280;">${service.distance.toFixed(1)}km away</span>
+          <div style="min-width: 220px; padding: 0; border-radius: 16px; overflow: hidden; font-family: inherit;">
+            <div style="position: relative;">
+              <img src="${service.image}" style="width: 100%; height: 120px; object-fit: cover;" />
+              <div style="position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                ${service.category}
+              </div>
             </div>
-            <button style="width: 100%; margin-top: 10px; padding: 8px; background: #f97316; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">View Details</button>
+            <div style="padding: 12px; background: white;">
+              <strong style="display: block; color: #1e293b; font-size: 16px; margin-bottom: 4px;">${service.title}</strong>
+              <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
+                <span style="color: #f59e0b; font-size: 12px;">★</span>
+                <span style="font-size: 12px; color: #64748b; font-weight: 600;">${service.rating.toFixed(1)}</span>
+                <span style="margin-left: auto; font-size: 11px; color: #10b981; font-weight: 700;">● ACTIVE NOW</span>
+              </div>
+              ${propertyInfo}
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+                <span style="font-size: 18px; font-weight: 900; color: #f97316;">ETB ${service.price.toLocaleString()}</span>
+                <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">${service.distance.toFixed(1)}km</span>
+              </div>
+              <button style="width: 100%; margin-top: 12px; padding: 10px; background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%); color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);">
+                VIEW DETAILS
+              </button>
+            </div>
           </div>
-        `);
+        `, {
+          className: 'premium-map-popup',
+          closeButton: false
+        });
     });
 
     // Get nearby emergency locations and add markers

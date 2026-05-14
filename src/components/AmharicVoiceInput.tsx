@@ -1,10 +1,13 @@
 import React, { useState } from "react";
+import { Mic, MicOff } from "lucide-react";
 
 interface AmharicVoiceInputProps {
   onResult: (text: string) => void;
+  className?: string;
+  children?: React.ReactNode;
 }
 
-const AmharicVoiceInput: React.FC<AmharicVoiceInputProps> = ({ onResult }) => {
+const AmharicVoiceInput: React.FC<AmharicVoiceInputProps> = ({ onResult, className, children }) => {
   const [listening, setListening] = useState(false);
 
   const startRecognition = () => {
@@ -20,15 +23,24 @@ const AmharicVoiceInput: React.FC<AmharicVoiceInputProps> = ({ onResult }) => {
       onResult(text);
       setListening(false);
     };
-    recognition.onerror = () => setListening(false);
+    recognition.onerror = (err: any) => {
+      console.error("Speech Recognition Error:", err);
+      setListening(false);
+    };
     recognition.onend = () => setListening(false);
     setListening(true);
     recognition.start();
   };
 
   return (
-    <button onClick={startRecognition} disabled={listening} style={{padding: '8px 16px', borderRadius: '6px', background: '#f3f4f6', border: '1px solid #ccc', cursor: listening ? 'not-allowed' : 'pointer'}}>
-      {listening ? "Listening..." : "🎤 Speak Amharic"}
+    <button 
+      type="button"
+      onClick={startRecognition} 
+      disabled={listening} 
+      className={className || "p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-2"}
+    >
+      {listening ? <MicOff className="h-4 w-4 animate-pulse text-red-500" /> : <Mic className="h-4 w-4 text-gray-600" />}
+      {children || (listening ? "Listening..." : "")}
     </button>
   );
 };

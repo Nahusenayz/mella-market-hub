@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { MessageCircle, Heart, AlertTriangle } from 'lucide-react';
+import { MessageCircle, Heart, AlertTriangle, Sparkles } from 'lucide-react';
 import { FirstAidChatbot } from './FirstAidChatbot';
 import { EmergencyAssistant } from './EmergencyAssistant';
+import { MellaAssistant } from './MellaAssistant';
 
 interface ChatbotFloatingButtonProps {
   showEmergencyAssistant?: boolean;
@@ -13,6 +14,7 @@ export const ChatbotFloatingButton: React.FC<ChatbotFloatingButtonProps> = ({
   userLocation
 }) => {
   const [isFirstAidOpen, setIsFirstAidOpen] = useState(false);
+  const [isMellaAiOpen, setIsMellaAiOpen] = useState(false);
   const [isEmergencyOpen, setIsEmergencyOpen] = useState(showEmergencyAssistant);
 
   // Auto-open emergency assistant if prop is true
@@ -24,6 +26,21 @@ export const ChatbotFloatingButton: React.FC<ChatbotFloatingButtonProps> = ({
 
   return (
     <>
+      {/* Mella AI Assistant Button - NEW */}
+      <button
+        onClick={() => setIsMellaAiOpen(true)}
+        className="fixed bottom-36 right-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg z-[150] transition-all duration-300 hover:scale-110 group"
+        aria-label="Open Mella AI Assistant"
+        title="Mella AI Assistant"
+      >
+        <div className="relative">
+          <Sparkles className="h-6 w-6" />
+          <span className="absolute -top-8 right-0 bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            Ask Mella AI
+          </span>
+        </div>
+      </button>
+
       {/* Regular First Aid Chatbot Button */}
       <button
         onClick={() => setIsFirstAidOpen(true)}
@@ -43,7 +60,7 @@ export const ChatbotFloatingButton: React.FC<ChatbotFloatingButtonProps> = ({
       {showEmergencyAssistant && !isEmergencyOpen && (
         <button
           onClick={() => setIsEmergencyOpen(true)}
-          className="fixed bottom-36 right-4 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-4 shadow-lg z-[150] transition-all duration-300 hover:scale-110 animate-pulse"
+          className="fixed bottom-52 right-4 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-4 shadow-lg z-[150] transition-all duration-300 hover:scale-110 animate-pulse"
           aria-label="Open Emergency Assistant"
           title="Emergency Report Assistant"
         >
@@ -51,6 +68,7 @@ export const ChatbotFloatingButton: React.FC<ChatbotFloatingButtonProps> = ({
         </button>
       )}
 
+      <MellaAssistant isOpen={isMellaAiOpen} onClose={() => setIsMellaAiOpen(false)} />
       <FirstAidChatbot isOpen={isFirstAidOpen} onClose={() => setIsFirstAidOpen(false)} />
       <EmergencyAssistant
         isOpen={isEmergencyOpen}

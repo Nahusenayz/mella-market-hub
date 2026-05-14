@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Search, MapPin } from 'lucide-react';
+import AmharicVoiceInput from './AmharicVoiceInput';
 
 interface SearchBarProps {
   onSearch: (query: string, location?: { lat: number; lng: number }, radius?: number) => void;
@@ -27,16 +28,27 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, userLocation }) 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
       <div className="flex flex-col space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Search for services, categories, or descriptions..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          />
+        <div className="relative flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search for services, categories, or descriptions..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            />
+          </div>
+          <AmharicVoiceInput 
+            onResult={(text) => {
+              setQuery(text);
+              onSearch(text, useLocation ? userLocation : undefined, useLocation ? radius : undefined);
+            }} 
+            className="px-4 py-3 bg-slate-50 border border-gray-200 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-2 text-sm text-gray-600 font-medium"
+          >
+            <span className="hidden sm:inline">Amharic</span>
+          </AmharicVoiceInput>
         </div>
         
         {userLocation && (

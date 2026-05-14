@@ -63,45 +63,38 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
 
   return (
     <>
-      <nav className="bg-white shadow-lg border-b-4 border-orange-500 sticky top-0 z-40">
+      <nav className="glass-navbar border-none shadow-none">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             {/* Logo */}
             <div
-              className="flex items-center space-x-3 cursor-pointer"
+              className="flex items-center space-x-3 cursor-pointer group"
               onClick={() => navigate('/')}
             >
-              <div className="bg-orange-500 text-white p-2 rounded-lg">
+              <div className="premium-gradient-orange text-white p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <Home size={24} />
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-800">Mella</h1>
-                <p className="text-xs text-gray-600">Connect. Share. Discover.</p>
+              <div className="hidden sm:block">
+                <h1 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">Mella</h1>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Market Hub</p>
               </div>
             </div>
 
             {/* Navigation Links - Horizontal on all screens */}
-            <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-6 ml-2 sm:ml-6 mr-2 sm:mr-4 font-medium overflow-x-auto no-scrollbar py-1">
+            <div className="flex items-center space-x-1 sm:space-x-4 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/50">
               <button 
                 onClick={() => navigate('/')} 
-                className={`transition-colors flex items-center gap-1 text-[10px] sm:text-xs md:text-sm whitespace-nowrap ${isActive('/') ? 'text-orange-600' : 'text-gray-600 hover:text-orange-500'}`}
+                className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${isActive('/') ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-600 hover:text-orange-500 hover:bg-white/50'}`}
               >
-                <Home size={14} className="sm:hidden" />
-                <span>{t('home')}</span>
+                <Home size={16} />
+                <span className="hidden sm:inline">{t('home')}</span>
               </button>
               <button 
                 onClick={() => navigate('/emergency')} 
-                className={`transition-colors flex items-center gap-1 text-[10px] sm:text-xs md:text-sm whitespace-nowrap ${isActive('/emergency') ? 'text-red-600 font-bold' : 'text-red-500 hover:text-red-600 font-semibold'}`}
+                className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${isActive('/emergency') ? 'bg-red-50 text-red-600 shadow-sm' : 'text-red-500 hover:text-red-600 hover:bg-white/50'}`}
               >
-                <AlertTriangle size={14} className="sm:hidden" />
-                <span>{t('emergency')}</span>
-              </button>
-              <button 
-                onClick={() => navigate('/profile')} 
-                className={`transition-colors flex items-center gap-1 text-[10px] sm:text-xs md:text-sm whitespace-nowrap ${isActive('/profile') ? 'text-orange-600' : 'text-gray-600 hover:text-orange-500'}`}
-              >
-                <User size={14} className="sm:hidden" />
-                <span>{t('profile')}</span>
+                <AlertTriangle size={16} />
+                <span className="hidden sm:inline">{t('emergency')}</span>
               </button>
             </div>
             
@@ -170,9 +163,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                   {/* Post Ad */}
                   <button
                     onClick={handlePostAd}
-                    className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+                    className="premium-gradient-orange text-white px-5 py-2.5 rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-orange-200 font-bold text-sm"
                   >
-                    <Plus size={16} />
+                    <Plus size={18} />
                     <span className="hidden sm:inline">Share</span>
                   </button>
 
@@ -239,16 +232,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                   </div>
                 </>
               ) : (
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
                   <button
                     onClick={() => navigate('/auth')}
-                    className="text-gray-600 hover:text-gray-800 font-medium"
+                    className="text-slate-600 hover:text-slate-900 font-bold text-sm px-2"
                   >
                     Sign In
                   </button>
                   <button
                     onClick={() => navigate('/auth')}
-                    className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+                    className="premium-gradient-orange text-white px-6 py-2.5 rounded-2xl hover:opacity-90 transition-all font-bold text-sm shadow-lg shadow-orange-200"
                   >
                     Join Mella
                   </button>

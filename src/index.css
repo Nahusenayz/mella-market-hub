@@ -148,6 +148,40 @@
   .animate-emergency-pulse {
     animation: pulse-red 2s infinite;
   }
+
+  /* Glassmorphism & Premium Design */
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+
+  .glass-navbar {
+    @apply bg-white/60 backdrop-blur-lg border-b border-white/20 sticky top-0 z-[100];
+  }
+
+  .premium-gradient {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  }
+
+  .premium-gradient-orange {
+    background: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #facc15 100%);
+  }
+
+  .premium-shadow {
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
+  }
+
+  .animate-pulse-live {
+    animation: pulse-live 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-live {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .5; transform: scale(1.1); }
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600;
+  }
 }
 
 @keyframes fade-in {

@@ -62,47 +62,36 @@ export const BottomNavigation: React.FC = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg z-[100] pb-safe md:hidden">
-      <div className="flex justify-around items-center py-3">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[100] pb-safe md:hidden border-t border-gray-100">
+      <div className="flex justify-around items-center h-16">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
 
-          if (item.isLink) {
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex flex-col items-center justify-center py-2 px-3 min-h-[56px] transition-colors ${active
-                    ? 'text-orange-500'
-                    : 'text-gray-500 hover:text-orange-400'
-                  }`}
-              >
-                <Icon
-                  size={24}
-                  className={`mb-1 ${active ? 'fill-current' : ''}`}
-                />
-                <span className="text-xs font-medium">{item.label}</span>
-              </Link>
-            );
-          } else {
-            return (
-              <button
-                key={item.path}
-                onClick={() => handleItemClick(item)}
-                className={`flex flex-col items-center justify-center py-2 px-3 min-h-[56px] transition-colors ${active
-                    ? 'text-orange-500'
-                    : 'text-gray-500 hover:text-orange-400'
-                  }`}
-              >
-                <Icon
-                  size={24}
-                  className={`mb-1 ${active ? 'fill-current' : ''}`}
-                />
-                <span className="text-xs font-medium">{item.label}</span>
-              </button>
-            );
-          }
+          const content = (
+            <div className={`flex flex-col items-center justify-center gap-1 transition-all ${active ? 'text-orange-600' : 'text-slate-500 hover:text-orange-400'}`}>
+              <div className={`p-1.5 rounded-xl ${active ? 'bg-orange-50' : ''}`}>
+                <Icon size={22} strokeWidth={active ? 2.5 : 2} />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-tight">
+                {item.label}
+              </span>
+            </div>
+          );
+
+          return (
+            <div key={item.path} className="flex-1">
+              {item.isLink ? (
+                <Link to={item.path} className="w-full h-full block py-2">
+                  {content}
+                </Link>
+              ) : (
+                <button onClick={() => handleItemClick(item)} className="w-full h-full py-2">
+                  {content}
+                </button>
+              )}
+            </div>
+          );
         })}
       </div>
     </nav>

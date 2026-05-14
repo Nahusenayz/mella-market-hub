@@ -31,8 +31,10 @@ export const useRealTimeAds = () => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchAds = async () => {
+  const fetchAds = async (retryCount = 0) => {
     try {
+      if (retryCount === 0) setLoading(true);
+      
       const { data, error } = await supabase
         .from('ads')
         .select(`
@@ -48,6 +50,12 @@ export const useRealTimeAds = () => {
 
       if (error) {
         console.error('Error fetching ads:', error);
+        // Retry on network errors
+        if (retryCount < 3) {
+          console.log(`Retrying fetchAds (${retryCount + 1}/3)...`);
+          setTimeout(() => fetchAds(retryCount + 1), 2000);
+          return;
+        }
         return;
       }
 
@@ -62,10 +70,15 @@ export const useRealTimeAds = () => {
       })) as unknown as Ad[];
 
       setAds(transformedAds);
-    } catch (error) {
-      console.error('Error in fetchAds:', error);
-    } finally {
       setLoading(false);
+    } catch (error: any) {
+      console.error('Error in fetchAds:', error);
+      if (error.message?.includes('fetch') && retryCount < 3) {
+        console.log(`Retrying fetchAds due to network error (${retryCount + 1}/3)...`);
+        setTimeout(() => fetchAds(retryCount + 1), 2000);
+      } else {
+        setLoading(false);
+      }
     }
   };
 

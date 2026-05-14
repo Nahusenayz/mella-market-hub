@@ -44,13 +44,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user) {
         // Verify profile still exists and is not disabled
+        // We only sign out if we get a definitive "not found" or "disabled" response
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('user_type')
           .eq('id', session.user.id)
           .single();
         
-        if (error || !profile || profile.user_type === 'disabled') {
+        if (error) {
+          console.warn('Auth check error:', error.message);
+          // If it's a network error, we DON'T sign out, we just keep the session
+          if (error.message.includes('fetch')) {
+            setSession(session);
+            setUser(session.user);
+          } else {
+            // Only sign out if it's a "real" database error (like missing profile)
+            console.warn('Invalid profile, signing out...');
+            await supabase.auth.signOut();
+            setSession(null);
+            setUser(null);
+          }
+        } else if (!profile || profile.user_type === 'disabled') {
           console.warn('User profile missing or disabled, signing out...');
           await supabase.auth.signOut();
           setSession(null);

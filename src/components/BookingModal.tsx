@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { X, Calendar, MessageSquare } from 'lucide-react';
 import { useBookings } from '@/hooks/useBookings';
+import AmharicVoiceInput from './AmharicVoiceInput';
 
 interface BookingModalProps {
   onClose: () => void;
@@ -73,10 +74,18 @@ export const BookingModal: React.FC<BookingModalProps> = ({ onClose, service, wo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <MessageSquare size={16} className="inline mr-2" />
-                Message (Optional)
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  <MessageSquare size={16} className="inline mr-2" />
+                  Message (Optional)
+                </label>
+                <AmharicVoiceInput 
+                  onResult={(text) => setFormData({ ...formData, message: text })} 
+                  className="text-xs flex items-center gap-1 text-orange-600 hover:text-orange-700 font-medium"
+                >
+                  Voice
+                </AmharicVoiceInput>
+              </div>
               <textarea
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}

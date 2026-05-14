@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Upload, MapPin, DollarSign, AlertCircle, CheckCircle2, Home } from 'lucide-react';
+import { X, Upload, MapPin, DollarSign, AlertCircle, CheckCircle2, Home, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from '@/contexts/LocationContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -283,9 +283,36 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Description
+              </label>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!formData.description) return;
+                  setLoading(true);
+                  const prompt = `Professionalize and translate the following marketplace listing description to both Amharic and English. Format the output clearly. \n\nDescription: ${formData.description}`;
+                  try {
+                    const { askMellaAssistant } = await import('@/services/groqService');
+                    const optimized = await askMellaAssistant(prompt);
+                    if (optimized) {
+                      setFormData({ ...formData, description: optimized });
+                      toast({ title: "AI Optimized", description: "Your description has been professionalized." });
+                    }
+                  } catch (e) {
+                    console.error(e);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading || !formData.description}
+                className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium bg-blue-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+              >
+                <Sparkles size={12} />
+                AI Optimize & Translate
+              </button>
+            </div>
             <textarea
               required
               value={formData.description}
