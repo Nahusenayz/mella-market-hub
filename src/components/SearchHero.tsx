@@ -223,7 +223,7 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
               </div>
             </div>
  
-            <div className="grid grid-cols-3 md:flex md:justify-center gap-2 sm:gap-4 max-w-4xl mx-auto pb-4">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-4xl mx-auto pb-4 px-1">
               {emergencyTypes.map((emergency) => (
                 <button
                   key={emergency.type}

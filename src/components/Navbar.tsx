@@ -80,8 +80,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
               </div>
             </div>
 
-            {/* Navigation Links - Horizontal on all screens */}
-            <div className="flex items-center space-x-1 sm:space-x-4 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/50">
+            {/* Navigation Links - Horizontal on desktop */}
+            <div className="hidden md:flex items-center space-x-1 sm:space-x-4 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/50">
               <button 
                 onClick={() => navigate('/')} 
                 className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${isActive('/') ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-600 hover:text-orange-500 hover:bg-white/50'}`}
@@ -99,8 +99,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
             </div>
             
             {/* Quick Emergency Shortcuts - Unified Size and Centered (Mobile Only) */}
-            <div className="flex-1 flex justify-center mx-2 sm:mx-6 overflow-hidden md:hidden">
-              <div className="flex items-center gap-1 sm:gap-3 px-1.5 sm:px-4 py-1.5 bg-gray-50/50 rounded-xl border border-gray-100 overflow-x-auto no-scrollbar w-full max-w-2xl justify-center sm:justify-around">
+            <div className="flex-1 flex justify-center mx-1 sm:mx-6 overflow-hidden md:hidden min-w-0">
+              <div className="flex items-center gap-1 sm:gap-3 px-1.5 sm:px-4 py-1.5 bg-gray-50/50 rounded-xl border border-gray-100 overflow-x-auto no-scrollbar w-full max-w-2xl justify-start sm:justify-around">
                 <button 
                   onClick={() => navigate('/emergency', { state: { category: 'police' } })}
                   className="flex flex-col items-center justify-center min-w-[50px] sm:flex-1 h-9 sm:h-11 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
@@ -139,7 +139,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                 variant="ghost"
                 size="sm"
                 onClick={toggleLanguage}
-                className="flex items-center gap-1 text-gray-600 hover:text-orange-600"
+                className="flex items-center gap-1 text-gray-600 hover:text-orange-600 flex-shrink-0 px-2"
               >
                 <Globe size={18} />
                 <span className="text-xs font-bold uppercase">{language === 'en' ? 'አማ' : 'EN'}</span>
@@ -232,18 +232,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                   </div>
                 </>
               ) : (
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
                   <button
                     onClick={() => navigate('/auth')}
-                    className="text-slate-600 hover:text-slate-900 font-bold text-sm px-2"
+                    className="text-slate-600 hover:text-slate-900 font-bold text-xs sm:text-sm px-1 sm:px-2 whitespace-nowrap"
                   >
                     Sign In
                   </button>
                   <button
                     onClick={() => navigate('/auth')}
-                    className="premium-gradient-orange text-white px-6 py-2.5 rounded-2xl hover:opacity-90 transition-all font-bold text-sm shadow-lg shadow-orange-200"
+                    className="premium-gradient-orange text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl hover:opacity-90 transition-all font-bold text-xs sm:text-sm shadow-lg shadow-orange-200 whitespace-nowrap"
                   >
-                    Join Mella
+                    <span className="sm:hidden">Join</span>
+                    <span className="hidden sm:inline">Join Mella</span>
                   </button>
                 </div>
               )}
