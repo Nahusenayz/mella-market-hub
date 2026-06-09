@@ -172,6 +172,12 @@ export function useEmergencyRequests() {
       if (error) {
         console.error('Error accepting request:', error)
         alert('Failed to accept request. It may have been taken by another responder.')
+      } else {
+        // Send a message to the user that the request was accepted
+        const request = requests.find(r => r.id === id)
+        if (request && userId) {
+          await sendMessage(request.user_id, 'I have accepted your emergency request and am preparing to assist you.')
+        }
       }
 
       fetchRequests()
@@ -227,6 +233,29 @@ export function useEmergencyRequests() {
       if (error) {
         console.error('Error updating status:', error)
       } else {
+        // Send a message to the user about the status update
+        const request = requests.concat(history).find(r => r.id === id)
+        if (request && userId) {
+          let message = ''
+          switch (status) {
+            case 'en_route':
+              message = 'I am now en route to your location. You can track my live location on the map.'
+              break
+            case 'completed':
+              message = 'I have marked this emergency as completed. Please stay safe.'
+              break
+            case 'cancelled':
+              message = 'I have had to cancel this assignment. Another responder may be assigned or you can request again.'
+              break
+            case 'accepted':
+              message = 'I have accepted your request and will be starting soon.'
+              break
+          }
+          if (message) {
+            await sendMessage(request.user_id, message)
+          }
+        }
+
         if (status === 'cancelled') {
           alert('Request cancelled.')
         }
@@ -255,6 +284,29 @@ export function useEmergencyRequests() {
       console.error('Error updating location:', e)
     }
   }, [])
+
+  const sendMessage = async (receiverId: string, content: string) => {
+    if (!userId) return false;
+    try {
+      const { error } = await supabase
+        .from('messages' as any)
+        .insert({
+          sender_id: userId,
+          receiver_id: receiverId,
+          content,
+          message_type: 'text'
+        });
+
+      if (error) {
+        console.error('Error sending message:', error);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.error('Error in sendMessage:', e);
+      return false;
+    }
+  }
 
   useEffect(() => {
     fetchRequests()
@@ -291,6 +343,7 @@ export function useEmergencyRequests() {
     decline,
     updateStatus,
     updateLocation,
+    sendMessage,
     refetch: fetchRequests
   }
 }

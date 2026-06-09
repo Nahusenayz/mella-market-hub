@@ -31,58 +31,58 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-slate-50">
-      <header className="sticky top-0 left-0 right-0 flex-none z-50 border-b border-white/60 bg-white/85 backdrop-blur-xl shadow-sm">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <Link to={isAuthenticated ? '/dashboard' : '/login'} className="flex items-center gap-3 min-w-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20">
+    <div className="flex flex-col min-h-screen w-full">
+      <header className="sticky top-0 left-0 right-0 flex-none z-50 glass bg-white/70">
+        <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+          <Link to={isAuthenticated ? '/dashboard' : '/login'} className="flex items-center gap-3 min-w-0 transition-transform hover:scale-[1.02] active:scale-[0.98]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-black tracking-tight text-gray-900">Mella Responder</h1>
-              <p className="hidden text-xs text-gray-500 sm:block">Live emergency dispatch</p>
+              <h1 className="truncate text-lg font-black tracking-tight text-slate-900 uppercase">Mella Ops</h1>
+              <p className="hidden text-[10px] font-black uppercase tracking-widest text-slate-400 sm:block">Field Responder</p>
             </div>
           </Link>
 
-          <nav className="flex items-center gap-2 text-sm font-medium">
+          <nav className="flex items-center gap-2 text-sm">
             {isAuthenticated ? (
               <>
                 <Link
                   to="/dashboard"
-                  className={`inline-flex items-center gap-2 rounded-full px-3 py-2 transition-colors ${
-                    loc.pathname.includes('dashboard') ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 font-black transition-all ${
+                    loc.pathname.includes('dashboard') ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   <LayoutDashboard className="h-4 w-4" />
-                  <span className="hidden sm:inline">Dashboard</span>
+                  <span className="hidden sm:inline">TERMINAL</span>
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-3 py-2 text-white transition-colors hover:bg-black"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2 font-black text-white shadow-lg transition-all hover:bg-black active:scale-95"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Sign out</span>
+                  <span className="hidden sm:inline">LOGOUT</span>
                 </button>
               </>
             ) : (
-              <>
+              <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className={`rounded-full px-3 py-2 transition-colors ${
-                    loc.pathname.includes('login') ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  className={`rounded-2xl px-4 py-2 font-black transition-all ${
+                    loc.pathname.includes('login') ? 'bg-orange-500 text-white' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  Login
+                  LOGIN
                 </Link>
                 <Link
                   to="/signup"
-                  className={`rounded-full px-3 py-2 transition-colors ${
-                    loc.pathname.includes('signup') ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  className={`rounded-2xl px-4 py-2 font-black transition-all ${
+                    loc.pathname.includes('signup') ? 'bg-orange-500 text-white' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  Sign Up
+                  SIGN UP
                 </Link>
-              </>
+              </div>
             )}
           </nav>
         </div>
