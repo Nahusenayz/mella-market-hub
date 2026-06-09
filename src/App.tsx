@@ -18,8 +18,6 @@ import NotFound from "./pages/NotFound";
 import Messages from "./pages/Messages";
 import WorkerDashboard from "./pages/WorkerDashboard";
 import Emergency from "./pages/Emergency";
-import AdminLogin from './pages/Adminlogin';
-import EmergencyAdminPanel from './pages/EmergencyAdminPanel';
 import AdminRegister from './pages/AdminRegister';
 import Map3D from './pages/Map3D';
 import ResponderDashboard from './pages/ResponderDashboard';

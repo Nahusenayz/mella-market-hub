@@ -134,7 +134,7 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
             </div>
             <div>
               <CardTitle className="text-lg font-bold">Mella AI Assistant</CardTitle>
-              <p className="text-xs text-blue-100">Powered by Groq</p>
+              <p className="text-xs text-blue-100">Powered by OpenRouter</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

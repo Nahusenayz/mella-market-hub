@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useLocation } from '@/contexts/LocationContext';
+import { calculateDistanceKm } from '@/lib/utils';
 
 // Fix for default markers in Leaflet with Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -239,21 +240,9 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
     }
   ];
 
-  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-    const R = 6371; // Earth's radius in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
   const getNearbyEmergencyLocations = (centerLat: number, centerLng: number) => {
     return baseEmergencyLocations.filter(location => {
-      const distance = calculateDistance(centerLat, centerLng, location.lat, location.lng);
+      const distance = calculateDistanceKm(centerLat, centerLng, location.lat, location.lng);
       return distance <= 5; // Only show emergency stations within 5km
     });
   };

@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { X, Upload, MapPin, DollarSign, AlertCircle, CheckCircle2, Home, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from '@/contexts/LocationContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { translateWithMella } from '@/services/groqService';
 
 interface AdFormProps {
   onClose: () => void;
@@ -35,6 +37,7 @@ const productCategories = [
 export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocation, onAdAdded, adToEdit, onAdUpdated }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { language } = useLanguage();
   const { location: contextLocation, loading: locationLoading, error: locationError, permissionStatus, requestPermission } = useLocation();
 
   // Use context location if available, otherwise fall back to prop location
@@ -54,6 +57,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>(adToEdit?.image_url || '');
   const [loading, setLoading] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -203,6 +207,43 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
     });
   };
 
+  const handleTranslateListing = async () => {
+    const hasText = formData.title.trim() || formData.description.trim();
+    if (!hasText || isTranslating) return;
+
+    setIsTranslating(true);
+    try {
+      const targetLanguage = language === 'am' ? 'en' : 'am';
+      const payload = [
+        `Title: ${formData.title.trim() || '(empty)'}`,
+        `Description: ${formData.description.trim() || '(empty)'}`
+      ].join('\n');
+      const translated = await translateWithMella(payload, targetLanguage);
+
+      const translatedLabel = targetLanguage === 'am' ? 'Amharic' : 'English';
+      setFormData((prev) => ({
+        ...prev,
+        description: prev.description.trim()
+          ? `${prev.description}\n\n${translatedLabel} translation:\n${translated}`
+          : translated,
+      }));
+
+      toast({
+        title: 'Translated',
+        description: `Your listing draft was translated to ${translatedLabel}.`,
+      });
+    } catch (error) {
+      console.error('Translation failed:', error);
+      toast({
+        title: 'Translation failed',
+        description: 'We could not translate the listing right now. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -287,31 +328,17 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
               <label className="block text-sm font-medium text-gray-700">
                 Description
               </label>
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!formData.description) return;
-                  setLoading(true);
-                  const prompt = `Professionalize and translate the following marketplace listing description to both Amharic and English. Format the output clearly. \n\nDescription: ${formData.description}`;
-                  try {
-                    const { askMellaAssistant } = await import('@/services/groqService');
-                    const optimized = await askMellaAssistant(prompt);
-                    if (optimized) {
-                      setFormData({ ...formData, description: optimized });
-                      toast({ title: "AI Optimized", description: "Your description has been professionalized." });
-                    }
-                  } catch (e) {
-                    console.error(e);
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
-                disabled={loading || !formData.description}
-                className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium bg-blue-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
-              >
-                <Sparkles size={12} />
-                AI Optimize & Translate
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleTranslateListing}
+                  disabled={isTranslating || (!formData.title.trim() && !formData.description.trim())}
+                  className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium bg-blue-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                >
+                  <Sparkles size={12} />
+                  {isTranslating ? 'Translating...' : 'Auto-Translate'}
+                </button>
+              </div>
             </div>
             <textarea
               required

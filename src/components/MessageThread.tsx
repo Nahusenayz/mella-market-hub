@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, ArrowLeft } from 'lucide-react';
+import { Send, ArrowLeft, Languages } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
+import { translateWithMella } from '@/services/groqService';
 
 interface MessageThreadProps {
   otherUserId: string;
@@ -21,9 +23,11 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
   initialMessage
 }) => {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const { messages, fetchMessages, sendMessage } = useMessages(otherUserId);
   const [newMessage, setNewMessage] = useState(initialMessage || '');
   const [sending, setSending] = useState(false);
+  const [translating, setTranslating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Create conversation ID for typing indicators
@@ -75,6 +79,24 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
       }, 3000);
     } else {
       setTyping(false);
+    }
+  };
+
+  const handleTranslateDraft = async () => {
+    const draft = newMessage.trim();
+    if (!draft || translating) return;
+
+    setTranslating(true);
+    setTyping(false);
+
+    try {
+      const targetLanguage = language === 'am' ? 'en' : 'am';
+      const translated = await translateWithMella(draft, targetLanguage);
+      setNewMessage(translated.trim());
+    } catch (error) {
+      console.error('Message translation failed:', error);
+    } finally {
+      setTranslating(false);
     }
   };
 
@@ -171,23 +193,34 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
 
       {/* Input */}
       <div className="p-4 border-t border-gray-200">
-        <div className="flex gap-2">
-          <textarea
-            value={newMessage}
-            onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
-            placeholder="Type a message..."
-            rows={1}
-            className="flex-1 resize-none border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            style={{ minHeight: '40px', maxHeight: '120px' }}
-          />
+        <div className="space-y-2">
           <button
-            onClick={handleSend}
-            disabled={!newMessage.trim() || sending}
-            className="bg-orange-500 text-white p-2 rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+            onClick={handleTranslateDraft}
+            disabled={!newMessage.trim() || translating}
+            className="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
           >
-            <Send size={20} />
+            <Languages size={12} />
+            {translating ? 'Translating...' : 'Translate draft'}
           </button>
+          <div className="flex gap-2">
+            <textarea
+              value={newMessage}
+              onChange={handleInputChange}
+              onKeyPress={handleKeyPress}
+              placeholder="Type a message..."
+              rows={1}
+              className="flex-1 resize-none border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              style={{ minHeight: '40px', maxHeight: '120px' }}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!newMessage.trim() || sending}
+              className="bg-orange-500 text-white p-2 rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send size={20} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

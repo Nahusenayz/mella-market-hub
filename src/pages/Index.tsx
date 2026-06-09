@@ -23,6 +23,7 @@ import { useLocation as useLocationContext } from '@/contexts/LocationContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { calculateDistanceKm } from '@/lib/utils';
 
 interface Service {
   id: string;
@@ -50,18 +51,6 @@ interface Service {
   is_furnished?: boolean;
   listing_type?: string;
 }
-
-const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-};
 
 const Index = () => {
   const { user } = useAuth();
@@ -110,7 +99,7 @@ const Index = () => {
   const services = React.useMemo(() => {
     return ads.map(ad => {
       const distance = ad.location_lat && ad.location_lng
-        ? calculateDistance(currentLocation.lat, currentLocation.lng, ad.location_lat, ad.location_lng)
+        ? calculateDistanceKm(currentLocation.lat, currentLocation.lng, ad.location_lat, ad.location_lng)
         : 0;
 
       return {
@@ -140,15 +129,13 @@ const Index = () => {
   }, [ads, currentLocation.lat, currentLocation.lng]);
 
   const filteredServices = React.useMemo(() => {
-    const searchSource = isSearching ? searchResults : services;
-
     // If we're searching, searchResults are already filtered/transformed from searchAds
     // But we still need to apply distance and category filters to the main ads list
     const source = isSearching
       ? searchResults.map(ad => ({
         ...ad,
         distance: ad.location_lat && ad.location_lng
-          ? calculateDistance(currentLocation.lat, currentLocation.lng, ad.location_lat, ad.location_lng)
+          ? calculateDistanceKm(currentLocation.lat, currentLocation.lng, ad.location_lat, ad.location_lng)
           : 0
       }))
       : services;

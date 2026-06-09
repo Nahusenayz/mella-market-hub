@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { EmergencyAssistant } from '@/components/EmergencyAssistant';
-import { FirstAidChatbot } from '@/components/FirstAidChatbot';
 import { MapView } from '@/components/MapView';
 import { TrackingMap } from '@/components/TrackingMap';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,6 @@ import {
   Shield,
   Flame,
   Car,
-  Bot,
   Globe,
   Navigation,
   User,
@@ -37,6 +35,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useWorkerLocations } from '@/hooks/useWorkerLocations';
 import { useToast } from '@/hooks/use-toast';
+import { calculateDistanceKm } from '@/lib/utils';
 
 interface EmergencyStation {
   id: string;
@@ -94,7 +93,6 @@ export const Emergency: React.FC = () => {
   const [userLocation, setUserLocation] = useState({ lat: 9.0320, lng: 38.7469 });
   const [emergencyStations, setEmergencyStations] = useState<EmergencyStation[]>([]);
   const [showEmergencyAssistant, setShowEmergencyAssistant] = useState(false);
-  const [showFirstAidBot, setShowFirstAidBot] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [requestDetails, setRequestDetails] = useState('');
@@ -103,6 +101,18 @@ export const Emergency: React.FC = () => {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
   const [filterCategory, setFilterCategory] = useState<string>(location.state?.category || 'all');
+  const presetReasons = React.useMemo(() => {
+    const key = (selectedWorker?.category || selectedCategory || 'general').toLowerCase();
+    const map: Record<string, string[]> = {
+      police: ['Robbery or theft', 'Suspicious person nearby', 'Assault or threat', 'Traffic accident'],
+      ambulance: ['Severe pain', 'Unconscious person', 'Breathing trouble', 'Bleeding badly'],
+      fire_truck: ['House fire', 'Gas smell or leak', 'Electrical fire', 'Smoke in building'],
+      traffic_police: ['Road blockage', 'Accident scene', 'Broken traffic light', 'Unsafe driving'],
+      tow_truck: ['Flat tire', 'Engine failure', 'Accident recovery', 'Vehicle stuck'],
+      general: ['Need urgent help', 'Medical emergency', 'Security emergency', 'Vehicle issue']
+    };
+    return map[key] || map.general;
+  }, [selectedWorker?.category, selectedCategory]);
   
   // Also set selectedCategory for the request form if a specific category was passed
   useEffect(() => {
@@ -274,18 +284,6 @@ export const Emergency: React.FC = () => {
     return () => clearInterval(interval);
   }, [refetchWorkers]);
 
-  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
   const generateNearbyEmergencyStations = (location: { lat: number; lng: number }) => {
     const stations: EmergencyStation[] = [
       {
@@ -332,7 +330,7 @@ export const Emergency: React.FC = () => {
 
     const stationsWithDistance = stations.map(station => ({
       ...station,
-      distance: calculateDistance(
+      distance: calculateDistanceKm(
         location.lat,
         location.lng,
         station.location.lat,
@@ -814,14 +812,6 @@ export const Emergency: React.FC = () => {
           </Button>
 
           <Button
-            onClick={() => setShowFirstAidBot(true)}
-            className="h-20 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white flex-col gap-2 shadow-lg"
-          >
-            <Bot className="h-6 w-6" />
-            <span className="text-sm font-medium">{t('firstAidBot')}</span>
-          </Button>
-
-          <Button
             onClick={() => {
               setSelectedWorker(null);
               setSelectedCategory(null);
@@ -1163,6 +1153,18 @@ export const Emergency: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Describe your emergency
                 </label>
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {presetReasons.map((reason) => (
+                    <button
+                      key={reason}
+                      type="button"
+                      onClick={() => setRequestDetails(reason)}
+                      className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors"
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
                 <textarea
                   value={requestDetails}
                   onChange={(e) => setRequestDetails(e.target.value)}
@@ -1213,13 +1215,6 @@ export const Emergency: React.FC = () => {
         userLocation={userLocation}
       />
 
-      {/* First Aid Chatbot Modal */}
-      {showFirstAidBot && (
-        <FirstAidChatbot
-          isOpen={showFirstAidBot}
-          onClose={() => setShowFirstAidBot(false)}
-        />
-      )}
     </div>
   );
 };

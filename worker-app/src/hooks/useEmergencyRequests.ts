@@ -182,13 +182,10 @@ export function useEmergencyRequests() {
 
   const decline = async (id: string) => {
     try {
-      // If a worker declines, we reset it to pending and clear responder_id 
-      // so other responders in that category can take it
       const { error } = await supabase
         .from('emergency_requests' as any)
         .update({
-          status: 'pending',
-          responder_id: null,
+          status: 'declined',
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
@@ -198,7 +195,7 @@ export function useEmergencyRequests() {
         console.error('Error declining:', error)
       } else {
         setDeclinedIds(prev => [...prev, id])
-        alert('Request declined. It will be sent to other responders.')
+        alert('Request declined. It will be sent to another responder.')
       }
       fetchRequests()
     } catch (e) {
@@ -212,15 +209,9 @@ export function useEmergencyRequests() {
     location?: { lat: number; lng: number }
   ) => {
     try {
-      const isWorkerCancellation = status === 'cancelled';
       const update: any = {
-        status: isWorkerCancellation ? 'pending' : status,
+        status,
         updated_at: new Date().toISOString()
-      }
-
-      // If worker cancels, we MUST set responder_id to null explicitly
-      if (isWorkerCancellation) {
-        update.responder_id = null;
       }
 
       if (location) {
@@ -237,17 +228,7 @@ export function useEmergencyRequests() {
         console.error('Error updating status:', error)
       } else {
         if (status === 'cancelled') {
-          // Add to local history before it disappears from the server-side history query
-          const cancelledItem = requests.find(r => r.id === id);
-          if (cancelledItem) {
-            setHistory(prev => [{
-              ...cancelledItem,
-              status: 'declined',
-              updated_at: new Date().toISOString()
-            }, ...prev]);
-          }
-          setDeclinedIds(prev => [...prev, id])
-          alert('Request re-queued. It is now available for other responders.')
+          alert('Request cancelled.')
         }
       }
       fetchRequests()

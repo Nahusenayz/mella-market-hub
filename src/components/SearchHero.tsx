@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Phone, MapPin, X, Navigation } from 'lucide-react';
 import { useLocation } from '@/contexts/LocationContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { calculateDistanceKm } from '@/lib/utils';
 
 interface SearchHeroProps {
   searchQuery: string;
@@ -121,18 +122,6 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
     { type: 'Tow Truck', icon: '🏗️', color: 'bg-blue-600 hover:bg-blue-700', label: 'Tow Truck' }
   ];
 
-  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-    const R = 6371; // Earth's radius in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
 
 
   // Update nearest stations when emergency type is selected or location changes
@@ -143,7 +132,7 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
       .filter(station => station.type === selectedEmergencyType)
       .map(station => ({
         ...station,
-        distance: calculateDistance(userLocation.lat, userLocation.lng, station.lat, station.lng)
+        distance: calculateDistanceKm(userLocation.lat, userLocation.lng, station.lat, station.lng)
       }))
       .filter(station => (station.distance || 0) <= 5) // Only show stations within 5km
       .sort((a, b) => (a.distance || 0) - (b.distance || 0))

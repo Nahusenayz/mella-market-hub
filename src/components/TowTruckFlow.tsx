@@ -7,6 +7,7 @@ import { MapView } from '@/components/MapView';
 import { useWorkerLocations } from '@/hooks/useWorkerLocations';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { calculateDistanceKm } from '@/lib/utils';
 
 interface Garage {
   id: string;
@@ -40,19 +41,8 @@ export const TowTruckFlow: React.FC<TowTruckFlowProps> = ({ userLocation, onClos
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
 
-  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
   const handleSelectGarage = (garage: Garage) => {
-    const d = calculateDistance(userLocation.lat, userLocation.lng, garage.lat, garage.lng);
+    const d = calculateDistanceKm(userLocation.lat, userLocation.lng, garage.lat, garage.lng);
     setSelectedGarage(garage);
     setDistance(d);
     setPrice(Math.round(d * 50));
@@ -232,7 +222,7 @@ export const TowTruckFlow: React.FC<TowTruckFlowProps> = ({ userLocation, onClos
                 <div className="text-center py-12 text-gray-400">Loading nearby tow trucks...</div>
               ) : workers.length > 0 ? (
                 workers.map(worker => {
-                  const d = calculateDistance(userLocation.lat, userLocation.lng, worker.location_lat, worker.location_lng);
+                  const d = calculateDistanceKm(userLocation.lat, userLocation.lng, worker.location_lat, worker.location_lng);
                   return (
                     <Card 
                       key={worker.id} 
@@ -267,7 +257,7 @@ export const TowTruckFlow: React.FC<TowTruckFlowProps> = ({ userLocation, onClos
                 })
               ) : (
                 GARAGES.map(garage => {
-                  const d = calculateDistance(userLocation.lat, userLocation.lng, garage.lat, garage.lng);
+                  const d = calculateDistanceKm(userLocation.lat, userLocation.lng, garage.lat, garage.lng);
                   return (
                     <Card 
                       key={garage.id} 
@@ -396,7 +386,7 @@ export const TowTruckFlow: React.FC<TowTruckFlowProps> = ({ userLocation, onClos
                     </div>
                     <div>
                       <p className="text-sm font-bold text-gray-800">Truck is coming!</p>
-                      <p className="text-xs text-gray-500">Distance: {truckPos ? calculateDistance(truckPos.lat, truckPos.lng, userLocation.lat, userLocation.lng).toFixed(2) : '...'} km</p>
+                      <p className="text-xs text-gray-500">Distance: {truckPos ? calculateDistanceKm(truckPos.lat, truckPos.lng, userLocation.lat, userLocation.lng).toFixed(2) : '...'} km</p>
                     </div>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => window.open(`tel:${selectedGarage.phone}`)}>

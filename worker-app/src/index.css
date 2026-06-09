@@ -715,6 +715,36 @@ main {
   padding: 2rem;
 }
 
+.dashboard-page {
+  width: min(100%, 1200px);
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.dashboard-page .dashboard-header {
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgba(249, 115, 22, 0.18);
+}
+
+.dashboard-page .stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.dashboard-page .stat-card {
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-page .request-card {
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-page .glass {
+  border-radius: 28px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+}
+
 /* ==================== DASHBOARD HEADER ==================== */
 .dashboard-header {
   background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
@@ -984,6 +1014,12 @@ main {
     padding: 1rem;
   }
 
+  .dashboard-page {
+    width: 100%;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
   form {
     padding: 1.5rem;
     border-radius: 16px;
@@ -996,6 +1032,10 @@ main {
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboard-page .request-card {
+    border-radius: 24px;
   }
 
   button {
