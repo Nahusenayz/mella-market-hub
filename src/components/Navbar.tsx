@@ -98,39 +98,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
               </button>
             </div>
             
-            {/* Quick Emergency Shortcuts - Unified Size and Centered (Mobile Only) */}
-            <div className="flex-1 flex justify-center mx-1 sm:mx-6 overflow-hidden md:hidden min-w-0">
-              <div className="flex items-center gap-1 sm:gap-3 px-1.5 sm:px-4 py-1.5 bg-gray-50/50 rounded-xl border border-gray-100 overflow-x-auto no-scrollbar w-full max-w-2xl justify-start sm:justify-around">
-                <button 
-                  onClick={() => navigate('/emergency', { state: { category: 'police' } })}
-                  className="flex flex-col items-center justify-center min-w-[50px] sm:flex-1 h-9 sm:h-11 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
-                >
-                  <span className="text-sm sm:text-lg leading-none">🚔</span>
-                  <span className="text-[7px] sm:text-[9px] font-bold text-gray-500 uppercase leading-none mt-1">Police</span>
-                </button>
-                <button 
-                  onClick={() => navigate('/emergency', { state: { category: 'traffic_police' } })}
-                  className="flex flex-col items-center justify-center min-w-[50px] sm:flex-1 h-9 sm:h-11 rounded-lg hover:bg-orange-50 transition-colors flex-shrink-0"
-                >
-                  <span className="text-sm sm:text-lg leading-none">🚦</span>
-                  <span className="text-[7px] sm:text-[9px] font-bold text-gray-500 uppercase leading-none mt-1">Traffic</span>
-                </button>
-                <button 
-                  onClick={() => navigate('/emergency', { state: { category: 'ambulance' } })}
-                  className="flex flex-col items-center justify-center min-w-[50px] sm:flex-1 h-9 sm:h-11 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
-                >
-                  <span className="text-sm sm:text-lg leading-none">🚑</span>
-                  <span className="text-[7px] sm:text-[9px] font-bold text-gray-500 uppercase leading-none mt-1">Medic</span>
-                </button>
-                <button 
-                  onClick={() => navigate('/emergency', { state: { category: 'fire_truck' } })}
-                  className="flex flex-col items-center justify-center min-w-[50px] sm:flex-1 h-9 sm:h-11 rounded-lg hover:bg-orange-50 transition-colors flex-shrink-0"
-                >
-                  <span className="text-sm sm:text-lg leading-none">🚒</span>
-                  <span className="text-[7px] sm:text-[9px] font-bold text-gray-500 uppercase leading-none mt-1">Fire</span>
-                </button>
-              </div>
-            </div>
 
             {/* Right Side */}
             <div className="flex items-center space-x-4">
