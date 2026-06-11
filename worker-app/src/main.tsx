@@ -5,19 +5,22 @@ import App from './App'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
+import { LanguageProvider } from './contexts/LanguageContext'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />}>
-          <Route index element={<Navigate to="/login" replace />} />
-          <Route path="login" element={<Login />} />
-          <Route path="signup" element={<Signup />} />
-          <Route path="dashboard" element={<Dashboard />} />
-        </Route>
-      </Routes>
+      <LanguageProvider>
+        <Routes>
+          <Route path="/" element={<App />}>
+            <Route index element={<Navigate to="/login" replace />} />
+            <Route path="login" element={<Login />} />
+            <Route path="signup" element={<Signup />} />
+            <Route path="dashboard" element={<Dashboard />} />
+          </Route>
+        </Routes>
+      </LanguageProvider>
     </BrowserRouter>
   </React.StrictMode>
 )

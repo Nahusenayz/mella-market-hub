@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from './integrations/supabase/client'
-import { LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react'
+import { LogOut, LayoutDashboard, ShieldCheck, Languages } from 'lucide-react'
+import { useTranslation } from './contexts/LanguageContext'
 
 export default function App() {
   const loc = useLocation()
   const nav = useNavigate()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { lang, toggleLang, t } = useTranslation()
 
   useEffect(() => {
     let mounted = true
@@ -39,48 +41,57 @@ export default function App() {
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-black tracking-tight text-slate-900 uppercase">Mella Ops</h1>
-              <p className="hidden text-[10px] font-black uppercase tracking-widest text-slate-400 sm:block">Field Responder</p>
+              <h1 className="truncate text-lg font-black tracking-tight text-slate-900 uppercase">{t('Mella Responder')}</h1>
+              <p className="hidden text-[10px] font-black uppercase tracking-widest text-slate-400 sm:block">{t('Field Responder')}</p>
             </div>
           </Link>
 
-          <nav className="flex items-center gap-2 text-sm">
+          <nav className="flex items-center gap-1 sm:gap-2 text-sm">
+            <button
+              onClick={toggleLang}
+              className="inline-flex items-center justify-center rounded-2xl px-2.5 py-2 font-black text-slate-500 hover:bg-slate-100 transition-all active:scale-95"
+              title={lang === 'en' ? 'አማርኛ' : 'English'}
+            >
+              <Languages className="h-4 w-4 sm:mr-1" />
+              <span className="text-[11px] sm:text-xs hidden sm:inline">{lang === 'en' ? 'AMH' : 'EN'}</span>
+              <span className="text-[11px] sm:text-xs sm:hidden">{lang === 'en' ? 'አማ' : 'EN'}</span>
+            </button>
             {isAuthenticated ? (
               <>
                 <Link
                   to="/dashboard"
-                  className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 font-black transition-all ${
+                  className={`inline-flex items-center gap-2 rounded-2xl px-3 sm:px-4 py-2 font-black transition-all ${
                     loc.pathname.includes('dashboard') ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   <LayoutDashboard className="h-4 w-4" />
-                  <span className="hidden sm:inline">TERMINAL</span>
+                  <span className="hidden sm:inline">{t('TERMINAL')}</span>
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2 font-black text-white shadow-lg transition-all hover:bg-black active:scale-95"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-3 sm:px-4 py-2 font-black text-white shadow-lg transition-all hover:bg-black active:scale-95"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">LOGOUT</span>
+                  <span className="hidden sm:inline">{t('LOGOUT')}</span>
                 </button>
               </>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <Link
                   to="/login"
-                  className={`rounded-2xl px-4 py-2 font-black transition-all ${
+                  className={`rounded-2xl px-3 sm:px-4 py-2 font-black transition-all ${
                     loc.pathname.includes('login') ? 'bg-orange-500 text-white' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  LOGIN
+                  {t('LOGIN')}
                 </Link>
                 <Link
                   to="/signup"
-                  className={`rounded-2xl px-4 py-2 font-black transition-all ${
+                  className={`rounded-2xl px-3 sm:px-4 py-2 font-black transition-all ${
                     loc.pathname.includes('signup') ? 'bg-orange-500 text-white' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  SIGN UP
+                  {t('SIGN UP')}
                 </Link>
               </div>
             )}

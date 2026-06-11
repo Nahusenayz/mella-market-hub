@@ -6,6 +6,7 @@ import Modal from '../components/Modal'
 import EditProfileModal from '../components/EditProfileModal'
 import WorkerEarnings from '../components/WorkerEarnings'
 import DemandHeatmap from '../components/DemandHeatmap'
+import { useTranslation } from '../contexts/LanguageContext'
 import {
   Bell,
   Map as MapIcon,
@@ -28,6 +29,7 @@ import { EmergencyRequest } from '../hooks/useEmergencyRequests'
 
 export default function Dashboard() {
   const nav = useNavigate()
+  const { t } = useTranslation()
   const [userId, setUserId] = useState<string | null>(null)
   const [userCategory, setUserCategory] = useState<string>('police')
   const [userName, setUserName] = useState<string>('')
@@ -72,11 +74,11 @@ export default function Dashboard() {
 
   const getGpsQualityLabel = (quality: 'excellent' | 'good' | 'fair' | 'poor' | 'unknown') => {
     switch (quality) {
-      case 'excellent': return 'Excellent'
-      case 'good': return 'Good'
-      case 'fair': return 'Fair'
-      case 'poor': return 'Poor'
-      default: return 'Unknown'
+      case 'excellent': return t('Excellent')
+      case 'good': return t('Good')
+      case 'fair': return t('Fair')
+      case 'poor': return t('Poor')
+      default: return t('Unknown')
     }
   }
 
@@ -91,9 +93,9 @@ export default function Dashboard() {
     const distanceKm = R * c
     if (distanceKm < 1) {
       const distanceM = Math.round(distanceKm * 1000)
-      return `${distanceM}m away`
+      return `${distanceM}${t('m away')}`
     }
-    return `${distanceKm.toFixed(1)}km away`
+    return `${distanceKm.toFixed(1)}${t('km away')}`
   }
 
   const getDistanceFromWorker = (request: EmergencyRequest): string | null => {
@@ -273,19 +275,19 @@ export default function Dashboard() {
     const emergencyKeywords = ['unconscious', 'bleed', 'fire', 'smoke', 'attack', 'stuck', 'heart', 'urgent', 'child', 'accident']
     const criticalMatch = emergencyKeywords.some(keyword => text.includes(keyword))
     if (criticalMatch || request.category === 'ambulance' || request.category === 'fire_truck') {
-      return { label: 'Critical', className: 'bg-red-100 text-red-700 border-red-200' }
+      return { label: t('Critical'), className: 'bg-red-100 text-red-700 border-red-200' }
     }
     if (request.category === 'traffic_police' || request.category === 'tow_truck') {
-      return { label: 'High', className: 'bg-amber-100 text-amber-700 border-amber-200' }
+      return { label: t('High'), className: 'bg-amber-100 text-amber-700 border-amber-200' }
     }
-    return { label: 'Normal', className: 'bg-slate-100 text-slate-700 border-slate-200' }
+    return { label: t('Normal'), className: 'bg-slate-100 text-slate-700 border-slate-200' }
   }
 
   const formatTimeAgo = (date: string) => {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000)
-    if (seconds < 60) return 'Just now'
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+    if (seconds < 60) return t('Just now')
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}${t('m ago')}`
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}${t('h ago')}`
     return new Date(date).toLocaleDateString()
   }
 
@@ -317,15 +319,15 @@ export default function Dashboard() {
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-lg font-black text-gray-900 leading-tight">
-                  New Emergency{newRequestCount > 1 ? 's' : ''}!
+                  {newRequestCount > 1 ? t('New Emergencies!') : t('New Emergency!')}
                 </h3>
                 <p className="mt-1 text-sm font-medium text-gray-600">
-                  {newRequestCount} pending request{newRequestCount > 1 ? 's' : ''} waiting.
+                  {newRequestCount} {newRequestCount > 1 ? t('pending requests waiting.') : t('pending request waiting.')}
                 </p>
                 {ringing && (
                   <div className="mt-2 flex items-center gap-2 text-xs font-black text-orange-600 uppercase tracking-widest">
                     <Volume2 className="h-3 w-3 animate-pulse" />
-                    Alarm ringing
+                    {t('Alarm ringing')}
                   </div>
                 )}
               </div>
@@ -333,7 +335,7 @@ export default function Dashboard() {
                 onClick={stopAlarm}
                 className="shrink-0 rounded-2xl bg-slate-900 px-4 py-2 text-xs font-black text-white shadow-lg transition-all hover:bg-black active:scale-95"
               >
-                DISMISS
+                {t('DISMISS')}
               </button>
             </div>
           </div>
@@ -358,10 +360,10 @@ export default function Dashboard() {
                   <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{theme.label}</h1>
                   <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-black uppercase tracking-widest ${isOnline ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
                     <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                    {isOnline ? 'Active' : 'Offline'}
+                    {isOnline ? t('Active') : t('Offline')}
                   </span>
                 </div>
-                <p className="mt-2 text-lg font-medium text-slate-400">Welcome back, <span className="text-white">{userName}</span></p>
+                <p className="mt-2 text-lg font-medium text-slate-400">{t('Welcome back,')} <span className="text-white">{userName}</span></p>
               </div>
             </div>
 
@@ -370,10 +372,10 @@ export default function Dashboard() {
                 <button
                   onClick={() => setShowEditProfile(true)}
                   className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 font-black text-white/70 transition-all hover:bg-white/20 hover:text-white"
-                  title="Edit Profile"
+                  title={t('Edit Profile')}
                 >
                   <Settings size={18} />
-                  <span className="hidden sm:inline text-xs">PROFILE</span>
+                  <span className="hidden sm:inline text-xs">{t('PROFILE')}</span>
                 </button>
                 <button
                   onClick={toggleOnlineStatus}
@@ -382,10 +384,10 @@ export default function Dashboard() {
                   }`}
                 >
                   {isOnline ? <Wifi size={20} /> : <WifiOff size={20} />}
-                  {isOnline ? 'GO OFFLINE' : 'GO ONLINE'}
+                  {isOnline ? t('GO OFFLINE') : t('GO ONLINE')}
                 </button>
                 <div className="hidden flex-col md:flex">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">GPS Signal</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t('GPS Signal')}</span>
                   <span className={`text-xs font-bold ${getGpsQualityColor(gpsQuality)} bg-transparent p-0`}>
                     {getGpsQualityLabel(gpsQuality)}
                   </span>
@@ -406,7 +408,7 @@ export default function Dashboard() {
             }`}
           >
             <Bell className={activeTab === 'requests' ? 'animate-bounce' : ''} />
-            <span className="text-lg font-black uppercase tracking-tight">Active Jobs</span>
+            <span className="text-lg font-black uppercase tracking-tight">{t('Active Jobs')}</span>
             {pendingRequests.length > 0 && (
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-500 text-xs font-black text-white">
                 {pendingRequests.length}
@@ -422,7 +424,7 @@ export default function Dashboard() {
             }`}
           >
             <TrendingUp />
-            <span className="text-lg font-black uppercase tracking-tight">Earnings</span>
+            <span className="text-lg font-black uppercase tracking-tight">{t('Earnings')}</span>
           </button>
           <button
             onClick={() => setActiveTab('demand')}
@@ -433,7 +435,7 @@ export default function Dashboard() {
             }`}
           >
             <MapIcon />
-            <span className="text-lg font-black uppercase tracking-tight">Hotspots</span>
+            <span className="text-lg font-black uppercase tracking-tight">{t('Hotspots')}</span>
           </button>
         </div>
 
@@ -449,25 +451,25 @@ export default function Dashboard() {
                     <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
                       <LayoutDashboard className="h-5 w-5" />
                     </div>
-                    Dispatcher
+                    {t('Dispatcher')}
                   </h3>
                   <div className="mt-6 grid grid-cols-2 gap-4">
                     <div className="rounded-[24px] bg-slate-50 p-4 border border-slate-100">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Waiting</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('Waiting')}</p>
                       <p className="mt-1 text-3xl font-black text-orange-600">{pendingRequests.length}</p>
                     </div>
                     <div className="rounded-[24px] bg-slate-50 p-4 border border-slate-100">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ongoing</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('Ongoing')}</p>
                       <p className="mt-1 text-3xl font-black text-slate-900">{activeRequests.length}</p>
                     </div>
                   </div>
                   <div className="mt-4 rounded-[24px] bg-slate-900 p-5 text-white">
                     <div className="flex items-center gap-2 text-orange-400">
                       <TrendingUp className="h-4 w-4" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">Hot Zone</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('Hot Zone')}</span>
                     </div>
                     <p className="mt-2 text-base font-bold capitalize">{topDemandCategory.replace('_', ' ')}</p>
-                    <p className="mt-1 text-xs text-slate-400 leading-relaxed">System queue is prioritising response in this category.</p>
+                    <p className="mt-1 text-xs text-slate-400 leading-relaxed">{t('System queue is prioritising response in this category.')}</p>
                   </div>
                 </div>
 
@@ -482,10 +484,10 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between mb-6 px-2">
                     <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
                       <Bell className="h-6 w-6 text-orange-500" />
-                      Pending Jobs
+                      {t('Pending Jobs')}
                     </h2>
                     <span className="rounded-full bg-orange-100 px-4 py-1.5 text-xs font-black text-orange-700">
-                      {pendingRequests.length} AVAILABLE
+                      {pendingRequests.length} {t('AVAILABLE')}
                     </span>
                   </div>
 
@@ -495,8 +497,8 @@ export default function Dashboard() {
                         <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-[32px] bg-slate-100 text-slate-400">
                           <Bell className="h-10 w-10" />
                         </div>
-                        <h3 className="mt-6 text-2xl font-black text-slate-900">Quiet for now</h3>
-                        <p className="mt-2 text-slate-500 font-medium">New emergency calls will pop up here instantly.</p>
+                        <h3 className="mt-6 text-2xl font-black text-slate-900">{t('Quiet for now')}</h3>
+                        <p className="mt-2 text-slate-500 font-medium">{t('New emergency calls will pop up here instantly.')}</p>
                       </div>
                     ) : (
                       pendingRequests.map((r, index) => {
@@ -521,7 +523,7 @@ export default function Dashboard() {
                                     {isCritical ? '🚨' : (r.user_profile?.full_name?.charAt(0).toUpperCase() || 'U')}
                                   </div>
                                   <div className="min-w-0">
-                                    <h4 className="truncate text-xl font-black text-slate-900">{r.user_profile?.full_name || 'Anonymous User'}</h4>
+                                    <h4 className="truncate text-xl font-black text-slate-900">{r.user_profile?.full_name || t('Anonymous User')}</h4>
                                     <div className="flex items-center gap-3 mt-1">
                                       <span className="text-sm font-bold text-slate-400 flex items-center gap-1.5">
                                         <Navigation className="h-3.5 w-3.5" />
@@ -541,7 +543,7 @@ export default function Dashboard() {
 
                               <div className="mt-6 rounded-3xl bg-slate-50/50 p-6 border border-slate-100">
                                 <p className="text-base leading-relaxed text-slate-700 font-medium">
-                                  {r.details || 'Emergency assistance requested. Standby for further details upon arrival.'}
+                                  {r.details || t('Emergency assistance requested. Standby for further details upon arrival.')}
                                 </p>
                               </div>
 
@@ -567,13 +569,13 @@ export default function Dashboard() {
                                     isCritical ? 'bg-red-600 text-white shadow-red-200' : 'bg-slate-900 text-white shadow-slate-200'
                                   }`}
                                 >
-                                  ACCEPT JOB
+                                  {t('ACCEPT JOB')}
                                 </button>
                                 <button 
                                   onClick={() => decline(r.id)} 
                                   className="flex-1 min-h-[70px] rounded-3xl bg-slate-100 text-slate-400 font-black hover:bg-slate-200 hover:text-slate-600 transition-all text-sm uppercase tracking-widest"
                                 >
-                                  SKIP
+                                  {t('SKIP')}
                                 </button>
                               </div>
                             </div>
@@ -589,17 +591,17 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between mb-6 px-2">
                     <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
                       <ClipboardCheck className="h-6 w-6 text-emerald-500" />
-                      Ongoing Assignments
+                      {t('Ongoing Assignments')}
                     </h2>
                     <span className="rounded-full bg-slate-900 px-4 py-1.5 text-[10px] font-black text-white uppercase tracking-widest">
-                      {activeRequests.length} IN PROGRESS
+                      {activeRequests.length} {t('IN PROGRESS')}
                     </span>
                   </div>
 
                   <div className="grid gap-6">
                     {activeRequests.length === 0 ? (
                       <div className="glass rounded-[40px] border-dashed border-slate-200 bg-white/40 p-12 text-center">
-                        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No active assignments</p>
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{t('No active assignments')}</p>
                       </div>
                     ) : (
                       activeRequests.map((r, index) => {
@@ -636,20 +638,20 @@ export default function Dashboard() {
                                     onClick={() => loc && updateStatus(r.id, 'en_route', loc)} 
                                     className="min-h-[64px] flex-[2] rounded-[24px] bg-indigo-600 text-white text-base font-black shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                   >
-                                    EN ROUTE
+                                    {t('EN ROUTE')}
                                   </button>
                                 )}
                                 <button 
                                   onClick={() => updateStatus(r.id, 'completed')} 
                                   className="min-h-[64px] flex-[2] rounded-[24px] bg-emerald-600 text-white text-base font-black shadow-xl shadow-emerald-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
-                                  MARK COMPLETED
+                                  {t('MARK COMPLETED')}
                                 </button>
                                 <button
                                   onClick={() => updateStatus(r.id, 'cancelled')}
                                   className="min-h-[64px] flex-1 rounded-[24px] bg-slate-100 text-slate-400 font-black hover:bg-rose-50 hover:text-rose-600 transition-all text-xs"
                                 >
-                                  CANCEL
+                                  {t('CANCEL')}
                                 </button>
                               </div>
                             </div>
@@ -668,34 +670,34 @@ export default function Dashboard() {
                     <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
                       <Award className="h-5 w-5" />
                     </div>
-                    Performance
+                    {t('Performance')}
                   </h3>
                   <div className="mt-6 flex items-center gap-4">
                     <div className="flex-1 rounded-[24px] bg-slate-900 p-5 text-white">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Monthly Jobs</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('Monthly Jobs')}</p>
                       <p className="mt-1 text-4xl font-black leading-none">{completedCount}</p>
                     </div>
                     <div className="flex-1 space-y-2">
                       <div className="text-center">
                         <p className="text-xs font-black text-slate-900">4.9 ★</p>
-                        <p className="text-[10px] font-bold text-slate-400">Rating</p>
+                        <p className="text-[10px] font-bold text-slate-400">{t('Rating')}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs font-black text-slate-900">100%</p>
-                        <p className="text-[10px] font-bold text-slate-400">Success</p>
+                        <p className="text-[10px] font-bold text-slate-400">{t('Success')}</p>
                       </div>
                     </div>
                   </div>
                   <button onClick={() => setShowHistoryModal(true)} className="mt-6 w-full rounded-2xl bg-slate-100 py-4 text-xs font-black text-slate-600 uppercase tracking-widest transition-all hover:bg-slate-200">
-                    Full Operations Log
+                    {t('Full Operations Log')}
                   </button>
                 </div>
 
                 <div className="glass rounded-[32px] p-6">
-                  <h3 className="text-base font-black text-slate-900 mb-6">Recent Log</h3>
+                  <h3 className="text-base font-black text-slate-900 mb-6">{t('Recent Log')}</h3>
                   <div className="space-y-4">
                     {recentHistory.length === 0 ? (
-                      <p className="text-sm font-bold text-slate-400 text-center py-8">No recent activity.</p>
+                      <p className="text-sm font-bold text-slate-400 text-center py-8">{t('No recent activity.')}</p>
                     ) : (
                       recentHistory.map((r) => (
                         <div key={r.id} className="relative pl-6 before:absolute before:left-0 before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-slate-200">
@@ -711,9 +713,9 @@ export default function Dashboard() {
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 mb-6 ring-1 ring-white/20">
                     <Gauge className="h-6 w-6" />
                   </div>
-                  <h4 className="text-xl font-black leading-tight">Response Intelligence</h4>
+                  <h4 className="text-xl font-black leading-tight">{t('Response Intelligence')}</h4>
                   <p className="mt-3 text-sm font-medium text-indigo-100 leading-relaxed">
-                    System suggests positioning near <span className="text-white font-bold">{topDemandCategory.replace('_', ' ')}</span> hotspots for faster dispatch.
+                    {t('System suggests positioning near')} <span className="text-white font-bold">{topDemandCategory.replace('_', ' ')}</span> {t('hotspots for faster dispatch.')}
                   </p>
                 </div>
               </aside>
@@ -751,7 +753,7 @@ export default function Dashboard() {
                 </span>
               )}
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest">Jobs</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">{t('Jobs')}</span>
           </button>
 
           <button
@@ -761,7 +763,7 @@ export default function Dashboard() {
             }`}
           >
             <TrendingUp size={20} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Cash</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">{t('Cash')}</span>
           </button>
 
           <button
@@ -771,7 +773,7 @@ export default function Dashboard() {
             }`}
           >
             <MapIcon size={20} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Map</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">{t('Map')}</span>
           </button>
 
           <button
@@ -783,16 +785,16 @@ export default function Dashboard() {
             <div className={`flex h-6 w-6 items-center justify-center rounded-full ${isOnline ? 'bg-emerald-500/20' : 'bg-rose-500/20'}`}>
               <div className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest">{isOnline ? 'Live' : 'Off'}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">{isOnline ? t('Live') : t('Off')}</span>
           </button>
         </div>
       </div>
 
       {/* Modals */}
-      <Modal isOpen={showHistoryModal} onClose={() => setShowHistoryModal(false)} title="Operations Log">
+      <Modal isOpen={showHistoryModal} onClose={() => setShowHistoryModal(false)} title={t('Operations Log')}>
         <div className="flex flex-col gap-4 p-2">
           {history.length === 0 ? (
-            <p className="text-center text-slate-400 font-bold py-12">NO PREVIOUS LOGS FOUND</p>
+            <p className="text-center text-slate-400 font-bold py-12">{t('NO PREVIOUS LOGS FOUND')}</p>
           ) : (
             history.map(r => (
               <div key={r.id} className="p-6 bg-slate-50 rounded-[24px] border border-slate-100 shadow-sm">
@@ -802,10 +804,10 @@ export default function Dashboard() {
                     {new Date(r.created_at).toLocaleDateString()}
                   </span>
                 </div>
-                <p className="text-sm text-slate-600 font-medium leading-relaxed">{r.details || 'No additional field logs recorded for this event.'}</p>
+                <p className="text-sm text-slate-600 font-medium leading-relaxed">{r.details || t('No additional field logs recorded for this event.')}</p>
                 <div className="mt-4 flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Mission Successful</span>
+                  <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{t('Mission Successful')}</span>
                 </div>
               </div>
             ))
@@ -814,14 +816,14 @@ export default function Dashboard() {
       </Modal>
 
       {cancelledRequest && (
-        <Modal isOpen={true} onClose={() => setCancelledRequest(null)} title="⚠️ MISSION CANCELLED">
+        <Modal isOpen={true} onClose={() => setCancelledRequest(null)} title={t('⚠️ MISSION CANCELLED')}>
           <div className="text-center p-8">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] bg-rose-50 text-rose-500 mb-6 ring-1 ring-rose-100">
               <AlertTriangle className="h-10 w-10" />
             </div>
-            <h3 className="text-2xl font-black text-slate-900 mb-2">Request Aborted</h3>
-            <p className="text-slate-500 mb-8 font-medium">The user has terminated the emergency request. No further action is required for this mission.</p>
-            <button onClick={() => setCancelledRequest(null)} className="w-full py-5 bg-slate-900 text-white rounded-3xl text-lg font-black shadow-2xl transition-all active:scale-95">ACKNOWLEDGE</button>
+            <h3 className="text-2xl font-black text-slate-900 mb-2">{t('Request Aborted')}</h3>
+            <p className="text-slate-500 mb-8 font-medium">{t('The user has terminated the emergency request. No further action is required for this mission.')}</p>
+            <button onClick={() => setCancelledRequest(null)} className="w-full py-5 bg-slate-900 text-white rounded-3xl text-lg font-black shadow-2xl transition-all active:scale-95">{t('ACKNOWLEDGE')}</button>
           </div>
         </Modal>
       )}

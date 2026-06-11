@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../integrations/supabase/client'
 import { useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from '../contexts/LanguageContext'
 
 export default function Signup() {
     const nav = useNavigate()
+    const { t } = useTranslation()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
@@ -186,8 +188,8 @@ export default function Signup() {
                     </div>
 
                     {/* Title */}
-                    <h2 className="login-title">Worker Registration</h2>
-                    <p className="login-subtitle">Join our emergency response network</p>
+                    <h2 className="login-title">{t('Worker Registration')}</h2>
+                    <p className="login-subtitle">{t('Join our emergency response network')}</p>
 
                     {/* Progress Steps */}
                     <div style={{
@@ -216,7 +218,7 @@ export default function Signup() {
                     {step === 1 && (
                         <div className="animate-fade-in">
                             <div className="form-group delay-100">
-                                <label>Full Name</label>
+                                <label>{t('Full Name')}</label>
                                 <div style={{ position: 'relative' }}>
                                     <span style={{
                                         position: 'absolute',
@@ -227,7 +229,7 @@ export default function Signup() {
                                         opacity: 0.5
                                     }}>👤</span>
                                     <input
-                                        placeholder="John Doe"
+                                        placeholder={t('John Doe')}
                                         type="text"
                                         value={fullName}
                                         onChange={e => setFullName(e.target.value)}
@@ -238,7 +240,7 @@ export default function Signup() {
                             </div>
 
                             <div className="form-group delay-200">
-                                <label>Service Category</label>
+                                <label>{t('Service Category')}</label>
                                 <div style={{
                                     display: 'grid',
                                     gridTemplateColumns: 'repeat(2, 1fr)',
@@ -269,7 +271,7 @@ export default function Signup() {
                                                 fontSize: '0.75rem',
                                                 fontWeight: 600,
                                                 color: category === cat.id ? cat.color : '#6b7280'
-                                            }}>{cat.label}</span>
+                                            }}>{t(cat.label)}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -277,7 +279,7 @@ export default function Signup() {
 
                             {category === 'tow_truck' && (
                                 <div className="form-group delay-300">
-                                    <label>Base Service Fee (ETB)</label>
+                                    <label>{t('Base Service Fee (ETB)')}</label>
                                     <div style={{ position: 'relative' }}>
                                         <span style={{
                                             position: 'absolute',
@@ -288,7 +290,7 @@ export default function Signup() {
                                             opacity: 0.5
                                         }}>💰</span>
                                         <input
-                                            placeholder="e.g. 500"
+                                            placeholder={t('e.g. 500')}
                                             type="number"
                                             value={serviceFee}
                                             onChange={e => setServiceFee(e.target.value)}
@@ -297,7 +299,7 @@ export default function Signup() {
                                         />
                                     </div>
                                     <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem' }}>
-                                        Set your starting price for towing services.
+                                        {t('Set your starting price for towing services.')}
                                     </p>
                                 </div>
                             )}
@@ -325,7 +327,7 @@ export default function Signup() {
                                         marginBottom: '0.5rem',
                                         color: locationGranted ? '#065f46' : '#92400e'
                                     }}>
-                                        {locationGranted ? 'Location Enabled!' : 'Enable Location'}
+                                        {locationGranted ? t('Location Enabled!') : t('Enable Location')}
                                     </h3>
                                     <p style={{
                                         fontSize: '0.875rem',
@@ -333,8 +335,8 @@ export default function Signup() {
                                         marginBottom: locationGranted ? 0 : '1rem'
                                     }}>
                                         {locationGranted
-                                            ? 'Your location will be shared with users seeking emergency help.'
-                                            : 'Allow location access so users can find you during emergencies.'
+                                            ? t('Your location will be shared with users seeking emergency help.')
+                                            : t('Allow location access so users can find you during emergencies.')
                                         }
                                     </p>
                                     {!locationGranted && (
@@ -348,7 +350,7 @@ export default function Signup() {
                                                 fontSize: '0.875rem'
                                             }}
                                         >
-                                            📍 Grant Location Access
+                                            📍 {t('Grant Location Access')}
                                         </button>
                                     )}
                                 </div>
@@ -358,7 +360,7 @@ export default function Signup() {
                                         color: '#6b7280',
                                         textAlign: 'center'
                                     }}>
-                                        Coordinates: {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
+                                        {t('Coordinates: {lat}, {lng}', { lat: userLocation.lat.toFixed(4), lng: userLocation.lng.toFixed(4) })}
                                     </p>
                                 )}
                             </div>
@@ -391,7 +393,7 @@ export default function Signup() {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        Email
+                                        {t('Email')}
                                     </button>
                                     <button
                                         type="button"
@@ -408,13 +410,13 @@ export default function Signup() {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        Phone
+                                        {t('Phone')}
                                     </button>
                                 </div>
 
                                 {signUpMethod === 'email' ? (
                                     <>
-                                        <label>Email Address</label>
+                                        <label>{t('Email Address')}</label>
                                         <div style={{ position: 'relative' }}>
                                             <span style={{
                                                 position: 'absolute',
@@ -425,7 +427,7 @@ export default function Signup() {
                                                 opacity: 0.5
                                             }}>📧</span>
                                             <input
-                                                placeholder="responder@example.com"
+                                                placeholder={t('responder@example.com')}
                                                 type="email"
                                                 value={email}
                                                 onChange={e => setEmail(e.target.value)}
@@ -436,7 +438,7 @@ export default function Signup() {
                                     </>
                                 ) : (
                                     <>
-                                        <label>Phone Number</label>
+                                        <label>{t('Phone Number')}</label>
                                         <div style={{ position: 'relative' }}>
                                             <span style={{
                                                 position: 'absolute',
@@ -447,7 +449,7 @@ export default function Signup() {
                                                 opacity: 0.5
                                             }}>📞</span>
                                             <input
-                                                placeholder="+251 911..."
+                                                placeholder={t('+251 911...')}
                                                 type="tel"
                                                 value={phone}
                                                 onChange={e => setPhone(e.target.value)}
@@ -460,7 +462,7 @@ export default function Signup() {
                             </div>
 
                             <div className="form-group delay-200">
-                                <label>Password</label>
+                                <label>{t('Password')}</label>
                                 <div style={{ position: 'relative' }}>
                                     <span style={{
                                         position: 'absolute',
@@ -501,7 +503,7 @@ export default function Signup() {
                             </div>
 
                             <div className="form-group delay-300">
-                                <label>Confirm Password</label>
+                                <label>{t('Confirm Password')}</label>
                                 <div style={{ position: 'relative' }}>
                                     <span style={{
                                         position: 'absolute',
@@ -543,9 +545,9 @@ export default function Signup() {
                                 type="button"
                                 onClick={prevStep}
                                 className="btn-secondary"
-                                style={{ flex: 1 }}
-                            >
-                                ← Back
+                                                    style={{ flex: 1 }}
+                                            >
+                                                ← {t('Back')}
                             </button>
                         )}
                         {step < 3 ? (
@@ -560,8 +562,8 @@ export default function Signup() {
                                     gap: '0.5rem'
                                 }}
                             >
-                                <span>Continue</span>
-                                <span>→</span>
+                                            <span>{t('Continue')}</span>
+                                            <span>→</span>
                             </button>
                         ) : (
                             <button
@@ -578,11 +580,11 @@ export default function Signup() {
                                 {loading ? (
                                     <>
                                         <span className="loading-spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }} />
-                                        <span>Creating Account...</span>
+                                        <span>{t('Creating Account...')}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <span>Complete Registration</span>
+                                        <span>{t('Complete Registration')}</span>
                                         <span>✓</span>
                                     </>
                                 )}
@@ -593,8 +595,8 @@ export default function Signup() {
                     {/* Login Link */}
                     <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
                         <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                            Already have an account?{' '}
-                            <Link to="/login" style={{ fontWeight: 600 }}>Sign in</Link>
+                            {t('Already have an account?')}{' '}
+                            <Link to="/login" style={{ fontWeight: 600 }}>{t('Sign in')}</Link>
                         </p>
                     </div>
                 </form>

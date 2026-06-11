@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../integrations/supabase/client'
 import { useNavigate, Link } from 'react-router-dom'
 import { ShieldCheck, Mail, Lock, ArrowRight, Eye, EyeOff, Activity, MapPin, Bell } from 'lucide-react'
+import { useTranslation } from '../contexts/LanguageContext'
 
 export default function Login() {
   const nav = useNavigate()
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -40,19 +42,19 @@ export default function Login() {
             <div className="h-20 w-20 flex items-center justify-center rounded-[28px] bg-slate-900 text-white shadow-2xl mb-6 ring-1 ring-white/20">
               <ShieldCheck size={40} className="animate-pulse" />
             </div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Terminal Access</h1>
-            <p className="mt-2 text-slate-500 font-bold uppercase tracking-widest text-[10px]">Authorized Emergency Personnel Only</p>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">{t('Terminal Access')}</h1>
+            <p className="mt-2 text-slate-500 font-bold uppercase tracking-widest text-[10px]">{t('Authorized Emergency Personnel Only')}</p>
           </div>
 
           <form onSubmit={signIn} className="space-y-6">
             <div>
-              <label>Email Address</label>
+              <label>{t('Email Address')}</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors">
                   <Mail size={20} />
                 </div>
                 <input
-                  placeholder="field.agent@mella.ops"
+                  placeholder={t('field.agent@mella.responder')}
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
@@ -63,7 +65,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label>Field Password</label>
+              <label>{t('Field Password')}</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors">
                   <Lock size={20} />
@@ -102,7 +104,7 @@ export default function Login() {
                 <div className="h-6 w-6 border-4 border-white/20 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  INITIALIZE SESSION
+                  {t('INITIALIZE SESSION')}
                   <ArrowRight size={20} />
                 </>
               )}
@@ -111,7 +113,7 @@ export default function Login() {
 
           <div className="mt-8 text-center">
             <p className="text-sm font-bold text-slate-400">
-              NEW RESPONDER? <Link to="/signup" className="text-orange-600 hover:underline ml-1">ENROLL IN FLEET</Link>
+              {t('NEW RESPONDER?')} <Link to="/signup" className="text-orange-600 hover:underline ml-1">{t('ENROLL IN FLEET')}</Link>
             </p>
           </div>
 
@@ -121,19 +123,19 @@ export default function Login() {
                 <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-orange-50 text-orange-600 mb-2">
                   <Activity size={18} />
                 </div>
-                <span className="text-[9px] font-black text-slate-400 uppercase">Live Ops</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase">{t('Live Ops')}</span>
               </div>
               <div className="flex flex-col items-center">
                 <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 mb-2">
                   <MapPin size={18} />
                 </div>
-                <span className="text-[9px] font-black text-slate-400 uppercase">GPS Link</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase">{t('GPS Link')}</span>
               </div>
               <div className="flex flex-col items-center">
                 <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 mb-2">
                   <Bell size={18} />
                 </div>
-                <span className="text-[9px] font-black text-slate-400 uppercase">Dispatch</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase">{t('Dispatch')}</span>
               </div>
             </div>
           </div>

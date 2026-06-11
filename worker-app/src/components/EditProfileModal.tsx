@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../integrations/supabase/client'
 import Modal from './Modal'
 import { Loader2, User, Phone, Briefcase, Save } from 'lucide-react'
+import { useTranslation } from '../contexts/LanguageContext'
 
 interface EditProfileModalProps {
   isOpen: boolean
@@ -21,6 +22,7 @@ const categories = [
 ]
 
 export default function EditProfileModal({ isOpen, onClose, userId, currentName, currentCategory, onSaved }: EditProfileModalProps) {
+  const { t } = useTranslation()
   const [fullName, setFullName] = useState(currentName)
   const [phoneNumber, setPhoneNumber] = useState('')
   const [category, setCategory] = useState(currentCategory)
@@ -44,7 +46,7 @@ export default function EditProfileModal({ isOpen, onClose, userId, currentName,
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!fullName.trim()) {
-      setError('Full name is required')
+      setError(t('Full name is required'))
       return
     }
 
@@ -79,24 +81,24 @@ export default function EditProfileModal({ isOpen, onClose, userId, currentName,
         onClose()
       }, 1200)
     } catch (err: any) {
-      setError(err.message || 'Failed to save profile')
+      setError(err.message || t('Failed to save profile'))
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Profile">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('Edit Profile')}>
       <form onSubmit={handleSave} className="space-y-5">
         <div className="form-group">
           <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-            <User size={16} /> Full Name
+            <User size={16} /> {t('Full Name')}
           </label>
           <input
             type="text"
             value={fullName}
             onChange={e => setFullName(e.target.value)}
-            placeholder="Your full name"
+            placeholder={t('Your full name')}
             required
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           />
@@ -104,21 +106,21 @@ export default function EditProfileModal({ isOpen, onClose, userId, currentName,
 
         <div className="form-group">
           <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-            <Phone size={16} /> Phone Number
+            <Phone size={16} /> {t('Phone Number')}
           </label>
           <input
             type="tel"
             value={phoneNumber}
             onChange={e => setPhoneNumber(e.target.value)}
-            placeholder="9XXXXXXXX"
+            placeholder={t('9XXXXXXXX')}
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           />
-          <p className="mt-1 text-xs text-slate-400">Users will see this number to call you during emergencies.</p>
+          <p className="mt-1 text-xs text-slate-400">{t('Users will see this number to call you during emergencies.')}</p>
         </div>
 
         <div className="form-group">
           <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-            <Briefcase size={16} /> Service Category
+            <Briefcase size={16} /> {t('Service Category')}
           </label>
           <div className="grid grid-cols-2 gap-2 mt-1">
             {categories.map((cat) => (
@@ -132,7 +134,7 @@ export default function EditProfileModal({ isOpen, onClose, userId, currentName,
                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                 }`}
               >
-                {cat.label}
+                {t(cat.label)}
               </button>
             ))}
           </div>
@@ -146,7 +148,7 @@ export default function EditProfileModal({ isOpen, onClose, userId, currentName,
 
         {success && (
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm font-medium text-emerald-700 flex items-center gap-2">
-            <Save size={16} /> Profile saved successfully!
+            <Save size={16} /> {t('Profile saved successfully!')}
           </div>
         )}
 
@@ -156,7 +158,7 @@ export default function EditProfileModal({ isOpen, onClose, userId, currentName,
             onClick={onClose}
             className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-3.5 text-sm font-black text-slate-600 transition-all hover:bg-slate-50 active:scale-[0.98]"
           >
-            CANCEL
+            {t('CANCEL')}
           </button>
           <button
             type="submit"
@@ -165,9 +167,9 @@ export default function EditProfileModal({ isOpen, onClose, userId, currentName,
           >
             {saving ? (
               <span className="flex items-center justify-center gap-2">
-                <Loader2 className="animate-spin" size={18} /> SAVING...
+                <Loader2 className="animate-spin" size={18} /> {t('SAVING...')}
               </span>
-            ) : 'SAVE'}
+            ) : t('SAVE')}
           </button>
         </div>
       </form>
