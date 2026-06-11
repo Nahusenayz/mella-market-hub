@@ -3,6 +3,7 @@ import { supabase } from '../integrations/supabase/client'
 import { useEmergencyRequests } from '../hooks/useEmergencyRequests'
 import { useNavigate } from 'react-router-dom'
 import Modal from '../components/Modal'
+import EditProfileModal from '../components/EditProfileModal'
 import WorkerEarnings from '../components/WorkerEarnings'
 import DemandHeatmap from '../components/DemandHeatmap'
 import {
@@ -13,17 +14,15 @@ import {
   User,
   Award,
   Navigation,
-  Copy,
-  Send,
   AlertTriangle,
-  ClipboardList,
   LayoutDashboard,
   ClipboardCheck,
-  CircleDot,
   Wifi,
   WifiOff,
   Gauge,
-  MapPin
+  MapPin,
+  Settings,
+  Volume2
 } from 'lucide-react'
 import { EmergencyRequest } from '../hooks/useEmergencyRequests'
 
@@ -40,10 +39,18 @@ export default function Dashboard() {
   const [newRequestCount, setNewRequestCount] = useState(0)
   const prevRequestsRef = useRef<string[]>([])
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const copyTimerRef = useRef<number | null>(null)
-  const [copiedReplyKey, setCopiedReplyKey] = useState<string | null>(null)
-  const [isSendingReply, setIsSendingReply] = useState<string | null>(null)
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
+  const [ringing, setRinging] = useState(false)
+  const ringingRef = useRef(false)
+
+  const stopAlarm = () => {
+    ringingRef.current = false
+    setRinging(false)
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+  }
 
   const getGpsQuality = (accuracy: number | null): 'excellent' | 'good' | 'fair' | 'poor' | 'unknown' => {
     if (!accuracy) return 'unknown'
@@ -98,10 +105,11 @@ export default function Dashboard() {
 
   // UI State
   const [showHistoryModal, setShowHistoryModal] = useState(false)
+  const [showEditProfile, setShowEditProfile] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
   const [cancelledRequest, setCancelledRequest] = useState<EmergencyRequest | null>(null)
 
-  // Check for new requests and play notification
+  // Check for new requests and play alarm notification
   useEffect(() => {
     const currentIds = requests.filter(r => r.status === 'pending').map(r => r.id)
     const newRequests = currentIds.filter(id => !prevRequestsRef.current.includes(id))
@@ -109,8 +117,17 @@ export default function Dashboard() {
     if (newRequests.length > 0 && prevRequestsRef.current.length > 0) {
       setShowNotification(true)
       setNewRequestCount(newRequests.length)
-      if (audioRef.current) {
-        audioRef.current.play().catch(() => { })
+      if (!ringingRef.current) {
+        ringingRef.current = true
+        setRinging(true)
+        if (audioRef.current) {
+          audioRef.current.loop = true
+          audioRef.current.currentTime = 0
+          audioRef.current.play().catch(() => {
+            ringingRef.current = false
+            setRinging(false)
+          })
+        }
       }
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('🚨 New Emergency Request!', {
@@ -118,7 +135,6 @@ export default function Dashboard() {
           icon: '🚨'
         })
       }
-      setTimeout(() => setShowNotification(false), 5000)
     }
 
     // Check if an active request was cancelled
@@ -128,9 +144,6 @@ export default function Dashboard() {
         const justCancelled = history.find(h => h.id === id && h.status === 'cancelled')
         if (justCancelled) {
           setCancelledRequest(justCancelled)
-          if (audioRef.current) {
-            audioRef.current.play().catch(() => { })
-          }
         }
       }
     })
@@ -255,39 +268,6 @@ export default function Dashboard() {
     return top ? top[0].replace('_', ' ') : 'No demand data yet'
   }, [pendingRequests, activeRequests, history])
 
-  const quickReplies = [
-    'I am on the way. Please stay in a safe place.',
-    'Please share a landmark or exact pin so I can reach you faster.',
-    'I am close. Keep your phone available for updates.'
-  ]
-
-  const sendQuickReplyToUser = async (text: string, userId: string, key: string) => {
-    try {
-      setIsSendingReply(key)
-      const success = await sendMessage(userId, text)
-      if (success) {
-        setCopiedReplyKey(key)
-        if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current)
-        copyTimerRef.current = window.setTimeout(() => setCopiedReplyKey(null), 1800)
-      }
-    } catch (error) {
-      console.error('Unable to send quick reply:', error)
-    } finally {
-      setIsSendingReply(null)
-    }
-  }
-
-  const copyQuickReply = async (text: string, key: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedReplyKey(key)
-      if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current)
-      copyTimerRef.current = window.setTimeout(() => setCopiedReplyKey(null), 1800)
-    } catch (error) {
-      console.error('Unable to copy quick reply:', error)
-    }
-  }
-
   const getPriorityMeta = (request: EmergencyRequest) => {
     const text = `${request.category || ''} ${request.details || ''}`.toLowerCase()
     const emergencyKeywords = ['unconscious', 'bleed', 'fire', 'smoke', 'attack', 'stuck', 'heart', 'urgent', 'child', 'accident']
@@ -299,11 +279,6 @@ export default function Dashboard() {
       return { label: 'High', className: 'bg-amber-100 text-amber-700 border-amber-200' }
     }
     return { label: 'Normal', className: 'bg-slate-100 text-slate-700 border-slate-200' }
-  }
-
-  const getQuickReplyByRequest = (request: EmergencyRequest) => {
-    if (request.status === 'accepted' || request.status === 'en_route') return quickReplies
-    return []
   }
 
   const formatTimeAgo = (date: string) => {
@@ -330,24 +305,36 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-24 md:pb-8">
-      <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto" />
+      <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2871/2871-preview.mp3" preload="auto" />
 
       {/* Global Notifications Area */}
       {showNotification && (
         <div className="fixed top-20 right-4 z-[100] w-full max-w-sm animate-slide-in-right">
-          <div className="glass rounded-3xl p-5 shadow-2xl border-orange-200 bg-white/95">
+          <div className="glass rounded-3xl p-5 shadow-2xl border-orange-200 bg-white/95 ring-2 ring-orange-500/30">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-white shadow-lg animate-bounce">
                 <Bell className="h-6 w-6" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <h3 className="text-lg font-black text-gray-900 leading-tight">
                   New Emergency{newRequestCount > 1 ? 's' : ''}!
                 </h3>
                 <p className="mt-1 text-sm font-medium text-gray-600">
                   {newRequestCount} pending request{newRequestCount > 1 ? 's' : ''} waiting.
                 </p>
+                {ringing && (
+                  <div className="mt-2 flex items-center gap-2 text-xs font-black text-orange-600 uppercase tracking-widest">
+                    <Volume2 className="h-3 w-3 animate-pulse" />
+                    Alarm ringing
+                  </div>
+                )}
               </div>
+              <button
+                onClick={stopAlarm}
+                className="shrink-0 rounded-2xl bg-slate-900 px-4 py-2 text-xs font-black text-white shadow-lg transition-all hover:bg-black active:scale-95"
+              >
+                DISMISS
+              </button>
             </div>
           </div>
         </div>
@@ -378,8 +365,16 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="flex w-full flex-wrap gap-4 md:w-auto">
+                <div className="flex w-full flex-wrap gap-4 md:w-auto">
               <div className="flex flex-1 items-center gap-4 rounded-3xl bg-white/5 p-2 pr-6 backdrop-blur-xl ring-1 ring-white/10">
+                <button
+                  onClick={() => setShowEditProfile(true)}
+                  className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 font-black text-white/70 transition-all hover:bg-white/20 hover:text-white"
+                  title="Edit Profile"
+                >
+                  <Settings size={18} />
+                  <span className="hidden sm:inline text-xs">PROFILE</span>
+                </button>
                 <button
                   onClick={toggleOnlineStatus}
                   className={`flex h-12 items-center justify-center gap-3 rounded-2xl px-6 font-black transition-all ${
@@ -476,29 +471,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="glass rounded-[32px] p-6">
-                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2 mb-4">
-                    <ClipboardList className="h-4 w-4 text-orange-600" />
-                    Speed Replies
-                  </h3>
-                  <div className="space-y-3">
-                    {quickReplies.map((reply, index) => (
-                      <button
-                        key={reply}
-                        onClick={() => copyQuickReply(reply, `quick-${index}`)}
-                        className="group flex w-full items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-4 text-left text-sm font-bold text-slate-700 shadow-sm transition-all hover:border-orange-200 hover:bg-orange-50"
-                      >
-                        <span className="pr-3 leading-tight">{reply}</span>
-                        <Copy className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-orange-400" />
-                      </button>
-                    ))}
-                  </div>
-                  {copiedReplyKey && (
-                    <p className="mt-4 text-center text-xs font-black text-emerald-600 flex items-center justify-center gap-2">
-                      <CircleDot className="h-3 w-3" /> COPIED TO CLIPBOARD
-                    </p>
-                  )}
-                </div>
+
               </aside>
 
               {/* Center: Main Queue */}
@@ -632,7 +605,6 @@ export default function Dashboard() {
                       activeRequests.map((r, index) => {
                         const priority = getPriorityMeta(r)
                         const isCritical = priority.label === 'Critical'
-                        const replies = getQuickReplyByRequest(r)
                         return (
                           <div
                             key={r.id}
@@ -656,35 +628,6 @@ export default function Dashboard() {
                                     {priority.label}
                                   </span>
                                 </div>
-                              </div>
-
-                              <div className="mt-6 flex flex-wrap gap-2">
-                                {replies.map((reply, replyIndex) => {
-                                  const replyKey = `${r.id}-${replyIndex}`
-                                  const isSending = isSendingReply === replyKey
-                                  const isSent = copiedReplyKey === replyKey
-                                  return (
-                                    <button
-                                      key={reply}
-                                      onClick={() => sendQuickReplyToUser(reply, r.user_id, replyKey)}
-                                      disabled={isSending}
-                                      className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-xs font-black transition-all active:scale-95 ${
-                                        isSent 
-                                          ? 'bg-emerald-500 border-emerald-500 text-white' 
-                                          : 'border-slate-100 bg-slate-50 text-slate-600 hover:bg-orange-500 hover:border-orange-500 hover:text-white'
-                                      } ${isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                      {isSending ? (
-                                        <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                      ) : isSent ? (
-                                        <CircleDot className="h-3.5 w-3.5" />
-                                      ) : (
-                                        <Send size={14} className="h-3.5 w-3.5" />
-                                      )}
-                                      {isSent ? 'SENT' : 'SEND UPDATE'}
-                                    </button>
-                                  )
-                                })}
                               </div>
 
                               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -882,6 +825,24 @@ export default function Dashboard() {
           </div>
         </Modal>
       )}
+
+      <EditProfileModal
+        isOpen={showEditProfile}
+        onClose={() => setShowEditProfile(false)}
+        userId={userId || ''}
+        currentName={userName}
+        currentCategory={userCategory}
+        onSaved={() => {
+          // Refresh user data
+          supabase.auth.getUser().then(({ data }) => {
+            const user = data.user
+            if (user) {
+              setUserName(user.user_metadata.full_name || 'Worker')
+              setUserCategory(user.user_metadata.category || 'police')
+            }
+          })
+        }}
+      />
     </div>
   )
 }

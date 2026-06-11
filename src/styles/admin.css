@@ -379,6 +379,15 @@
   background: #f0fdf4;
 }
 
+.admin-action-btn.primary {
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.admin-action-btn.primary:hover {
+  background: #eff6ff;
+}
+
 .admin-actions-cell {
   display: flex;
   gap: 0.5rem;

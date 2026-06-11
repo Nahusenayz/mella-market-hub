@@ -10,7 +10,17 @@ const AdminEmergenciesTable: React.FC = () => {
   const updateEmergency = useUpdateEmergency();
 
   const handleStatusChange = (id: string, newStatus: string) => {
-    updateEmergency.mutate({ id, updates: { status: newStatus } });
+    const updates: Record<string, unknown> = { status: newStatus };
+    if (newStatus === 'cancelled') {
+      updates.responder_id = null;
+    }
+    updateEmergency.mutate({ id, updates });
+  };
+
+  const handleCancel = (id: string) => {
+    if (window.confirm('Are you sure you want to cancel this emergency request?')) {
+      handleStatusChange(id, 'cancelled');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -111,7 +121,7 @@ const AdminEmergenciesTable: React.FC = () => {
                   <div className="flex items-center gap-2">
                     {req.status === 'pending' && (
                       <button 
-                        onClick={() => handleStatusChange(req.id, 'cancelled')}
+                        onClick={() => handleCancel(req.id)}
                         className="p-1 hover:bg-red-50 text-red-600 rounded"
                         title="Cancel Request"
                       >

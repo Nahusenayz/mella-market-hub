@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useAdminWorkers, useUpdateUser, useDeleteUser } from '@/hooks/useAdminData';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2, Pencil } from 'lucide-react';
 import { AdminAddForm } from './AdminAddForm';
+import { AdminEditWorkerForm } from './AdminEditWorkerForm';
 
 const AdminWorkersTable: React.FC = () => {
   const [page, setPage] = useState(0);
   const { data, isLoading, isError } = useAdminWorkers(page);
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
+  const [editingWorker, setEditingWorker] = useState<any | null>(null);
 
   const totalPages = data ? Math.ceil(data.totalCount / 10) : 0;
 
@@ -118,12 +120,17 @@ const AdminWorkersTable: React.FC = () => {
                     </td>
                     <td>
                       <span className="admin-badge gray" style={{ textTransform: 'capitalize' }}>
-                        {(worker as any).worker_locations?.[0]?.category?.replace('_', ' ') || '—'}
+                        {(worker as any).worker_locations?.[0]?.category?.replace('_', ' ') 
+                          || worker.user_type?.replace('_', ' ') 
+                          || '—'}
                       </span>
                     </td>
                     <td>{formatDate(worker.created_at)}</td>
                     <td>
                       <div className="admin-actions-cell">
+                        <button className="admin-action-btn primary" onClick={() => setEditingWorker(worker)} title="Edit Worker">
+                          <Pencil size={14} />
+                        </button>
                         {!worker.is_verified && (
                           <button className="admin-action-btn success" onClick={() => handleVerify(worker.id)}>
                             Verify
@@ -168,6 +175,14 @@ const AdminWorkersTable: React.FC = () => {
           </div>
         )}
       </div>
+
+      {editingWorker && (
+        <AdminEditWorkerForm
+          worker={editingWorker}
+          isOpen={!!editingWorker}
+          onClose={() => setEditingWorker(null)}
+        />
+      )}
     </div>
   );
 };

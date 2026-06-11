@@ -370,6 +370,18 @@ export const useUpdateEmergency = () => {
   const { toast } = useToast();
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Record<string, unknown> }) => {
+      const status = updates.status as string | undefined;
+
+      // Try using the SECURITY DEFINER RPC first (bypasses RLS)
+      if (status === 'cancelled' || status === 'completed') {
+        const { error: rpcError } = await supabase.rpc('admin_update_emergency_status', {
+          p_emergency_id: id,
+          p_new_status: status,
+        });
+        if (!rpcError) return;
+        // If RPC fails (function doesn't exist yet), fall through to direct update
+      }
+
       const { error } = await supabase.from('emergency_requests').update(updates).eq('id', id);
       if (error) throw error;
     },
