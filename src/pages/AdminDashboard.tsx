@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import AdminSidebar, { type AdminSection } from '@/components/admin/AdminSidebar';
 import AdminDashboardOverview from '@/components/admin/AdminDashboardOverview';
 import AdminUsersTable from '@/components/admin/AdminUsersTable';
@@ -12,6 +13,7 @@ import AdminPaymentsTable from '@/components/admin/AdminPaymentsTable';
 import AdminReports from '@/components/admin/AdminReports';
 import AdminEmergenciesTable from '@/components/admin/AdminEmergenciesTable';
 import { ShieldX, Loader2, ShieldCheck, Lock, User as UserIcon } from 'lucide-react';
+import { playAlarm, requestBrowserNotification } from '@/utils/notifications';
 import '@/styles/admin.css';
 
 const AdminDashboard: React.FC = () => {
@@ -20,6 +22,29 @@ const AdminDashboard: React.FC = () => {
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
+  const [newEmergencyCount, setNewEmergencyCount] = useState(0);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const channel = supabase
+      .channel('admin-emergency-alerts')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'emergency_requests' }, (payload) => {
+        const newReq = payload.new as any;
+        if (newReq.status === 'pending') {
+          playAlarm();
+          setNewEmergencyCount(c => c + 1);
+          requestBrowserNotification('New Emergency!', `${newReq.category || 'Emergency'} — ${newReq.details?.slice(0, 60) || ''}`);
+          queryClient.invalidateQueries({ queryKey: ['admin', 'emergencies'] });
+          queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [isAdmin, queryClient]);
+
+  const clearNewEmergencies = () => setNewEmergencyCount(0);
+
   // Login states
   const [loginUser, setLoginUser] = useState('');
   const [loginPass, setLoginPass] = useState('');
@@ -129,6 +154,11 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
+  const handleSectionChange = (section: AdminSection) => {
+    setActiveSection(section);
+    if (section === 'emergencies') clearNewEmergencies();
+  };
+
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
@@ -154,11 +184,12 @@ const AdminDashboard: React.FC = () => {
     <div className="admin-dashboard">
       <AdminSidebar
         activeSection={activeSection}
-        onSectionChange={setActiveSection}
+        onSectionChange={handleSectionChange}
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
         profile={profile ? { full_name: profile.full_name, email: profile.email } : null}
         onLogout={signOut}
+        newEmergencyCount={newEmergencyCount}
       />
       <main className="admin-content">
         {renderContent()}

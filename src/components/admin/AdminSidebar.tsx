@@ -28,6 +28,7 @@ interface AdminSidebarProps {
   onToggle: () => void;
   profile: { full_name: string | null; email: string | null } | null;
   onLogout: () => void;
+  newEmergencyCount?: number;
 }
 
 const navItems: { key: AdminSection; label: string; icon: React.ElementType }[] = [
@@ -47,6 +48,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onToggle,
   profile,
   onLogout,
+  newEmergencyCount = 0,
 }) => {
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -84,6 +86,11 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             >
               <Icon />
               {label}
+              {key === 'emergencies' && newEmergencyCount > 0 && (
+                <span className="ml-auto bg-red-600 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                  {newEmergencyCount}
+                </span>
+              )}
             </button>
           ))}
         </nav>
