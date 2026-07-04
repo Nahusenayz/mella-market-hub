@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NotificationSystem } from './NotificationSystem';
 import { UserSearch } from './UserSearch';
 import { UserProfileModal } from './UserProfile';
-import { User, LogOut, MessageSquare, Home, Plus, Globe, AlertTriangle } from 'lucide-react';
+import { User, LogOut, MessageSquare, Home, Plus, Globe, AlertTriangle, Sun, Moon } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import logo from '@/logo.png';
 import { Translated } from './Translated';
@@ -23,7 +23,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
   const { language, setLanguage, t } = useLanguage();
   const [selectedUserProfile, setSelectedUserProfile] = useState<string | null>(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('mella-dark') === 'true');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('mella-dark', String(isDark));
+  }, [isDark]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -103,12 +109,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
 
             {/* Right Side */}
             <div className="flex items-center space-x-4">
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={() => setIsDark(!isDark)}
+                className="p-2 rounded-full text-gray-600 hover:text-orange-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-orange-400 dark:hover:bg-gray-800 transition-all"
+                title={isDark ? 'Light Mode' : 'Dark Mode'}
+              >
+                {isDark ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+
               {/* Language Switcher */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleLanguage}
-                className="flex items-center gap-1 text-gray-600 hover:text-orange-600 flex-shrink-0 px-2"
+                className="flex items-center gap-1 text-gray-600 hover:text-orange-600 flex-shrink-0 px-2 dark:text-gray-400 dark:hover:text-orange-400"
               >
                 <Globe size={18} />
                 <span className="text-xs font-bold uppercase">{language === 'en' ? 'አማ' : 'EN'}</span>

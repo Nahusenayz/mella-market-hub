@@ -30,7 +30,8 @@ import {
   Users,
   ChevronLeft,
   LogOut,
-  MessageSquare
+  MessageSquare,
+  MessageCircle
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -586,7 +587,7 @@ export const Emergency: React.FC = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 dark:from-gray-900 dark:to-gray-800 pb-20 overflow-x-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg">
         <div className="container mx-auto px-4 py-6">
@@ -859,6 +860,17 @@ export const Emergency: React.FC = () => {
           >
             <Phone className="h-6 w-6" />
             <span className="text-sm font-medium">{t('call911').replace('911', '991')}</span>
+          </Button>
+
+          <Button
+            onClick={() => {
+              const body = `Emergency! My location: ${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}. Google Maps: https://maps.google.com/?q=${userLocation.lat},${userLocation.lng}`;
+              window.open(`sms:?&body=${encodeURIComponent(body)}`, '_self');
+            }}
+            className="h-20 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white flex-col gap-2 shadow-lg"
+          >
+            <MessageCircle className="h-6 w-6" />
+            <span className="text-sm font-medium">SMS Alert</span>
           </Button>
         </div>
       </div>
@@ -1196,13 +1208,35 @@ export const Emergency: React.FC = () => {
                     </button>
                   ))}
                 </div>
-                <textarea
-                  value={requestDetails}
-                  onChange={(e) => setRequestDetails(e.target.value)}
-                  placeholder="What's happening? Any specific details..."
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                  rows={3}
-                />
+                <div className="flex gap-2">
+                  <textarea
+                    value={requestDetails}
+                    onChange={(e) => setRequestDetails(e.target.value)}
+                    placeholder="What's happening? Any specific details..."
+                    className="flex-1 p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                    rows={3}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+                      if (!SpeechRecognition) { alert('Voice input is not supported in this browser. Try Chrome.'); return; }
+                      const recognition = new SpeechRecognition();
+                      recognition.lang = language === 'am' ? 'am-ET' : 'en-US';
+                      recognition.interimResults = false;
+                      recognition.onresult = (e: any) => {
+                        const transcript = e.results[0][0].transcript;
+                        setRequestDetails((prev: string) => (prev ? prev + ' ' : '') + transcript);
+                      };
+                      recognition.start();
+                    }}
+                    className="self-stretch px-3 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-xl transition-colors flex flex-col items-center justify-center gap-1 text-[10px] font-bold"
+                    title="Voice input (Amharic / English)"
+                  >
+                    🎤
+                    <span>Voice</span>
+                  </button>
+                </div>
               </div>
 
               {/* Location Info */}

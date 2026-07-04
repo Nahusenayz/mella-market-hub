@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, MapPin, MessageCircle, User } from 'lucide-react';
+import { Star, MapPin, MessageCircle, User, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Translated } from './Translated';
@@ -178,6 +178,19 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
         )}
         
         <div className="flex gap-3">
+          <button
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({ title: service.title, text: service.description, url: window.location.href });
+              } else {
+                navigator.clipboard?.writeText(`${service.title} — ${service.description} | Mella Market Hub`);
+              }
+            }}
+            className="p-3 rounded-2xl bg-white text-slate-500 hover:text-orange-600 hover:bg-orange-50 transition-all border border-slate-200 shadow-sm active:scale-95 flex-shrink-0"
+            title="Share"
+          >
+            <Share2 size={18} />
+          </button>
           {!isOwnAd && (
             <>
               <button
