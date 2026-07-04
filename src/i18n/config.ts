@@ -25,9 +25,15 @@ const resources = {
 
       // Search Hero / Emergency Dashboard
       police: 'Police',
+      policeDesc: 'Crime, accidents, safety',
       trafficPolice: 'Traffic Police',
       ambulance: 'Ambulance',
+      medical: 'Medical',
+      medicalDesc: 'Health emergencies',
       fireStation: 'Fire Station',
+      fireStationDesc: 'Fire emergencies',
+      trafficDesc: 'Traffic incidents',
+      towTruckDesc: 'Vehicle breakdown',
       nearestStationsTitle: 'Nearest {{type}} Stations',
       usingLiveLocation: 'Using your live location for accurate results',
       usingDefaultLocation: 'Using default location',
@@ -105,6 +111,23 @@ const resources = {
       disclaimer: 'I am not a doctor. This is general guidance only.',
       howCanIHelp: 'How can I help you today?',
 
+      // Responder Stats (Home Page)
+      respondersOnline: '{{count}} Responders Online in Addis Ababa',
+      communitySafetyActive: 'Community Safety: Active',
+
+      // Emergency Page additional
+      respondersOnlineLabel: 'Responders Online',
+      liveUpdatesActive: 'Live Updates Active',
+      availableResponders: 'Available Responders ({{count}})',
+      loadingResponders: 'Loading responders...',
+      noResponders: 'No responders currently available',
+      selectEmergencyType: 'Select Emergency Type',
+      describeEmergency: 'Describe your emergency',
+      contact: 'Contact',
+      cancelRequest: 'Cancel Request',
+      errorLoadingResponders: 'Error loading responders: {{error}}. Please try refreshing the page.',
+      towTruck: 'Tow Truck',
+
       // Language
       language: 'Language',
       english: 'English',
@@ -133,9 +156,15 @@ const resources = {
 
       // Search Hero / Emergency Dashboard
       police: 'ፖሊስ',
+      policeDesc: 'ወንጀል፣ አደጋዎች፣ ደህንነት',
       trafficPolice: 'ትራፊክ ፖሊስ',
       ambulance: 'አምቡላንስ',
+      medical: 'ህክምና',
+      medicalDesc: 'የጤና አደጋዎች',
       fireStation: 'የእሳት አደጋ መከላከያ',
+      fireStationDesc: 'የእሳት አደጋዎች',
+      trafficDesc: 'የትራፊክ አደጋዎች',
+      towTruckDesc: 'የተሽከርካሪ ብልሽት',
       nearestStationsTitle: 'በአቅራቢያ ያሉ የ{{type}} ጣቢያዎች',
       usingLiveLocation: 'ለበለጠ ትክክለኛ ውጤት የቀጥታ መገኛዎን በመጠቀም ላይ',
       usingDefaultLocation: 'መደበኛ መገኛን በመጠቀም ላይ',
@@ -212,6 +241,23 @@ const resources = {
       firstAidTitle: 'የመጀመሪያ እርዳታ ረዳት',
       disclaimer: 'እኔ ሐኪም አይደለሁም። ይህ አጠቃላይ መመሪያ ብቻ ነው።',
       howCanIHelp: 'ዛሬ እንዴት ልረዳዎት እችላለሁ?',
+
+      // Responder Stats (Home Page)
+      respondersOnline: '{{count}} ምላሽ ሰጪዎች በአዲስ አበባ ውስጥ በመስመር ላይ',
+      communitySafetyActive: 'የማህበረሰብ ደህንነት፡ ንቁ',
+
+      // Emergency Page additional
+      respondersOnlineLabel: 'ምላሽ ሰጪዎች በመስመር ላይ',
+      liveUpdatesActive: 'የቀጥታ መረጃዎች ንቁ',
+      availableResponders: 'ዝግጁ ምላሽ ሰጪዎች ({{count}})',
+      loadingResponders: 'ምላሽ ሰጪዎችን በመጫን ላይ...',
+      noResponders: 'ምንም ምላሽ ሰጪዎች በአሁኑ ጊዜ አልተገኙም',
+      selectEmergencyType: 'የአደጋ ጊዜ አይነት ይምረጡ',
+      describeEmergency: 'የአደጋ ጊዜ ሁኔታዎን ይግለጹ',
+      contact: 'ያገናኙ',
+      cancelRequest: 'ጥያቄ ይቅር',
+      errorLoadingResponders: 'ምላሽ ሰጪዎችን በመጫን ላይ ስህተት፡ {{error}}። እባክዎ ገፁን አድስ።',
+      towTruck: 'የመጎተቻ መኪና',
 
       // Language
       language: 'ቋንቋ',

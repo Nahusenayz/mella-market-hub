@@ -7,6 +7,7 @@ import { UserSearch } from './UserSearch';
 import { UserProfileModal } from './UserProfile';
 import { User, LogOut, MessageSquare, Home, Plus, Globe, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import logo from '@/logo.png';
 
 import { Button } from '@/components/ui/button';
 
@@ -71,8 +72,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
               className="flex items-center space-x-3 cursor-pointer group"
               onClick={() => navigate('/')}
             >
-              <div className="premium-gradient-orange text-white p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Home size={24} />
+              <div className="premium-gradient-orange p-2 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <img src={logo} alt="Mella" className="w-8 h-8 object-contain" />
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">Mella</h1>

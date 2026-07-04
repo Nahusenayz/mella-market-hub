@@ -235,11 +235,11 @@ const Index = () => {
             <div className="flex items-center justify-center gap-8 animate-pulse">
               <div className="flex items-center gap-2">
                 <Activity size={16} className="text-orange-200" />
-                <span className="text-sm font-medium">{onlineResponders || 12} Responders Online in Addis Ababa</span>
+                <span className="text-sm font-medium">{t('respondersOnline', { count: onlineResponders || 12 })}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Shield size={16} className="text-orange-200" />
-                <span className="text-sm font-medium">Community Safety: Active</span>
+                <span className="text-sm font-medium">{t('communitySafetyActive')}</span>
               </div>
             </div>
           </div>

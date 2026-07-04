@@ -115,6 +115,28 @@ export const Emergency: React.FC = () => {
     return map[key] || map.general;
   }, [selectedWorker?.category, selectedCategory]);
   
+  const catLabel = (key: string) => {
+    const labels: Record<string, string> = {
+      police: t('police'),
+      ambulance: t('medical'),
+      fire_truck: t('fireStation'),
+      traffic_police: t('trafficPolice'),
+      tow_truck: t('towTruck')
+    };
+    return labels[key] || key;
+  };
+
+  const catDesc = (key: string) => {
+    const descs: Record<string, string> = {
+      police: t('policeDesc'),
+      ambulance: t('medicalDesc'),
+      fire_truck: t('fireStationDesc'),
+      traffic_police: t('trafficDesc'),
+      tow_truck: t('towTruckDesc')
+    };
+    return descs[key] || key;
+  };
+
   // Also set selectedCategory for the request form if a specific category was passed
   useEffect(() => {
     if (location.state?.category) {
@@ -742,7 +764,7 @@ export const Emergency: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-sm font-medium text-gray-600">Live Updates Active</span>
+                  <span className="text-sm font-medium text-gray-600">{t('liveUpdatesActive')}</span>
                 </div>
               </div>
 
@@ -755,7 +777,7 @@ export const Emergency: React.FC = () => {
                       className="flex-1 bg-green-600 hover:bg-green-700 gap-2 h-10"
                       onClick={() => phoneNumber ? handleEmergencyCall(phoneNumber) : alert('Responder phone not available')}
                     >
-                      <Phone className="w-4 h-4" /> Contact
+                      <Phone className="w-4 h-4" /> {t('contact')}
                     </Button>
                   );
                 })()}
@@ -767,7 +789,7 @@ export const Emergency: React.FC = () => {
                   className="w-full mt-2 text-red-600 hover:text-red-700 hover:bg-red-50 gap-2"
                   onClick={cancelRequest}
                 >
-                  <XCircle className="w-4 h-4" /> Cancel Request
+                  <XCircle className="w-4 h-4" /> {t('cancelRequest')}
                 </Button>
               </div>
             </div>
@@ -782,7 +804,7 @@ export const Emergency: React.FC = () => {
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-orange-600" />
               <span className="font-semibold text-gray-800">
-                {allWorkers.length} Responders Online
+                {allWorkers.length} {t('respondersOnlineLabel')}
               </span>
             </div>
             <div className="flex gap-2 flex-wrap">
@@ -859,7 +881,7 @@ export const Emergency: React.FC = () => {
           <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
               <User className="h-5 w-5 text-orange-600" />
-              Available Responders ({filteredWorkers.length})
+              {t('availableResponders', { count: filteredWorkers.length })}
             </h2>
 
             {/* Category Filter */}
@@ -871,7 +893,7 @@ export const Emergency: React.FC = () => {
                   : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300'
                   }`}
               >
-                All
+                {t('all')}
               </button>
               {EMERGENCY_CATEGORIES.map(cat => (
                 <button
@@ -883,7 +905,7 @@ export const Emergency: React.FC = () => {
                     }`}
                   style={filterCategory === cat.key ? { background: cat.color } : {}}
                 >
-                  {cat.icon} {cat.label}
+                  {cat.icon} {catLabel(cat.key)}
                 </button>
               ))}
             </div>
@@ -893,7 +915,7 @@ export const Emergency: React.FC = () => {
             <Alert variant="destructive" className="mb-4">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Error loading responders: {workersError}. Please try refreshing the page.
+                {t('errorLoadingResponders', { error: workersError })}
               </AlertDescription>
             </Alert>
           )}
@@ -901,12 +923,12 @@ export const Emergency: React.FC = () => {
           {workersLoading ? (
             <div className="flex items-center justify-center py-12 bg-white rounded-xl">
               <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
-              <span className="ml-3 text-gray-600">Loading responders...</span>
+              <span className="ml-3 text-gray-600">{t('loadingResponders')}</span>
             </div>
           ) : filteredWorkers.length === 0 ? (
             <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
               <div className="text-4xl mb-3">🔍</div>
-              <p className="text-gray-500 font-medium">No responders currently available</p>
+              <p className="text-gray-500 font-medium">{t('noResponders')}</p>
               <p className="text-gray-400 text-sm mt-1">
                 {filterCategory !== 'all' ? 'Try selecting a different category' : 'Check back soon'}
               </p>
@@ -1121,7 +1143,7 @@ export const Emergency: React.FC = () => {
                         {selectedWorker.profiles?.full_name || 'Responder'}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        {EMERGENCY_CATEGORIES.find(c => c.key === selectedWorker.category)?.label} • {selectedWorker.distance?.toFixed(1)}km away
+                        {catLabel(selectedWorker.category)} • {selectedWorker.distance?.toFixed(1)}km away
                       </p>
                     </div>
                   </div>
@@ -1132,7 +1154,7 @@ export const Emergency: React.FC = () => {
               {!selectedWorker && (
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Select Emergency Type
+                    {t('selectEmergencyType')}
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     {EMERGENCY_CATEGORIES.map((cat) => (
@@ -1146,8 +1168,8 @@ export const Emergency: React.FC = () => {
                           }`}
                       >
                         <div className="text-2xl mb-1">{cat.icon}</div>
-                        <div className="font-medium text-sm">{cat.label}</div>
-                        <div className="text-xs text-gray-500">{cat.description}</div>
+                        <div className="font-medium text-sm">{catLabel(cat.key)}</div>
+                        <div className="text-xs text-gray-500">{catDesc(cat.key)}</div>
                       </button>
                     ))}
                   </div>
@@ -1157,7 +1179,7 @@ export const Emergency: React.FC = () => {
               {/* Details Input */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Describe your emergency
+                  {t('describeEmergency')}
                 </label>
                 <div className="mb-3 flex flex-wrap gap-2">
                   {presetReasons.map((reason) => (

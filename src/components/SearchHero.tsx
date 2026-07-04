@@ -119,7 +119,7 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
     { type: 'Traffic', icon: '🚦', color: 'bg-yellow-600 hover:bg-yellow-700', label: t('trafficPolice') },
     { type: 'Ambulance', icon: '🚑', color: 'bg-red-600 hover:bg-red-700', label: t('ambulance') },
     { type: 'Fire Station', icon: '🚒', color: 'bg-orange-600 hover:bg-orange-700', label: t('fireStation') },
-    { type: 'Tow Truck', icon: '🏗️', color: 'bg-blue-600 hover:bg-blue-700', label: 'Tow Truck' }
+    { type: 'Tow Truck', icon: '🏗️', color: 'bg-blue-600 hover:bg-blue-700', label: t('towTruck') }
   ];
 
 
