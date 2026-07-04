@@ -1,17 +1,48 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useBookingTracking } from '@/hooks/useBookingTracking';
 import { useMessages } from '@/hooks/useMessages';
-import { useEmergencyRequests } from '@/hooks/useEmergencyRequests';
+import { useEmergencyRequests, EmergencyRequest } from '@/hooks/useEmergencyRequests';
 import { supabase } from '@/integrations/supabase/client';
 import { BookingTracker } from '@/components/BookingTracker';
 import { MessageThread } from '@/components/MessageThread';
 import { Navbar } from '@/components/Navbar';
 import { TrackingMap } from '@/components/TrackingMapGoogle';
-import { MapPin, Clock, Phone, Check, X, Navigation, Home, Flag } from 'lucide-react';
+import { MapPin, Clock, Phone, Check, X, Navigation, Home, Flag, Bell, BellRing } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+function playAlarm() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const now = ctx.currentTime;
+    const frequencies = [880, 660, 880, 660];
+    frequencies.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(freq, now + i * 0.2);
+      osc.type = 'square';
+      gain.gain.setValueAtTime(0.15, now + i * 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.2 + 0.15);
+      osc.start(now + i * 0.2);
+      osc.stop(now + i * 0.2 + 0.15);
+    });
+  } catch {}
+}
+
+function requestBrowserNotification(title: string, body: string) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '/logo.png' });
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') new Notification(title, { body, icon: '/logo.png' });
+    });
+  }
+}
 
 const WorkerDashboard = () => {
   const { user } = useAuth();
@@ -27,7 +58,26 @@ const WorkerDashboard = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocationSharing, setIsLocationSharing] = useState(false);
 
-  const { requests: emergencyRequests, acceptRequest: acceptEmergency, declineRequest: declineEmergency, updateStatus: updateEmergencyStatus } = useEmergencyRequests();
+  const [newRequestCount, setNewRequestCount] = useState(0);
+  const [hasNewRequest, setHasNewRequest] = useState(false);
+  const emergencySectionRef = useRef<HTMLDivElement>(null);
+
+  const handleNewRequest = useCallback((req: EmergencyRequest) => {
+    playAlarm();
+    setNewRequestCount(c => c + 1);
+    setHasNewRequest(true);
+    requestBrowserNotification(
+      'New Emergency Request!',
+      `${req.category || 'Emergency'} — ${req.details?.slice(0, 60) || 'Tap to view'}`
+    );
+  }, []);
+
+  const { requests: emergencyRequests, acceptRequest: acceptEmergency, declineRequest: declineEmergency, updateStatus: updateEmergencyStatus } = useEmergencyRequests(handleNewRequest);
+
+  const clearNewRequestIndicator = () => {
+    setNewRequestCount(0);
+    setHasNewRequest(false);
+  };
   const [workerCategory, setWorkerCategory] = useState<string | null>(null);
   const [completedCount, setCompletedCount] = useState({ standard: 0, emergency: 0 });
 
@@ -277,11 +327,22 @@ const WorkerDashboard = () => {
             <div className="flex flex-col gap-8">
               {/* Emergency Requests */}
               {workerCategory && (
-                <div className="bg-white rounded-xl shadow-lg border-2 border-red-100">
+                <div
+                  ref={emergencySectionRef}
+                  onClick={clearNewRequestIndicator}
+                  className={`bg-white rounded-xl shadow-lg border-2 transition-all duration-300 ${
+                    hasNewRequest ? 'border-red-500 shadow-red-200 animate-pulse' : 'border-red-100'
+                  }`}
+                >
                   <div className="p-6 border-b border-gray-200 bg-red-50 rounded-t-xl">
                     <h2 className="text-xl font-bold text-red-800 flex items-center gap-2">
-                       <Flag size={20} />
+                       {hasNewRequest ? <BellRing size={20} className="animate-bounce text-red-600" /> : <Flag size={20} />}
                        Emergency Requests <span className="capitalize text-lg">({workerCategory})</span>
+                       {newRequestCount > 0 && (
+                         <span className="ml-auto bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full animate-pulse flex items-center gap-1">
+                           <Bell size={14} /> {newRequestCount} new
+                         </span>
+                       )}
                     </h2>
                   </div>
                   <div className="max-h-96 overflow-y-auto">

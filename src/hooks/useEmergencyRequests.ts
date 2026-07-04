@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -19,11 +19,14 @@ export type EmergencyRequest = {
   updated_at: string | null;
 };
 
-export const useEmergencyRequests = () => {
+export type NewRequestHandler = (request: EmergencyRequest) => void;
+
+export const useEmergencyRequests = (onNewRequest?: NewRequestHandler) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [requests, setRequests] = useState<EmergencyRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const knownIds = useRef(new Set<string>());
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -34,13 +37,26 @@ export const useEmergencyRequests = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRequests((data || []) as EmergencyRequest[]);
+      const fetched = (data || []) as EmergencyRequest[];
+      setRequests(prev => {
+        const prevIds = new Set(prev.map(r => r.id));
+        const firstKnown = knownIds.current.size === 0;
+        for (const r of fetched) {
+          if (!knownIds.current.has(r.id)) {
+            knownIds.current.add(r.id);
+            if (!firstKnown && !prevIds.has(r.id) && r.status === 'pending' && onNewRequest) {
+              onNewRequest(r);
+            }
+          }
+        }
+        return fetched;
+      });
     } catch (e) {
       console.error('Error fetching emergency requests', e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [onNewRequest]);
 
   const acceptRequest = async (id: string) => {
     if (!user) return;
@@ -105,6 +121,18 @@ export const useEmergencyRequests = () => {
       .channel('emergency-requests')
       .on(
         'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'emergency_requests' as any },
+        (payload) => {
+          const newReq = payload.new as EmergencyRequest;
+          if (newReq.status === 'pending' && onNewRequest) {
+            knownIds.current.add(newReq.id);
+            onNewRequest(newReq);
+          }
+          fetchRequests();
+        }
+      )
+      .on(
+        'postgres_changes',
         { event: '*', schema: 'public', table: 'emergency_requests' as any },
         () => fetchRequests()
       )
@@ -113,7 +141,7 @@ export const useEmergencyRequests = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchRequests]);
+  }, [fetchRequests, onNewRequest]);
 
   return { requests, loading, acceptRequest, declineRequest, updateStatus, refetch: fetchRequests };
 };
