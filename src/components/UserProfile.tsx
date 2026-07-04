@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Star, MapPin, X, Phone, Mail, Calendar, User as UserIcon, MessageStar } from 'lucide-react';
 import { ReviewSystem } from './ReviewSystem';
+import { Translated } from './Translated';
 
 interface UserProfile {
   id: string;
@@ -166,7 +167,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             )}
             
             <div className="flex-1">
-              <h1 className="text-2xl font-bold">{profile.full_name}</h1>
+              <h1 className="text-2xl font-bold"><Translated text={profile.full_name} /></h1>
               <div className="flex items-center gap-2 mt-2">
                 <Star size={16} className="text-yellow-300 fill-current" />
                 <span className="text-lg">

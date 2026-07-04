@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { X, MapPin, Share2, Heart, ChevronLeft, ChevronRight, BedDouble, Bath, ShieldCheck } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { VerificationBadge } from './VerificationBadge';
+import { Translated } from './Translated';
 
 interface PostModalProps {
   isOpen: boolean;
@@ -139,7 +140,7 @@ export const PostModal: React.FC<PostModalProps> = ({
             <h2 className="text-2xl font-bold text-gray-900 mb-1">
               {Number(post.price).toLocaleString()} <span className="text-lg font-medium text-gray-600">ETB/month</span>
             </h2>
-            <h3 className="text-lg font-medium text-gray-800 line-clamp-2">{post.title}</h3>
+            <h3 className="text-lg font-medium text-gray-800 line-clamp-2"><Translated text={post.title} /></h3>
           </div>
 
           {/* Key Features */}
@@ -188,7 +189,7 @@ export const PostModal: React.FC<PostModalProps> = ({
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-bold text-gray-900 truncate">{post.provider}</div>
+              <div className="font-bold text-gray-900 truncate"><Translated text={post.provider} /></div>
               <div className="text-sm text-gray-500">Building trust</div>
             </div>
             {/* Action buttons inside card if needed, or kept at bottom */}

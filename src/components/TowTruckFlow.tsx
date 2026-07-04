@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { MapView } from '@/components/MapView';
 import { useWorkerLocations } from '@/hooks/useWorkerLocations';
+import { Translated } from './Translated';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { calculateDistanceKm } from '@/lib/utils';
@@ -242,7 +243,7 @@ export const TowTruckFlow: React.FC<TowTruckFlowProps> = ({ userLocation, onClos
                             <Truck size={24} />
                           </div>
                           <div>
-                            <h4 className="font-bold text-gray-800">{worker.profiles?.full_name || 'Tow Operator'}</h4>
+                            <h4 className="font-bold text-gray-800"><Translated text={worker.profiles?.full_name || 'Tow Operator'} /></h4>
                             <p className="text-sm text-gray-500">Professional Towing</p>
                             <div className="flex items-center gap-2 mt-1 text-xs text-orange-600 font-medium">
                               <MapPin size={12} />

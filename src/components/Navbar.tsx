@@ -8,6 +8,7 @@ import { UserProfileModal } from './UserProfile';
 import { User, LogOut, MessageSquare, Home, Plus, Globe, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import logo from '@/logo.png';
+import { Translated } from './Translated';
 
 import { Button } from '@/components/ui/button';
 
@@ -155,7 +156,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                         </div>
                       )}
                       <span className="hidden md:block text-sm font-medium text-gray-700">
-                        {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+                        <Translated text={user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'} />
                       </span>
                     </button>
 

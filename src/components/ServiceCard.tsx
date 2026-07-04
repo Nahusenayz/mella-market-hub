@@ -2,6 +2,7 @@ import React from 'react';
 import { Star, MapPin, MessageCircle, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Translated } from './Translated';
 
 interface Service {
   id: string;
@@ -100,7 +101,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
       
       <div className="p-6 relative">
         <div className="flex items-start justify-between mb-4">
-          <h3 className="text-xl font-extrabold text-slate-900 group-hover:text-orange-600 transition-colors leading-tight">{service.title}</h3>
+          <h3 className="text-xl font-extrabold text-slate-900 group-hover:text-orange-600 transition-colors leading-tight"><Translated text={service.title} /></h3>
         </div>
         
         <p className="text-slate-600 mb-6 line-clamp-2 text-sm leading-relaxed">{service.description}</p>
@@ -128,7 +129,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
               className="font-bold text-slate-900 cursor-pointer hover:text-orange-600 transition-colors"
               onClick={handleUserProfileClick}
             >
-              {service.profiles?.full_name || service.provider}
+              <Translated text={service.profiles?.full_name || service.provider} />
             </p>
             <div className="flex items-center gap-1.5">
               <div className="flex">

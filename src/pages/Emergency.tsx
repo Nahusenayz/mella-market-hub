@@ -35,6 +35,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useWorkerLocations } from '@/hooks/useWorkerLocations';
+import { Translated } from '@/components/Translated';
 import { useToast } from '@/hooks/use-toast';
 import { calculateDistanceKm } from '@/lib/utils';
 
@@ -958,7 +959,7 @@ export const Emergency: React.FC = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-gray-800 truncate">
-                              {worker.profiles?.full_name || 'Available Responder'}
+                              <Translated text={worker.profiles?.full_name || 'Available Responder'} />
                             </h3>
                             <div className="flex items-center gap-2">
                               <span className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded ${isOnline ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
@@ -1140,7 +1141,7 @@ export const Emergency: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-800">
-                        {selectedWorker.profiles?.full_name || 'Responder'}
+                        <Translated text={selectedWorker.profiles?.full_name || 'Responder'} />
                       </h3>
                       <p className="text-sm text-gray-600">
                         {catLabel(selectedWorker.category)} • {selectedWorker.distance?.toFixed(1)}km away

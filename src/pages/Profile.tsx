@@ -12,6 +12,7 @@ import { useBookingTracking } from '@/hooks/useBookingTracking';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Translated } from '@/components/Translated';
 
 interface UserProfile {
   id: string;
@@ -396,7 +397,7 @@ const Profile = () => {
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 animate-in fade-in zoom-in duration-200 overflow-hidden">
                   <div className="py-1">
                     <div className="px-4 py-2 border-b border-gray-50 bg-gray-50/50">
-                      <p className="text-sm font-bold text-gray-800 truncate">{profile?.full_name || 'User'}</p>
+                      <p className="text-sm font-bold text-gray-800 truncate"><Translated text={profile?.full_name || 'User'} /></p>
                       <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                     </div>
                     <button
@@ -471,7 +472,7 @@ const Profile = () => {
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <h1 className="text-3xl font-bold text-gray-800">
-                      {profile?.full_name || 'User Name'}
+                      <Translated text={profile?.full_name || 'User Name'} />
                     </h1>
                     <VerificationBadge isVerified={true} badges={['certified', 'top_rated']} size="lg" />
                     {isWorker && (
