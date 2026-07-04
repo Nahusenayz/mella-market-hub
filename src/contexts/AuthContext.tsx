@@ -28,60 +28,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    let cancelled = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        if (cancelled) return;
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+        if (event !== 'INITIAL_SESSION') setLoading(false);
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
-      
+      if (cancelled) return;
       if (session?.user) {
-        // Verify profile still exists and is not disabled
-        // We only sign out if we get a definitive "not found" or "disabled" response
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (error) {
-          console.warn('Auth check error:', error.message);
-          // If it's a network error, we DON'T sign out, we just keep the session
-          if (error.message.includes('fetch')) {
-            setSession(session);
-            setUser(session.user);
-          } else {
-            // Only sign out if it's a "real" database error (like missing profile)
-            console.warn('Invalid profile, signing out...');
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('user_type')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (profile?.user_type === 'disabled') {
             await supabase.auth.signOut();
             setSession(null);
             setUser(null);
+          } else {
+            setSession(session);
+            setUser(session.user);
           }
-        } else if (!profile || profile.user_type === 'disabled') {
-          console.warn('User profile missing or disabled, signing out...');
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-        } else {
+        } catch {
           setSession(session);
           setUser(session.user);
         }
       } else {
         setSession(session);
-        setUser(session?.user ?? null);
+        setUser(null);
       }
-      
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => { cancelled = true; subscription.unsubscribe(); };
   }, []);
 
   const signUp = async (emailOrPhone: string, password: string, fullName: string, isPhone = false) => {

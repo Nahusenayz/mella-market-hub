@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { X, MapPin, Phone, Navigation, Clock, CreditCard, Check, ChevronRight, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MapView } from '@/components/MapView';
+import { MapView } from '@/components/MapViewGoogle';
 import { useWorkerLocations } from '@/hooks/useWorkerLocations';
 import { Translated } from './Translated';
 import { supabase } from '@/integrations/supabase/client';

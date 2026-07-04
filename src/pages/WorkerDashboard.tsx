@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { BookingTracker } from '@/components/BookingTracker';
 import { MessageThread } from '@/components/MessageThread';
 import { Navbar } from '@/components/Navbar';
-import { TrackingMap } from '@/components/TrackingMap';
+import { TrackingMap } from '@/components/TrackingMapGoogle';
 import { MapPin, Clock, Phone, Check, X, Navigation, Home, Flag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 

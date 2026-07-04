@@ -587,7 +587,7 @@ export const Emergency: React.FC = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 dark:from-gray-900 dark:to-gray-800 pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 pb-20 overflow-x-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg">
         <div className="container mx-auto px-4 py-6">
