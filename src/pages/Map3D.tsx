@@ -69,7 +69,7 @@ const Map3D: React.FC = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 overflow-x-hidden">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Button variant="secondary" onClick={() => navigate(-1)}>
           ← Back

@@ -586,7 +586,7 @@ export const Emergency: React.FC = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 pb-20 overflow-x-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg">
         <div className="container mx-auto px-4 py-6">
@@ -870,7 +870,7 @@ export const Emergency: React.FC = () => {
             <MapPinned className="h-5 w-5 text-orange-600" />
             Live Responder Map
           </h2>
-          <div className="w-full h-[300px] md:h-[350px] rounded-xl shadow-lg border border-gray-200 bg-white">
+          <div className="w-full h-[300px] md:h-[350px] rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
             <MapView
               services={transformWorkersForMap()}
               userLocation={userLocation}

@@ -307,7 +307,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-24 md:pb-8">
+    <div className="min-h-screen bg-slate-50/50 pb-24 md:pb-8 overflow-x-hidden">
       <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2871/2871-preview.mp3" preload="auto" />
 
       {/* Global Notifications Area */}
