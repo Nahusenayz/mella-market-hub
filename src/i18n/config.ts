@@ -128,6 +128,10 @@ const resources = {
       errorLoadingResponders: 'Error loading responders: {{error}}. Please try refreshing the page.',
       towTruck: 'Tow Truck',
 
+      // Footer
+      footerMadeBy: 'Made by',
+      footerCopyright: '© 2026 Mella-All In One - Ethiopian Marketplace. Tech Space ET, All rights reserved.',
+
       // Language
       language: 'Language',
       english: 'English',
@@ -258,6 +262,10 @@ const resources = {
       cancelRequest: 'ጥያቄ ይቅር',
       errorLoadingResponders: 'ምላሽ ሰጪዎችን በመጫን ላይ ስህተት፡ {{error}}። እባክዎ ገፁን አድስ።',
       towTruck: 'የመጎተቻ መኪና',
+
+      // Footer
+      footerMadeBy: 'የተሰራው በ',
+      footerCopyright: '© 2026 ሜላ-ሁሉም በአንድ - የኢትዮጵያ የገበያ ቦታ። ቴክ ስፔስ ኢቲ፣ ሁሉም መብቶች የተጠበቁ ናቸው።',
 
       // Language
       language: 'ቋንቋ',
