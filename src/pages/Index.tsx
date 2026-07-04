@@ -4,7 +4,7 @@ import { SearchHero } from '@/components/SearchHero';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { DistanceFilter } from '@/components/DistanceFilter';
 import { ServiceGrid } from '@/components/ServiceGrid';
-import { MapView } from '@/components/MapView';
+import { MapView } from '@/components/MapViewGoogle';
 import { SearchBar } from '@/components/SearchBar';
 import { BookingModal } from '@/components/BookingModal';
 import { MessageThread } from '@/components/MessageThread';

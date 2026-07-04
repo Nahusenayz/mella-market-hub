@@ -1,175 +1,72 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useEffect, useMemo, useState } from 'react';
+import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import { useRealTimeAds } from '@/hooks/useRealTimeAds';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
-// Lightweight 3D map page using Mapbox GL JS (free tier).
-// Token is provided by the user and stored in localStorage (no env vars).
+const containerStyle = {
+  width: '100%',
+  height: '100%',
+};
+
+const defaultCenter = { lat: 9.032, lng: 38.7469 };
 
 const emergencyStations = [
-  { id: 'e1', name: 'Tikur Anbessa Hospital', type: 'hospital', coords: [38.7639, 9.0366] },
-  { id: 'e2', name: 'Federal Police HQ', type: 'police', coords: [38.74, 9.03] },
-  { id: 'e3', name: 'Addis Fire & Emergency', type: 'fire', coords: [38.75, 9.025] },
-  { id: 'e4', name: 'Ambulance Service Center', type: 'ambulance', coords: [38.758, 9.018] },
+  { id: 'e1', name: 'Tikur Anbessa Hospital', type: 'hospital', lat: 9.0366, lng: 38.7639 },
+  { id: 'e2', name: 'Federal Police HQ', type: 'police', lat: 9.03, lng: 38.74 },
+  { id: 'e3', name: 'Addis Fire & Emergency', type: 'fire', lat: 9.025, lng: 38.75 },
+  { id: 'e4', name: 'Ambulance Service Center', type: 'ambulance', lat: 9.018, lng: 38.758 },
 ];
 
-const iconForType = (type?: string) => {
-  switch (type) {
-    case 'hospital': return '🏥';
-    case 'police': return '🚔';
-    case 'fire': return '🚒';
-    case 'ambulance': return '🚑';
-    default: return '📌';
-  }
+const stationIcon = (type: string) => {
+  const icons: Record<string, string> = {
+    hospital: '🏥',
+    police: '🚔',
+    fire: '🚒',
+    ambulance: '🚑',
+  };
+  return icons[type] || '📌';
+};
+
+const categoryColors: Record<string, string> = {
+  Properties: '#8B5CF6',
+  'Community Help': '#10B981',
+  'Safety Alert': '#EF4444',
 };
 
 const Map3D: React.FC = () => {
   const navigate = useNavigate();
   const { ads } = useRealTimeAds();
-  const mapContainer = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [center, setCenter] = useState(defaultCenter);
+  const [selectedAd, setSelectedAd] = useState<any>(null);
+  const googleMapsApiKey = 'AIzaSyBs3GqItt4UlMnRFZEkXNWZxQUkdYxOeRk';
 
-  // Pre-set the token to avoid manual input
-  const defaultToken = 'pk.eyJ1IjoibmFodTEzIiwiYSI6ImNtZThlbWwxbjBiNGEybHM4d3FxeDk5dDUifQ.uWvrvBCPejGkD9vk-7545g';
-  const [token, setToken] = useState<string>(() => {
-    const stored = localStorage.getItem('mapbox_token');
-    if (!stored) {
-      localStorage.setItem('mapbox_token', defaultToken);
-      return defaultToken;
-    }
-    return stored;
-  });
-  
-  const [center, setCenter] = useState<[number, number]>(() => [38.7469, 9.032]); // Addis default
-
-  // Ask geolocation to center the map (non-blocking)
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
-        setCenter([pos.coords.longitude, pos.coords.latitude]);
+        setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       });
     }
   }, []);
 
-  // Initialize map when token and container exist
-  useEffect(() => {
-    if (!token || !mapContainer.current) return;
-    mapboxgl.accessToken = token;
-
-    const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center,
-      zoom: 12,
-      pitch: 55,
-      bearing: -10,
-      antialias: true,
-    });
-
-    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
-
-    map.on('load', () => {
-      // 3D buildings layer
-      const layers = map.getStyle().layers || [];
-      const labelLayerId = layers.find(
-        (l: any) => l.type === 'symbol' && l.layout && l.layout['text-field']
-      )?.id;
-
-      map.addLayer(
-        {
-          id: '3d-buildings',
-          source: 'composite',
-          'source-layer': 'building',
-          filter: ['==', 'extrude', 'true'],
-          type: 'fill-extrusion',
-          minzoom: 15,
-          paint: {
-            'fill-extrusion-color': '#ddd',
-            'fill-extrusion-height': [
-              'interpolate', ['linear'], ['zoom'],
-              15, 0,
-              15.05, ['get', 'height']
-            ],
-            'fill-extrusion-base': [
-              'interpolate', ['linear'], ['zoom'],
-              15, 0,
-              15.05, ['get', 'min_height']
-            ],
-            'fill-extrusion-opacity': 0.6
-          }
-        },
-        labelLayerId
-      );
-    });
-
-    mapRef.current = map;
-    return () => {
-      markersRef.current.forEach(m => m.remove());
-      markersRef.current = [];
-      map.remove();
-    };
-  }, [token, mapContainer.current]);
-
-  // Update center if it changes after map init
-  useEffect(() => {
-    const map = mapRef.current;
-    if (map && center) {
-      map.setCenter(center);
-    }
-  }, [center]);
-
-  // Render markers for ads and emergency stations
-  const items = useMemo(() => {
-    const adItems = (ads || []).map((ad: any) => ({
+  const adMarkers = useMemo(() => {
+    return (ads || []).filter((ad: any) => ad.location_lat && ad.location_lng).map((ad: any) => ({
       id: ad.id,
-      coords: [ad.location_lng, ad.location_lat] as [number, number],
-      label: ad.title,
-      type: 'ad',
-    })).filter(i => i.coords[0] && i.coords[1]);
-
-    const emergencyItems = emergencyStations.map(s => ({
-      id: s.id,
-      coords: s.coords as [number, number],
-      label: s.name,
-      type: s.type,
+      lat: ad.location_lat,
+      lng: ad.location_lng,
+      title: ad.title,
+      price: ad.price,
+      category: ad.category,
     }));
-
-    return [...emergencyItems, ...adItems];
   }, [ads]);
 
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    // Clear existing markers
-    markersRef.current.forEach(m => m.remove());
-    markersRef.current = [];
-
-    // Add markers
-    items.forEach(item => {
-      const el = document.createElement('div');
-      el.className = 'rounded-full shadow-md bg-white text-xs px-2 py-1';
-      el.style.transform = 'translate(-50%, -50%)';
-      el.style.whiteSpace = 'nowrap';
-      el.style.pointerEvents = 'auto';
-      el.textContent = `${iconForType(item.type)} ${item.label}`;
-
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat(item.coords)
-        .addTo(map);
-
-      markersRef.current.push(marker);
-    });
-  }, [items]);
-
-  const handleSaveToken = (e: React.FormEvent) => {
-    e.preventDefault();
-    localStorage.setItem('mapbox_token', token);
-    window.location.reload();
-  };
+  const stationMarkers = emergencyStations.map(s => ({
+    id: s.id,
+    lat: s.lat,
+    lng: s.lng,
+    name: s.name,
+    type: s.type,
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
@@ -177,40 +74,85 @@ const Map3D: React.FC = () => {
         <Button variant="secondary" onClick={() => navigate(-1)}>
           ← Back
         </Button>
-        <div className="text-center font-semibold">3D Map</div>
+        <div className="text-center font-semibold">Explore Map</div>
         <div />
       </div>
 
-      {!token && (
-        <div className="container mx-auto px-4 pb-4">
-          <form onSubmit={handleSaveToken} className="bg-white rounded-xl p-4 shadow">
-            <label className="block text-sm font-medium mb-2">Mapbox Public Token</label>
-            <input
-              type="text"
-              className="w-full border rounded px-3 py-2"
-              placeholder="pk.eyJ..."
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Paste your Mapbox public token (free tier). It will be stored locally in your browser.
-            </p>
-            <div className="mt-3">
-              <Button type="submit">Save & Load Map</Button>
-            </div>
-          </form>
-        </div>
-      )}
-
       <div className="container mx-auto px-4 pb-6">
         <div className="w-full h-[70vh] rounded-xl overflow-hidden shadow relative">
-          <div ref={mapContainer} className="absolute inset-0" />
-          {!token && (
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-              <div className="text-center text-gray-700">Enter your Mapbox token to load the 3D map.</div>
-            </div>
-          )}
+          <LoadScript googleMapsApiKey={googleMapsApiKey}>
+            <GoogleMap
+              mapContainerStyle={containerStyle}
+              center={center}
+              zoom={12}
+              options={{
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+              }}
+            >
+              {adMarkers.map((ad: any) => (
+                <Marker
+                  key={ad.id}
+                  position={{ lat: ad.lat, lng: ad.lng }}
+                  icon={{
+                    path: window.google?.maps?.SymbolPath?.CIRCLE || 1,
+                    scale: 8,
+                    fillColor: categoryColors[ad.category] || '#6366F1',
+                    fillOpacity: 0.9,
+                    strokeColor: '#fff',
+                    strokeWeight: 2,
+                  }}
+                  onClick={() => setSelectedAd(ad)}
+                />
+              ))}
+
+              {stationMarkers.map((s) => (
+                <Marker
+                  key={s.id}
+                  position={{ lat: s.lat, lng: s.lng }}
+                  label={{ text: stationIcon(s.type), fontSize: '16px' }}
+                  title={s.name}
+                />
+              ))}
+
+              {selectedAd && (
+                <InfoWindow
+                  position={{ lat: selectedAd.lat, lng: selectedAd.lng }}
+                  onCloseClick={() => setSelectedAd(null)}
+                >
+                  <div className="text-sm max-w-[200px]">
+                    <div className="font-semibold text-gray-800">{selectedAd.title}</div>
+                    <div className="text-orange-600 font-bold mt-1">
+                      {selectedAd.price ? `${selectedAd.price} ETB` : 'Free'}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">{selectedAd.category}</div>
+                  </div>
+                </InfoWindow>
+              )}
+            </GoogleMap>
+          </LoadScript>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 pb-6">
+        <div className="flex flex-wrap gap-4 justify-center text-sm">
+          <div className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded-full" style={{ background: '#8B5CF6' }} />
+            <span>Properties</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded-full" style={{ background: '#10B981' }} />
+            <span>Community Help</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded-full" style={{ background: '#EF4444' }} />
+            <span>Safety Alert</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-base">🏥🚔🚒🚑</span>
+            <span>Emergency Stations</span>
+          </div>
         </div>
       </div>
     </div>

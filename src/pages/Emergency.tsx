@@ -3,8 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { EmergencyAssistant } from '@/components/EmergencyAssistant';
 import { SafetyScore } from '@/components/SafetyScore';
-import { MapView } from '@/components/MapView';
-import { TrackingMap } from '@/components/TrackingMap';
+import { MapView } from '@/components/MapViewGoogle';
+import { TrackingMap } from '@/components/TrackingMapGoogle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -861,14 +861,16 @@ export const Emergency: React.FC = () => {
             <span className="text-sm font-medium">{t('call911').replace('911', '991')}</span>
           </Button>
         </div>
+      </div>
 
-        {/* Map with Workers */}
+      {/* Map with Workers */}
+      <div className="container mx-auto px-4 py-4">
         <div className="mb-8">
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
             <MapPinned className="h-5 w-5 text-orange-600" />
             Live Responder Map
           </h2>
-          <div className="w-full h-[350px] rounded-xl overflow-hidden shadow-lg border border-gray-200">
+          <div className="w-full h-[300px] md:h-[350px] rounded-xl shadow-lg border border-gray-200 bg-white">
             <MapView
               services={transformWorkersForMap()}
               userLocation={userLocation}
@@ -876,9 +878,10 @@ export const Emergency: React.FC = () => {
             />
           </div>
         </div>
+      </div>
 
-        {/* Available Responders Section */}
-        <div className="mb-8 max-h-[600px] overflow-y-auto">
+      {/* Available Responders Section */}
+      <div className="container mx-auto px-4 pb-8">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
               <User className="h-5 w-5 text-orange-600" />
@@ -1020,7 +1023,6 @@ export const Emergency: React.FC = () => {
               })}
             </div>
           )}
-        </div>
 
         {/* Quick-Dial Emergency Service FAB */}
         <div className="fixed left-6 bottom-24 z-50 flex flex-col gap-3 group md:hidden">

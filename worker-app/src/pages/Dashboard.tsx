@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import Modal from '../components/Modal'
 import EditProfileModal from '../components/EditProfileModal'
 import WorkerEarnings from '../components/WorkerEarnings'
-import DemandHeatmap from '../components/DemandHeatmap'
+import DemandHeatmap from '../components/DemandHeatmapGoogle'
 import WorkerLeaderboard from '../components/WorkerLeaderboard'
 import { useTranslation } from '../contexts/LanguageContext'
 import {
