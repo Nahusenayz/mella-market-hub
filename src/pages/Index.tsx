@@ -24,6 +24,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { calculateDistanceKm } from '@/lib/utils';
+import { isInCrimeZone, getSeverityLabel, getSeverityColor } from '@/hooks/crimeData';
 
 interface Service {
   id: string;
@@ -80,9 +81,12 @@ const Index = () => {
   const [editAd, setEditAd] = useState<Service | null>(null);
   const { workers: responders } = useWorkerLocations();
   const onlineResponders = responders.length;
+  const [dismissedCrimeAlert, setDismissedCrimeAlert] = useState(false);
 
   // Default location fallback
   const currentLocation = userLocation || { lat: 9.0320, lng: 38.7469 };
+  const crimeZone = isInCrimeZone(currentLocation.lat, currentLocation.lng);
+  const showCrimeAlert = crimeZone && !dismissedCrimeAlert && crimeZone.severity !== 'low';
 
   // Check if we need to open ad form from navigation state
   useEffect(() => {
@@ -243,6 +247,29 @@ const Index = () => {
               </div>
             </div>
           </div>
+
+          {/* Crime Zone Alert */}
+          {showCrimeAlert && crimeZone && (
+            <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white">
+              <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Shield className="h-5 w-5 flex-shrink-0" />
+                  <p className="text-sm font-medium">
+                    <strong>{getSeverityLabel(crimeZone.severity)}</strong> — {crimeZone.label}.{' '}
+                    <span className="text-red-100">{crimeZone.incidents} recent incidents reported.</span>
+                    {' '}<span className="underline cursor-pointer" onClick={() => navigate('/emergency')}>Stay safe</span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => setDismissedCrimeAlert(true)}
+                  className="text-white/80 hover:text-white flex-shrink-0"
+                  aria-label="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="container mx-auto px-4 py-8">
 

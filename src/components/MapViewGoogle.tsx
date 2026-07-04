@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { GoogleMap, LoadScript, Marker, InfoWindow, Circle } from '@react-google-maps/api';
 import { useLocation } from '@/contexts/LocationContext';
 import { calculateDistanceKm } from '@/lib/utils';
+import { CRIME_HOTSPOTS, getSeverityColor, getSeverityOpacity, getSeverityLabel } from '@/hooks/crimeData';
 
 interface Service {
   id: string;
@@ -144,8 +145,35 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
     `;
   };
 
+  const [showCrimeLayer, setShowCrimeLayer] = useState(true);
+
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      {/* Crime zone legend overlay */}
+      {showCrimeLayer && (
+        <div style={{
+          position: 'absolute', bottom: 12, left: 12, zIndex: 10,
+          background: 'rgba(255,255,255,0.95)', borderRadius: 8, padding: '8px 12px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)', fontSize: 11,
+          display: 'flex', flexDirection: 'column', gap: 4,
+        }}>
+          <div style={{ fontWeight: 700, color: '#374151', marginBottom: 2, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Crime Heat Zones
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#dc2626', display: 'inline-block' }} />
+            <span style={{ color: '#6b7280' }}>High</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f97316', display: 'inline-block' }} />
+            <span style={{ color: '#6b7280' }}>Moderate</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#eab308', display: 'inline-block' }} />
+            <span style={{ color: '#6b7280' }}>Low</span>
+          </div>
+        </div>
+      )}
       <LoadScript googleMapsApiKey="AIzaSyBs3GqItt4UlMnRFZEkXNWZxQUkdYxOeRk">
         <GoogleMap
           mapContainerStyle={containerStyle}
@@ -178,6 +206,31 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
             icon={getUserMarkerIcon()}
             title={isTracking ? 'Live Location' : 'Current Location'}
           />
+
+          {/* Crime heat hotspots */}
+          {CRIME_HOTSPOTS.map((spot) => (
+            <React.Fragment key={spot.id}>
+              <Circle
+                center={{ lat: spot.lat, lng: spot.lng }}
+                radius={spot.radius}
+                options={{
+                  fillColor: getSeverityColor(spot.severity),
+                  fillOpacity: getSeverityOpacity(spot.severity),
+                  strokeColor: getSeverityColor(spot.severity),
+                  strokeWeight: 2,
+                  strokeOpacity: 0.4,
+                }}
+              />
+              <Marker
+                position={{ lat: spot.lat, lng: spot.lng }}
+                icon={{
+                  path: window.google?.maps?.SymbolPath?.CIRCLE || 1,
+                  scale: 0,
+                }}
+                title={`${getSeverityLabel(spot.severity)} — ${spot.incidents} incidents (${spot.type})`}
+              />
+            </React.Fragment>
+          ))}
 
           {/* Service markers */}
           {services.map((service) => (

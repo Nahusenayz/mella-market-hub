@@ -17,6 +17,8 @@
 - **Google Maps integration**: `MapViewGoogle.tsx` replaces Leaflet `MapView` in Index and Emergency pages. `TrackingMapGoogle.tsx` replaces Leaflet `TrackingMap` in Emergency page. `DemandHeatmapGoogle.tsx` replaces Leaflet `DemandHeatmap` in worker-app Dashboard. `Map3D.tsx` rewritten with Google Maps (no Mapbox tokens needed). All files are local-only (not committed).
 - **Amharic translations**: Full translation keys for Emergency page (categories, responder stats, live updates, error/loading/toast texts) and Index responder stats (responders online, community safety).
 - **Footer Amharic translation**: Footer "Made by" and copyright text now translate when Amharic is active.
+- **Crime heat demo**: Mock crime hotspot data (10 zones across Addis Ababa) displayed as color-coded heat circles on both main app MapView and worker-app DemandHeatmap.
+- **Crime zone alert**: Dismissible notification banner on Index page when user is in a high or medium crime zone, showing incident count and safety link.
 
 ### Fixed
 - **UserProfile blank screen crash**: Restored missing `useEffect` import that caused the modal to crash on open.

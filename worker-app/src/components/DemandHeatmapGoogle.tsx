@@ -38,6 +38,19 @@ const DemandHeatmapGoogle: React.FC = () => {
     fetchDemandData();
   }, []);
 
+  const crimeHotspots = [
+    { id: 'c1', lat: 9.0380, lng: 38.7480, radius: 600, color: '#dc2626', opacity: 0.25 },
+    { id: 'c2', lat: 9.0300, lng: 38.7520, radius: 500, color: '#dc2626', opacity: 0.25 },
+    { id: 'c3', lat: 9.0450, lng: 38.7400, radius: 450, color: '#dc2626', opacity: 0.25 },
+    { id: 'c4', lat: 8.9950, lng: 38.8050, radius: 500, color: '#f97316', opacity: 0.18 },
+    { id: 'c5', lat: 9.0100, lng: 38.7800, radius: 400, color: '#f97316', opacity: 0.18 },
+    { id: 'c6', lat: 9.0050, lng: 38.7650, radius: 350, color: '#f97316', opacity: 0.18 },
+    { id: 'c7', lat: 9.0250, lng: 38.7700, radius: 400, color: '#f97316', opacity: 0.18 },
+    { id: 'c8', lat: 9.0080, lng: 38.7850, radius: 300, color: '#eab308', opacity: 0.1 },
+    { id: 'c9', lat: 9.0150, lng: 38.7950, radius: 300, color: '#eab308', opacity: 0.1 },
+    { id: 'c10', lat: 9.0350, lng: 38.7600, radius: 250, color: '#eab308', opacity: 0.1 },
+  ];
+
   return (
     <div className="glass p-6 rounded-2xl shadow-xl space-y-4">
       <div className="flex items-center justify-between">
@@ -86,10 +99,39 @@ const DemandHeatmapGoogle: React.FC = () => {
                 />
               </React.Fragment>
             ))}
+
+            {/* Crime hotspot overlay */}
+            {crimeHotspots.map((spot) => (
+              <Circle
+                key={spot.id}
+                center={{ lat: spot.lat, lng: spot.lng }}
+                radius={spot.radius}
+                options={{
+                  fillColor: spot.color,
+                  fillOpacity: spot.opacity,
+                  strokeColor: spot.color,
+                  strokeWeight: 2,
+                  strokeOpacity: 0.4,
+                }}
+              />
+            ))}
           </GoogleMap>
         </LoadScript>
       </div>
-      <p className="text-xs text-gray-400 italic">Areas with high emergency frequency & service requests.</p>
+      <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+        <p className="italic">Areas with high emergency frequency & service requests.</p>
+        <div className="flex items-center gap-3 ml-auto">
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-red-500" /> Crime: High
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-orange-500" /> Moderate
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-yellow-500" /> Low
+          </span>
+        </div>
+      </div>
     </div>
   );
 };
