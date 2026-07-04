@@ -6,6 +6,7 @@ import Modal from '../components/Modal'
 import EditProfileModal from '../components/EditProfileModal'
 import WorkerEarnings from '../components/WorkerEarnings'
 import DemandHeatmap from '../components/DemandHeatmap'
+import WorkerLeaderboard from '../components/WorkerLeaderboard'
 import { useTranslation } from '../contexts/LanguageContext'
 import {
   Bell,
@@ -718,6 +719,8 @@ export default function Dashboard() {
                     {t('System suggests positioning near')} <span className="text-white font-bold">{topDemandCategory.replace('_', ' ')}</span> {t('hotspots for faster dispatch.')}
                   </p>
                 </div>
+
+                <WorkerLeaderboard />
               </aside>
             </div>
           )}

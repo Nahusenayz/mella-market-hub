@@ -86,7 +86,6 @@ export const useRealTimeAds = () => {
   useEffect(() => {
     fetchAds();
 
-    // Set up real-time subscription for ads
     const channel = supabase
       .channel('ads-changes-main')
       .on(
@@ -98,6 +97,31 @@ export const useRealTimeAds = () => {
         },
         () => {
           fetchAds();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          // Update rating in-place for affected user's ads
+          const updatedProfile = payload.new as any;
+          setAds(prev => prev.map(ad => {
+            if (ad.user_id === updatedProfile.id) {
+              return {
+                ...ad,
+                profiles: {
+                  full_name: updatedProfile.full_name || ad.profiles?.full_name || '',
+                  rating: updatedProfile.rating || 0,
+                  profile_image_url: updatedProfile.profile_image_url || ad.profiles?.profile_image_url || ''
+                }
+              };
+            }
+            return ad;
+          }));
         }
       )
       .subscribe();

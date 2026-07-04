@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, ArrowLeft, Languages } from 'lucide-react';
+import { Send, ArrowLeft, Languages, Sparkles } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -194,15 +194,41 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
       {/* Input */}
       <div className="p-4 border-t border-gray-200">
         <div className="space-y-2">
-          <button
-            type="button"
-            onClick={handleTranslateDraft}
-            disabled={!newMessage.trim() || translating}
-            className="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
-          >
-            <Languages size={12} />
-            {translating ? 'Translating...' : 'Translate draft'}
-          </button>
+          {/* Quick Reply Suggestions */}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            {[
+              'How much?',
+              'Is it available?',
+              'Can you deliver?',
+              'Tell me more',
+              'I am interested'
+            ].map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => {
+                  setNewMessage(suggestion);
+                  setTimeout(() => handleSend(), 100);
+                }}
+                className="flex items-center gap-1 shrink-0 text-[11px] font-medium bg-purple-50 text-purple-700 hover:bg-purple-100 px-2.5 py-1.5 rounded-full border border-purple-200 transition-colors whitespace-nowrap"
+              >
+                <Sparkles size={10} />
+                {suggestion}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleTranslateDraft}
+              disabled={!newMessage.trim() || translating}
+              className="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+            >
+              <Languages size={12} />
+              {translating ? 'Translating...' : 'Translate draft'}
+            </button>
+          </div>
           <div className="flex gap-2">
             <textarea
               value={newMessage}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { EmergencyAssistant } from '@/components/EmergencyAssistant';
+import { SafetyScore } from '@/components/SafetyScore';
 import { MapView } from '@/components/MapView';
 import { TrackingMap } from '@/components/TrackingMap';
 import { Button } from '@/components/ui/button';
@@ -798,6 +799,11 @@ export const Emergency: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Safety Score */}
+      <div className="container mx-auto px-4">
+        <SafetyScore location={userLocation} />
       </div>
 
       {/* Quick Actions */}

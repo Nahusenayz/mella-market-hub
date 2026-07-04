@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Upload, MapPin, DollarSign, AlertCircle, CheckCircle2, Home, Sparkles } from 'lucide-react';
+import { X, Upload, MapPin, DollarSign, AlertCircle, CheckCircle2, Home, Sparkles, Wand2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from '@/contexts/LocationContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -58,6 +58,8 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
   const [imagePreview, setImagePreview] = useState<string>(adToEdit?.image_url || '');
   const [loading, setLoading] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [aiPriceSuggestion, setAiPriceSuggestion] = useState<string | null>(null);
+  const [isGettingAiPrice, setIsGettingAiPrice] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -195,6 +197,42 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
       case 'sell': return 'Selling price (ETB)';
       case 'rent': return 'Rental price per day (ETB)';
       default: return '0.00';
+    }
+  };
+
+  const handleAiPriceSuggest = async () => {
+    if (!formData.title.trim() && !formData.description.trim()) {
+      toast({ title: 'Add a title/description first', description: 'AI needs context about your listing to suggest a price.', variant: 'default' });
+      return;
+    }
+    setIsGettingAiPrice(true);
+    setAiPriceSuggestion(null);
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Mella Market Hub',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-3.1-8b-instruct',
+          messages: [
+            { role: 'system', content: 'You are a pricing expert for the Ethiopian market. Given a listing title, description, and category, suggest a fair price range in ETB. Return ONLY a single line like "Suggested: ETB XXX - YYY" with no extra text.' },
+            { role: 'user', content: `Category: ${formData.category}\nTitle: ${formData.title || '(not set)'}\nDescription: ${formData.description || '(not set)'}\nType: ${formData.type}` }
+          ]
+        })
+      });
+      const data = await response.json();
+      const suggestion = data.choices?.[0]?.message?.content || null;
+      if (suggestion) {
+        setAiPriceSuggestion(suggestion);
+      }
+    } catch (e) {
+      console.error('AI price suggest error:', e);
+    } finally {
+      setIsGettingAiPrice(false);
     }
   };
 
@@ -384,7 +422,36 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
                   className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   placeholder={getPricePlaceholder()}
                 />
+                <button
+                  type="button"
+                  onClick={handleAiPriceSuggest}
+                  disabled={isGettingAiPrice}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-1 rounded-md hover:bg-purple-200 transition-colors disabled:opacity-50"
+                  title="AI Price Suggest"
+                >
+                  <Wand2 size={14} />
+                  {isGettingAiPrice ? '...' : 'AI'}
+                </button>
               </div>
+              {aiPriceSuggestion && (
+                <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-800 flex items-center gap-2">
+                  <Sparkles size={14} className="text-purple-500 shrink-0" />
+                  <span>{aiPriceSuggestion}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const match = aiPriceSuggestion.match(/ETB\s*([\d,]+)/i);
+                      if (match) {
+                        setFormData({ ...formData, price: match[1].replace(/,/g, '') });
+                        setAiPriceSuggestion(null);
+                      }
+                    }}
+                    className="ml-auto text-xs bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 shrink-0"
+                  >
+                    Use
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

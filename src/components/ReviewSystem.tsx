@@ -7,14 +7,16 @@ interface ReviewSystemProps {
   userId: string;
   canReview?: boolean;
   bookingId?: string;
+  onReviewSubmitted?: () => void;
 }
 
 export const ReviewSystem: React.FC<ReviewSystemProps> = ({
   userId,
   canReview = false,
-  bookingId
+  bookingId,
+  onReviewSubmitted
 }) => {
-  const { reviews, loading, fetchReviews, createReview } = useReviews();
+  const { reviews, loading, tableMissing, fetchReviews, createReview } = useReviews();
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState('');
@@ -38,6 +40,7 @@ export const ReviewSystem: React.FC<ReviewSystemProps> = ({
     setComment('');
     setRating(5);
     fetchReviews(userId);
+    onReviewSubmitted?.();
   };
 
   const renderStars = (rating: number, interactive = false, onRate?: (rating: number) => void) => {
@@ -140,7 +143,13 @@ export const ReviewSystem: React.FC<ReviewSystemProps> = ({
           Reviews ({reviews.length})
         </h3>
         
-        {reviews.length === 0 ? (
+        {tableMissing ? (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-3">🗄️</div>
+            <p className="text-gray-500 font-medium">Reviews table not set up yet</p>
+            <p className="text-xs text-gray-400 mt-1">Run the SQL migration in Supabase dashboard to enable reviews</p>
+          </div>
+        ) : reviews.length === 0 ? (
           <p className="text-gray-500 text-center py-8">No reviews yet</p>
         ) : (
           reviews.map((review) => (

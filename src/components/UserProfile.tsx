@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Star, MapPin, X, Phone, Mail, Calendar, User as UserIcon } from 'lucide-react';
+import { Star, MapPin, X, Phone, Mail, Calendar, User as UserIcon, MessageStar } from 'lucide-react';
+import { ReviewSystem } from './ReviewSystem';
 
 interface UserProfile {
   id: string;
@@ -42,6 +43,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [userAds, setUserAds] = useState<UserAd[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'listings' | 'reviews'>('listings');
 
   useEffect(() => {
     fetchUserProfile();
@@ -208,34 +210,60 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
           </div>
 
-          {/* User's Ads */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              {isOwnProfile ? 'Your' : `${profile.full_name}'s`} Listings ({userAds.length})
-            </h2>
-            
-            {userAds.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {userAds.map(ad => (
-                  <div key={ad.id} className="bg-gray-50 rounded-lg p-4 border">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-gray-800 truncate flex-1">{ad.title}</h3>
-                      <span className={`text-xs px-2 py-1 rounded-full ml-2 ${getAdTypeBadgeColor(ad.ad_type)}`}>
-                        {ad.ad_type}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">{ad.description}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-orange-600 font-bold">ETB {ad.price.toLocaleString()}</span>
-                      <span className="text-xs text-gray-500">{ad.category}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-8">No active listings</p>
-            )}
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200 mb-6">
+            <button
+              onClick={() => setActiveTab('listings')}
+              className={`flex-1 py-3 text-center font-medium transition-colors ${
+                activeTab === 'listings'
+                  ? 'text-orange-600 border-b-2 border-orange-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Listings ({userAds.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('reviews')}
+              className={`flex-1 py-3 text-center font-medium transition-colors ${
+                activeTab === 'reviews'
+                  ? 'text-orange-600 border-b-2 border-orange-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Reviews
+            </button>
           </div>
+
+          {/* Tab Content */}
+          {activeTab === 'listings' ? (
+            <div className="mb-6">
+              {userAds.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {userAds.map(ad => (
+                    <div key={ad.id} className="bg-gray-50 rounded-lg p-4 border">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold text-gray-800 truncate flex-1">{ad.title}</h3>
+                        <span className={`text-xs px-2 py-1 rounded-full ml-2 ${getAdTypeBadgeColor(ad.ad_type)}`}>
+                          {ad.ad_type}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">{ad.description}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-orange-600 font-bold">ETB {ad.price.toLocaleString()}</span>
+                        <span className="text-xs text-gray-500">{ad.category}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-8">No active listings</p>
+              )}
+            </div>
+          ) : (
+            <div className="mb-6 max-h-96 overflow-y-auto">
+              <ReviewSystem userId={userId} canReview={!isOwnProfile} onReviewSubmitted={fetchUserProfile} />
+            </div>
+          )}
 
           {/* Action Buttons */}
           {!isOwnProfile && (

@@ -36,6 +36,7 @@ export const useReviews = () => {
   const { toast } = useToast();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
+  const [tableMissing, setTableMissing] = useState(false);
 
   const fetchReviews = async (userId: string) => {
     setLoading(true);
@@ -49,7 +50,16 @@ export const useReviews = () => {
         .eq('reviewee_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST205') {
+          console.warn('ℹ️ reviews table does not exist yet. Run the migration at supabase/migrations/20260704000000_create_reviews_table.sql');
+          setReviews([]);
+          setTableMissing(true);
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
       // Transform the data to match our interface
       const transformedReviews = (data || []).map(review => ({
@@ -91,7 +101,18 @@ export const useReviews = () => {
           reviewer_id: user.id
         });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST205') {
+          toast({
+            title: "Reviews Table Missing",
+            description: "The reviews table hasn't been created yet. Run the SQL migration in Supabase dashboard.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -201,6 +222,7 @@ export const useReviews = () => {
   return {
     reviews,
     loading,
+    tableMissing,
     fetchReviews,
     createReview,
     updateReview,

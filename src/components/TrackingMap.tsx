@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -6,6 +6,31 @@ interface TrackingMapProps {
     userLocation: { lat: number; lng: number };
     responderLocation: { lat: number; lng: number };
     responderType?: string;
+}
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function getTrafficMultiplier(): number {
+    const hour = new Date().getHours();
+    // Rush hours: 7-9am (1.5x), 12-2pm (1.2x), 5-8pm (1.8x)
+    if (hour >= 7 && hour <= 9) return 1.5;
+    if (hour >= 12 && hour <= 14) return 1.2;
+    if (hour >= 17 && hour <= 20) return 1.8;
+    if (hour >= 22 || hour <= 5) return 0.8;
+    return 1.0;
+}
+
+function estimateMinutes(distanceKm: number): number {
+    const avgSpeedKmh = 30; // city average
+    const trafficMul = getTrafficMultiplier();
+    const minutes = (distanceKm / avgSpeedKmh) * 60 * trafficMul;
+    return Math.max(1, Math.round(minutes));
 }
 
 export const TrackingMap: React.FC<TrackingMapProps> = ({
@@ -16,6 +41,12 @@ export const TrackingMap: React.FC<TrackingMapProps> = ({
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<L.Map | null>(null);
     const markersGroup = useRef<L.LayerGroup | null>(null);
+
+    const distanceKm = useMemo(() => haversineKm(
+        userLocation.lat, userLocation.lng,
+        responderLocation.lat, responderLocation.lng
+    ), [userLocation, responderLocation]);
+    const etaMinutes = useMemo(() => estimateMinutes(distanceKm), [distanceKm]);
 
     useEffect(() => {
         if (!mapContainer.current) return;
@@ -107,5 +138,21 @@ export const TrackingMap: React.FC<TrackingMapProps> = ({
 
     }, [userLocation, responderLocation, responderType]);
 
-    return <div ref={mapContainer} className="w-full h-full bg-gray-100 full-screen-map" />;
+    return (
+        <div className="relative w-full h-full">
+            <div ref={mapContainer} className="w-full h-full bg-gray-100 full-screen-map" />
+            <div className="absolute top-3 right-3 z-[1000] bg-white/90 backdrop-blur rounded-lg shadow-lg border border-gray-200 px-3 py-2 text-sm min-w-[120px]">
+                <div className="flex items-center gap-2 text-gray-700 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                    ETA: {etaMinutes} min
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                    {distanceKm < 1
+                        ? `${Math.round(distanceKm * 1000)}m away`
+                        : `${distanceKm.toFixed(1)}km away`
+                    }
+                </div>
+            </div>
+        </div>
+    );
 };

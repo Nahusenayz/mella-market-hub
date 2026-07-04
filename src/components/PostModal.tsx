@@ -76,11 +76,25 @@ export const PostModal: React.FC<PostModalProps> = ({
           </div>
 
           <div className="absolute top-4 right-4 z-10 flex gap-3">
-            <button className="bg-white/90 p-2 rounded-full shadow-sm hover:bg-white transition-colors">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const url = `${window.location.origin}?share=${post.id}`;
+                const text = `Check out "${post.title}" on Mella Market Hub — ETB ${post.price.toLocaleString()}`;
+                if (navigator.share) {
+                  navigator.share({ title: post.title, text, url }).catch(() => {});
+                } else {
+                  navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+                    const btn = e.currentTarget;
+                    const original = btn.innerHTML;
+                    btn.innerHTML = '<svg class="lucide lucide-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+                    setTimeout(() => { btn.innerHTML = original; }, 2000);
+                  });
+                }
+              }}
+              className="bg-white/90 p-2 rounded-full shadow-sm hover:bg-white transition-colors"
+            >
               <Share2 size={20} className="text-gray-800" />
-            </button>
-            <button className="bg-white/90 p-2 rounded-full shadow-sm hover:bg-white transition-colors">
-              <Heart size={20} className="text-gray-800" />
             </button>
           </div>
 
