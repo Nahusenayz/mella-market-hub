@@ -39,7 +39,7 @@ const Map3D: React.FC = () => {
   const { ads } = useRealTimeAds();
   const [center, setCenter] = useState(defaultCenter);
   const [selectedAd, setSelectedAd] = useState<any>(null);
-  const googleMapsApiKey = 'AIzaSyBs3GqItt4UlMnRFZEkXNWZxQUkdYxOeRk';
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
     if (navigator.geolocation) {

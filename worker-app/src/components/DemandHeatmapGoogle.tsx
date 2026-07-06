@@ -61,7 +61,7 @@ const DemandHeatmapGoogle: React.FC = () => {
         </div>
       </div>
       <div className="h-96 w-full rounded-xl overflow-hidden shadow-inner border border-gray-100">
-        <LoadScript googleMapsApiKey="AIzaSyBs3GqItt4UlMnRFZEkXNWZxQUkdYxOeRk">
+        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
           <GoogleMap
             mapContainerStyle={containerStyle}
             center={center}

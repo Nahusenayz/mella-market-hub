@@ -174,7 +174,7 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
           </div>
         </div>
       )}
-      <LoadScript googleMapsApiKey="AIzaSyBs3GqItt4UlMnRFZEkXNWZxQUkdYxOeRk">
+      <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
         <GoogleMap
           mapContainerStyle={containerStyle}
           center={{ lat: currentLocation.lat, lng: currentLocation.lng }}

@@ -77,7 +77,7 @@ export const TrackingMap: React.FC<TrackingMapProps> = ({
 
     return (
         <div className="relative w-full h-full">
-            <LoadScript googleMapsApiKey="AIzaSyBs3GqItt4UlMnRFZEkXNWZxQUkdYxOeRk">
+            <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
                 <GoogleMap
                     mapContainerStyle={containerStyle}
                     center={center}
