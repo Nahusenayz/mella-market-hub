@@ -1,13 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User, Loader2, Mic, Globe, Sparkles, Trash2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { X, Send, Bot, User, Loader2, Sparkles, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { askMellaAssistant } from '@/services/groqService';
 import AmharicVoiceInput from './AmharicVoiceInput';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Message {
   id: string;
@@ -23,8 +22,20 @@ interface MellaAssistantProps {
 
 const STORAGE_KEY = 'mella_assistant_history';
 
+const EMERGENCY_FAQ: Record<string, string> = {
+  "What number should I call?": "**Police:** 991  |  **Ambulance:** 939  |  **Fire:** 912",
+  "How long will help take?": "Urban areas: **8–15 minutes**. Rural areas may take longer. Stay where you are and keep your phone on.",
+  "What should I do while waiting?": "1. Stay calm\n2. Keep the injured person still and warm\n3. Gather ID documents\n4. Unlock the door\n5. Have someone wait at the gate to guide responders",
+  "Where is the nearest hospital?": "Major hospitals in Addis include **Black Lion**, **St. Paul's**, **Yekatit 12**, **Bethzatha**, and **Myungsung**. Check the map on the Emergency page for the closest one.",
+  "Should I move the injured person?": "**No.** Unless there is immediate danger (fire, flooding, gas leak), do not move them — risk of spinal injury is high.",
+  "How do I stop bleeding?": "1. Apply firm pressure with a clean cloth\n2. Elevate the wound above the heart if possible\n3. Do NOT remove blood-soaked cloth — add another layer on top\n4. Keep pressure until help arrives",
+  "Is this an emergency?": "Call immediately if: unconscious, not breathing, severe bleeding, chest pain, difficulty breathing, major burn, seizure, or poisoning. **When in doubt, call — better safe than sorry.**",
+  "How do I report a fire?": "1. Evacuate everyone immediately\n2. Call **912**\n3. Stay low to avoid smoke\n4. Do NOT use elevators\n5. Wait at a safe distance for firefighters"
+};
+
+const DEFAULT_SUGGESTIONS = Object.keys(EMERGENCY_FAQ);
+
 export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose }) => {
-  const { language } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -38,22 +49,21 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
       try {
         const parsed = JSON.parse(saved);
         setMessages(parsed.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) })));
+        setSuggestions(DEFAULT_SUGGESTIONS);
       } catch (e) {
         console.error('Failed to load Mella AI history', e);
       }
     } else {
       // Welcome message
-      const welcome = language === 'am' 
-        ? "ሰላም! እኔ መላ AI ነኝ። እንዴት ልረዳዎት እችላለሁ?"
-        : "Hello! I am Mella AI. How can I help you today?";
       setMessages([{
         id: '1',
-        text: welcome,
+        text: "Hello! I am Mella AI. I can answer your emergency and marketplace questions. Choose a quick question below to get started.",
         sender: 'bot',
         timestamp: new Date()
       }]);
+      setSuggestions(DEFAULT_SUGGESTIONS);
     }
-  }, [language]);
+  }, []);
 
   // Save history
   useEffect(() => {
@@ -70,29 +80,8 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
     scrollToBottom();
   }, [messages, isLoading]);
 
-  const fetchSuggestions = async (history: Message[]) => {
-    try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'Mella Market Hub',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'meta-llama/llama-3.1-8b-instruct',
-          messages: [
-            { role: 'system', content: 'Based on the conversation, suggest 3 short reply options as a JSON array of strings. Return ONLY valid JSON, no markdown, no explanation.' },
-            ...history.slice(-6).map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text }))
-          ]
-        })
-      });
-      const data = await res.json();
-      const text = data.choices?.[0]?.message?.content || '[]';
-      const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
-      if (Array.isArray(parsed)) setSuggestions(parsed.slice(0, 3));
-    } catch { setSuggestions([]); }
+  const fetchSuggestions = () => {
+    setSuggestions(DEFAULT_SUGGESTIONS);
   };
 
   const handleSendMessage = async (text?: string) => {
@@ -108,6 +97,21 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
 
     setMessages(prev => [...prev, userMsg]);
     setInputMessage('');
+
+    // Check if it's a known FAQ question
+    const faqAnswer = EMERGENCY_FAQ[messageText];
+    if (faqAnswer) {
+      const botMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        text: faqAnswer,
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, botMsg]);
+      setSuggestions(DEFAULT_SUGGESTIONS);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -126,8 +130,7 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
       };
 
       setMessages(prev => [...prev, botMsg]);
-      const allMessages = [...messages, userMsg, botMsg];
-      fetchSuggestions(allMessages);
+      fetchSuggestions();
     } catch (error) {
       console.error('Mella AI Error:', error);
     } finally {
@@ -139,7 +142,7 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
     localStorage.removeItem(STORAGE_KEY);
     setMessages([{
       id: Date.now().toString(),
-      text: language === 'am' ? "ታሪክ ተሰርዟል። እንዴት ልርዳዎት?" : "History cleared. How can I help you?",
+      text: "History cleared. How can I help you?",
       sender: 'bot',
       timestamp: new Date()
     }]);
@@ -233,7 +236,7 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
             <div className="flex items-center gap-2">
               <AmharicVoiceInput onResult={handleSendMessage} />
               <Input 
-                placeholder={language === 'am' ? "ጥያቄዎን እዚህ ይጻፉ..." : "Type your message..."}
+                placeholder="Type your message..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
