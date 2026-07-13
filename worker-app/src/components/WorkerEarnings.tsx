@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useEarnings } from '../hooks/useEarnings';
-import { TrendingUp, DollarSign, Calendar, Briefcase, Clock } from 'lucide-react';
+import { TrendingUp, DollarSign, Calendar, Briefcase, Clock, Gauge } from 'lucide-react';
 
 interface WorkerEarningsProps {
   userId: string | null;
@@ -14,6 +14,33 @@ const WorkerEarnings: React.FC<WorkerEarningsProps> = ({ userId }) => {
   if (!earnings) return null;
 
   const maxAmount = Math.max(...earnings.monthlyData.map(d => d.amount), 1);
+
+  const calculatePerformanceScore = (stats: { completedJobs: number; rating: number; responseTime: number; hoursOnline: number }) => {
+    const responseScore = Math.max(0, 100 - stats.responseTime * 2);
+    const completionScore = Math.min(100, stats.completedJobs * 5);
+    const ratingScore = (stats.rating / 5) * 100;
+    const onlineScore = Math.min(100, stats.hoursOnline * 2);
+    return Math.round(responseScore * 0.4 + completionScore * 0.3 + ratingScore * 0.2 + onlineScore * 0.1);
+  };
+
+  const performanceScore = useMemo(() => calculatePerformanceScore({
+    completedJobs: earnings.recentJobs.length,
+    rating: 4.5,
+    responseTime: 5,
+    hoursOnline: 20
+  }), [earnings]);
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-emerald-600';
+    if (score >= 60) return 'text-amber-600';
+    return 'text-red-600';
+  };
+
+  const getScoreBg = (score: number) => {
+    if (score >= 80) return 'bg-emerald-50 border-emerald-200';
+    if (score >= 60) return 'bg-amber-50 border-amber-200';
+    return 'bg-red-50 border-red-200';
+  };
 
   return (
     <div className="animate-fade-in-up">
@@ -37,6 +64,24 @@ const WorkerEarnings: React.FC<WorkerEarningsProps> = ({ userId }) => {
                 <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Average</p>
                 <p className="text-sm font-black text-blue-600">{Math.round(earnings.averagePerJob).toLocaleString()}</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Performance Score Card */}
+        <div className={`mx-6 sm:mx-8 mt-6 rounded-2xl border p-4 ${getScoreBg(performanceScore)}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Gauge size={24} className={getScoreColor(performanceScore)} />
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Performance Score</p>
+                <p className={`text-2xl font-black ${getScoreColor(performanceScore)}`}>{performanceScore}/100</p>
+              </div>
+            </div>
+            <div className="w-20 h-2 rounded-full bg-gray-200 overflow-hidden">
+              <div className={`h-full rounded-full transition-all duration-500 ${
+                performanceScore >= 80 ? 'bg-emerald-500' : performanceScore >= 60 ? 'bg-amber-500' : 'bg-red-500'
+              }`} style={{ width: `${performanceScore}%` }} />
             </div>
           </div>
         </div>

@@ -175,29 +175,64 @@ Required behavior:
 - Replacing Supabase as the backend
 - Adding paid AI dependencies
 
-## Code Cleanup Done
+## Recent Emergency & Response Features (July 2026)
 
-- Removed unused admin page component.
-- Removed unused emergency admin panel page component.
-- Removed Gemini first-aid service file.
-- Removed the Gemini first-aid chatbot component.
-- Removed stale admin import from the root app shell.
-- Replaced direct first-aid AI call with the shared OpenRouter assistant.
-- Removed the worker-side emergency requeue workaround in frontend code.
-- Removed an unused variable from the main feed page.
-- Added post and message translation helpers powered by the shared AI service.
-- Lazy-loaded the global chat assistant to reduce initial bundle cost.
+### Emergency Responder Category Buttons
+- **Hero section** (`SearchHero.tsx`) shows per-category responder counts fetched from `useWorkerLocations` hook, filtering by police/ambulance/fire_truck/traffic_police/tow_truck.
+- Clicking a category navigates to `/emergency` with the category pre-selected.
+- **Bottom nav bar**: Removed the saved/favorites button and badge.
+
+### Dark Mode
+- App-wide dark mode via Tailwind `dark:` class strategy with `ThemeContext`, localStorage persistence, system-preference detection, and toggle in Navbar.
+- Covered: `Navbar.tsx`, `SearchBar.tsx`, `Index.tsx` containers/sections, `Footer.tsx`.
+
+### En-Route Location Simulation
+- **Worker Dashboard** (`Dashboard.tsx`): `startEnRouteSim()` runs a 60-step interval (2s each) moving `responder_location_lat/lng` from the worker's current location toward the user's location.
+- Updates written directly to `emergency_requests` via Supabase.
+- If start ≈ end (both default coords), auto-applies a +0.02° offset for visible movement.
+- Simulation logs each step for debugging.
+
+### Live Tracking Map (SVG — No Google Maps Dependency)
+- **TrackingMapGoogle.tsx**: Replaced Google Maps `@react-google-maps/api` with a zero-dependency SVG component.
+- **Root cause fixed:** `LoadScript` in `@react-google-maps/api` v2.20.8 has **no `onError` prop** — the canvas fallback was silently ignored. When the Google Maps API failed to load, `Marker` crashed with `ReferenceError: google is not defined`, which the route-level `ErrorBoundary` caught, blanking the entire Emergency page with "Something went wrong".
+- SVG map renders immediately with: user marker (blue circle), responder marker (red card + emoji), connecting dashed line, animated pulse ring, cross-street lines, distance scale, and live indicator.
+- ETA calculated via Haversine distance ÷ 30 km/h × traffic multiplier (rush hour 1.8×, night 0.8×).
+- User subscribes to `responder-tracking-{requestId}` channel for real-time `responder_location_lat/lng` updates.
+
+### Voice Call (WebRTC)
+- **Flow**: User app initiates call request → Worker receives notification with Accept/Decline → WebRTC peer connection via Google STUN + Supabase Realtime broadcast signaling on channel `call-{requestId}`.
+- Main app `useVoiceCall` sends `call_request`, waits for `call_accepted`, then sends WebRTC offer.
+- Worker app `useVoiceCall` auto-listens via `listen()` on mount, handles `call_request` → sets `incomingCall=true`, exposes `acceptCall()` and `declineCall()`.
+- **Incoming call modal** in worker Dashboard with Accept (green) / Decline (red) buttons.
+- Microphone tracks properly stopped on end-call via `getTracks().forEach(t => t.stop())` + `srcObject = null`.
+- Fixed stale closure bug in channel handlers by using `callStatusRef`.
+
+### Real-Time Status Sync
+- Worker clicks "MARK COMPLETED" or "CANCEL" → `updateStatus()` updates `emergency_requests` → user's real-time subscription on `active-request-{id}` fires.
+- User sees Sonner toast and `activeRequest` is cleared.
+- Fixed bug where toast exceptions (`try/catch`) swallowed `setActiveRequest(null)`, leaving the UI stuck showing a completed/cancelled request.
+
+### Sound Notification (Web Audio API)
+- Replaced `<audio>` element siren with Web Audio API oscillator (880/660 Hz alternating).
+- Persistent `AudioContext` created on first user interaction to satisfy browser autoplay policy.
+
+### Voice Call Button Visibility
+- Voice Call button only appears in the **user app** tracking popup (when status is `en_route`).
+- **Worker app** no longer has a CALL button; instead it receives incoming call notifications.
+
+### Google Maps API
+- `MapViewGoogle.tsx` and `DemandHeatmapGoogle.tsx` still use `@react-google-maps/api` with `LoadScript` and `VITE_GOOGLE_MAPS_API_KEY`.
+- **`TrackingMapGoogle.tsx` removed Google Maps dependency** — replaced with zero-dependency SVG because `LoadScript` in v2.20.8 lacks `onError` support. When API key is missing/invalid, `Marker` crashes with `ReferenceError: google is not defined`, caught by ErrorBoundary, blanking the page.
+- Other Google Maps components (`MapViewGoogle.tsx`, `DemandHeatmapGoogle.tsx`) still work; only the TrackingMap was affected because the user's tracking popup renders inside the route-level ErrorBoundary.
 
 ## Verification
 
 Builds completed successfully for:
 
-- Main app
-- Worker app
+- Main app (`npx tsc --noEmit` + `vite build`)
+- Worker app (`npx tsc --noEmit` + `vite build`)
 
 ## Follow-Up Improvements
-
-These are good next steps if you want to keep improving the product:
 
 1. Extract duplicate haversine / distance helpers into one shared utility.
 2. Lazy-load heavy map and chatbot components.
@@ -205,3 +240,5 @@ These are good next steps if you want to keep improving the product:
 4. Add saved searches and better empty states.
 5. Add searchable and filterable admin tables for faster moderation.
 6. Consider splitting more heavy map views into lazy-loaded routes if bundle size remains high.
+7. Add a call-request timeout so the user sees a "No answer" state if the worker doesn't respond within 30s.
+8. Persist the OpenRouter model selection so the admin can switch between models without redeploying.

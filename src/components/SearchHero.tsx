@@ -1,164 +1,39 @@
 
-import React, { useState, useEffect } from 'react';
-import { Phone, MapPin, X, Navigation } from 'lucide-react';
+import React from 'react';
+import { Phone, MapPin } from 'lucide-react';
 import { useLocation } from '@/contexts/LocationContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { calculateDistanceKm } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 interface SearchHeroProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   isWorkerMode: boolean;
   onTowTruckClick?: () => void;
-}
-
-interface EmergencyStation {
-  id: string;
-  type: string;
-  name: string;
-  lat: number;
-  lng: number;
-  icon: string;
-  phone: string;
-  address: string;
-  distance?: number;
+  responderCounts?: Record<string, number>;
 }
 
 export const SearchHero: React.FC<SearchHeroProps> = ({
   searchQuery,
   onSearchChange,
   isWorkerMode,
-  onTowTruckClick
+  onTowTruckClick,
+  responderCounts = {}
 }) => {
   const { t } = useLanguage();
-  const [selectedEmergencyType, setSelectedEmergencyType] = useState<string | null>(null);
   const { location: contextLocation, permissionStatus } = useLocation();
+  const navigate = useNavigate();
 
-  // Use context location or fallback to Addis Ababa
   const userLocation = contextLocation || { lat: 9.0320, lng: 38.7469 };
   const isLocationTracking = permissionStatus === 'granted';
 
-  // Emergency stations in Addis Ababa
-  const emergencyStations: EmergencyStation[] = [
-    // Police Stations
-    {
-      id: '1', type: 'Police', name: 'Federal Police HQ',
-      lat: 9.0300, lng: 38.7400, icon: '🚔',
-      phone: '+251-11-551-8877', address: 'Arada, Addis Ababa'
-    },
-    {
-      id: '2', type: 'Police', name: 'Bole Police Station',
-      lat: 8.9950, lng: 38.8100, icon: '🚔',
-      phone: '+251-11-661-2400', address: 'Bole, Addis Ababa'
-    },
-    {
-      id: '3', type: 'Police', name: 'Kirkos Police Station',
-      lat: 9.0100, lng: 38.7550, icon: '🚔',
-      phone: '+251-11-551-2400', address: 'Kirkos, Addis Ababa'
-    },
-
-    // Traffic Police
-    {
-      id: '4', type: 'Traffic', name: 'Traffic Control Center',
-      lat: 9.0200, lng: 38.7450, icon: '🚦',
-      phone: '+251-11-551-9900', address: 'Mexico, Addis Ababa'
-    },
-    {
-      id: '5', type: 'Traffic', name: 'Bole Traffic Police',
-      lat: 8.9920, lng: 38.8120, icon: '🚦',
-      phone: '+251-11-661-8899', address: 'Bole, Addis Ababa'
-    },
-    {
-      id: '6', type: 'Traffic', name: 'Piazza Traffic Unit',
-      lat: 9.0380, lng: 38.7480, icon: '🚦',
-      phone: '+251-11-551-7700', address: 'Piazza, Addis Ababa'
-    },
-
-    // Ambulance/Hospitals
-    {
-      id: '7', type: 'Ambulance', name: 'Tikur Anbessa Hospital',
-      lat: 9.0366, lng: 38.7639, icon: '🚑',
-      phone: '+251-11-551-7211', address: 'Lideta, Addis Ababa'
-    },
-    {
-      id: '8', type: 'Ambulance', name: 'Black Lion Hospital',
-      lat: 9.0415, lng: 38.7614, icon: '🚑',
-      phone: '+251-11-553-5370', address: 'Gulele, Addis Ababa'
-    },
-    {
-      id: '9', type: 'Ambulance', name: 'Bethzatha General Hospital',
-      lat: 9.0200, lng: 38.7800, icon: '🚑',
-      phone: '+251-11-661-5544', address: 'Bole, Addis Ababa'
-    },
-    {
-      id: '10', type: 'Ambulance', name: 'Ethiopian Red Cross Ambulance',
-      lat: 9.0100, lng: 38.7650, icon: '🚑',
-      phone: '+251-11-551-5393', address: 'Arat Kilo, Addis Ababa'
-    },
-
-    // Fire Stations
-    {
-      id: '11', type: 'Fire Station', name: 'Addis Fire & Emergency Service',
-      lat: 9.0250, lng: 38.7500, icon: '🚒',
-      phone: '+251-11-551-1311', address: 'Piazza, Addis Ababa'
-    },
-    {
-      id: '12', type: 'Fire Station', name: 'Bole Fire Station',
-      lat: 8.9950, lng: 38.8100, icon: '🚒',
-      phone: '+251-11-661-5544', address: 'Bole, Addis Ababa'
-    },
-    {
-      id: '13', type: 'Fire Station', name: 'Gulele Fire Station',
-      lat: 9.0450, lng: 38.7350, icon: '🚒',
-      phone: '+251-11-551-6677', address: 'Gulele, Addis Ababa'
-    }
-  ];
-
   const emergencyTypes = [
-    { type: 'Police', icon: '🚔', color: 'bg-blue-600 hover:bg-blue-700', label: t('police') },
-    { type: 'Traffic', icon: '🚦', color: 'bg-yellow-600 hover:bg-yellow-700', label: t('trafficPolice') },
-    { type: 'Ambulance', icon: '🚑', color: 'bg-red-600 hover:bg-red-700', label: t('ambulance') },
-    { type: 'Fire Station', icon: '🚒', color: 'bg-orange-600 hover:bg-orange-700', label: t('fireStation') },
-    { type: 'Tow Truck', icon: '🏗️', color: 'bg-blue-600 hover:bg-blue-700', label: t('towTruck') }
+    { type: 'Police', icon: '🚔', color: 'bg-blue-600 hover:bg-blue-700', label: t('police'), workerCategory: 'police' },
+    { type: 'Traffic', icon: '🚦', color: 'bg-yellow-600 hover:bg-yellow-700', label: t('trafficPolice'), workerCategory: 'traffic_police' },
+    { type: 'Ambulance', icon: '🚑', color: 'bg-red-600 hover:bg-red-700', label: t('ambulance'), workerCategory: 'ambulance' },
+    { type: 'Fire Station', icon: '🚒', color: 'bg-orange-600 hover:bg-orange-700', label: t('fireStation'), workerCategory: 'fire_truck' },
+    { type: 'Tow Truck', icon: '🏗️', color: 'bg-blue-600 hover:bg-blue-700', label: t('towTruck'), workerCategory: 'tow_truck' }
   ];
-
-
-
-  // Update nearest stations when emergency type is selected or location changes
-  const nearestStations = React.useMemo(() => {
-    if (!selectedEmergencyType) return [];
-
-    return emergencyStations
-      .filter(station => station.type === selectedEmergencyType)
-      .map(station => ({
-        ...station,
-        distance: calculateDistanceKm(userLocation.lat, userLocation.lng, station.lat, station.lng)
-      }))
-      .filter(station => (station.distance || 0) <= 5) // Only show stations within 5km
-      .sort((a, b) => (a.distance || 0) - (b.distance || 0))
-      .slice(0, 5); // Show top 5 nearest
-  }, [selectedEmergencyType, userLocation.lat, userLocation.lng]);
-
-  const handleEmergencyTypeSelect = (type: string) => {
-    if (type === 'Tow Truck' && onTowTruckClick) {
-      onTowTruckClick();
-      return;
-    }
-    setSelectedEmergencyType(type);
-  };
-
-  const handleCall = (phone: string) => {
-    window.open(`tel:${phone}`, '_self');
-  };
-
-  const handleNavigate = (station: EmergencyStation) => {
-    const url = `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${station.lat},${station.lng}`;
-    window.open(url, '_blank');
-  };
-
-  const handleBack = () => {
-    setSelectedEmergencyType(null);
-  };
 
   if (isWorkerMode) {
     return (
@@ -190,133 +65,51 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
   return (
     <div className="bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white min-h-[40vh] sm:min-h-[45vh]">
       <div className="container mx-auto px-4 py-4 sm:py-6">
-        {!selectedEmergencyType ? (
-          // Emergency Type Selection
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <span className="text-2xl sm:text-3xl">🚨</span>
-              <h1 className="text-2xl md:text-4xl font-bold animate-fade-in">
-                {t('emergencyTitle')}
-              </h1>
+        <div className="text-center max-w-4xl mx-auto">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <span className="text-2xl sm:text-3xl">🚨</span>
+            <h1 className="text-2xl md:text-4xl font-bold animate-fade-in">
+              {t('emergencyTitle')}
+            </h1>
+          </div>
+          <p className="text-base md:text-lg mb-6 opacity-90 max-w-2xl mx-auto">
+            {t('emergencyDescription')}
+          </p>
+
+          {/* Location Status */}
+          <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-2 sm:p-3 max-w-lg mx-auto">
+            <div className="flex items-center justify-center gap-2 text-xs sm:text-sm">
+              <div className={`w-2 h-2 rounded-full ${isLocationTracking ? 'bg-green-400' : 'bg-gray-400'}`}></div>
+              <MapPin size={16} />
+              <span>{isLocationTracking ? t('usingLiveLocation') : t('usingDefaultLocation')}</span>
             </div>
-            <p className="text-base md:text-lg mb-6 opacity-90 max-w-2xl mx-auto">
-              {t('emergencyDescription')}
-            </p>
- 
-            {/* Location Status - Smaller */}
-            <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-2 sm:p-3 max-w-lg mx-auto">
-              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm">
-                <div className={`w-2 h-2 rounded-full ${isLocationTracking ? 'bg-green-400' : 'bg-gray-400'}`}></div>
-                <MapPin size={16} />
-                <span>{isLocationTracking ? t('usingLiveLocation') : t('usingDefaultLocation')}</span>
-              </div>
-            </div>
- 
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-4xl mx-auto pb-4 px-1">
-              {emergencyTypes.map((emergency) => (
+          </div>
+
+          {/* Emergency Category Buttons with Responder Counts */}
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-4xl mx-auto pb-4 px-1">
+            {emergencyTypes.map((emergency) => {
+              const count = responderCounts[emergency.workerCategory] ?? 0;
+              return (
                 <button
                   key={emergency.type}
-                  onClick={() => handleEmergencyTypeSelect(emergency.type)}
-                  className={`${emergency.color} text-white p-3 sm:p-4 md:px-6 md:py-5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex flex-col items-center gap-1 sm:gap-2 border-2 border-white/10 md:min-w-[120px]`}
+                  onClick={() => {
+                    if (emergency.type === 'Tow Truck' && onTowTruckClick) {
+                      onTowTruckClick();
+                    }
+                    navigate('/emergency', { state: { category: emergency.workerCategory } });
+                  }}
+                  className={`${emergency.color} text-white p-3 sm:p-4 md:px-6 md:py-5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex flex-col items-center gap-1 sm:gap-2 border-2 border-white/10 md:min-w-[120px] relative`}
                 >
                   <span className="text-2xl sm:text-3xl">{emergency.icon}</span>
                   <span className="text-[10px] sm:text-xs md:text-sm font-bold uppercase tracking-wider">{emergency.label}</span>
+                  <span className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-bold mt-0.5 min-w-[28px]">
+                    {count}
+                  </span>
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        ) : (
-          // Nearest Stations List
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-4 mb-8">
-              <button
-                onClick={handleBack}
-                className="bg-white/20 hover:bg-white/30 p-3 rounded-full transition-colors"
-              >
-                <X size={24} />
-              </button>
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{emergencyTypes.find(e => e.type === selectedEmergencyType)?.icon}</span>
-                <h2 className="text-2xl md:text-3xl font-bold">
-                  {t('nearestStationsTitle', { type: t(selectedEmergencyType.toLowerCase() === 'police' ? 'police' : selectedEmergencyType.toLowerCase() === 'traffic' ? 'trafficPolice' : selectedEmergencyType.toLowerCase() === 'ambulance' ? 'ambulance' : 'fireStation') })}
-                </h2>
-              </div>
-            </div>
-
-            {/* Location Status */}
-            <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-3">
-              <div className="flex items-center justify-center gap-2 text-sm">
-                <div className={`w-2 h-2 rounded-full ${isLocationTracking ? 'bg-green-400' : 'bg-gray-400'}`}></div>
-                <span>{isLocationTracking ? t('usingLiveLocation') : t('usingDefaultLocation')}</span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {nearestStations.map((station, index) => (
-                <div key={station.id} className="bg-white/95 text-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-200">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-red-100 p-3 rounded-full">
-                      <span className="text-2xl">{station.icon}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-800 mb-1">{station.name}</h3>
-                          <p className="text-sm text-gray-600 mb-2">{station.address}</p>
-                          <div className="flex items-center gap-2 text-sm">
-                            <MapPin size={16} className="text-red-500" />
-                            <span className="font-medium text-red-600">
-                              {station.distance ? `${station.distance.toFixed(1)} km away` : 'Distance calculating...'}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold mb-2">
-                            #{index + 1} {t('closest')}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-3 mt-4">
-                        <button
-                          onClick={() => handleCall(station.phone)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors flex-1"
-                        >
-                          <Phone size={20} />
-                          <span className="hidden sm:inline">{t('callNow')}</span>
-                          <span className="sm:hidden">{t('callNow')}</span>
-                        </button>
-                        <button
-                          onClick={() => handleNavigate(station)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors flex-1"
-                        >
-                          <Navigation size={20} />
-                          <span className="hidden sm:inline">{t('navigate')}</span>
-                          <span className="sm:hidden">{t('navigate')}</span>
-                        </button>
-                      </div>
-                      <div className="mt-3 bg-gray-100 rounded-lg p-3">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Phone size={14} />
-                          <span className="font-mono">{station.phone}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {nearestStations.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-white/80 mb-4">
-                  <span className="text-4xl mb-2 block">🔍</span>
-                  <p>{t('noStationsFound', { type: t(selectedEmergencyType.toLowerCase() === 'police' ? 'police' : selectedEmergencyType.toLowerCase() === 'traffic' ? 'trafficPolice' : selectedEmergencyType.toLowerCase() === 'ambulance' ? 'ambulance' : 'fireStation') })}</p>
-                  <p className="text-sm mt-2 opacity-75">{t('tryMovingCenter')}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

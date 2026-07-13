@@ -28,7 +28,20 @@ export const EmergencyAssistant: React.FC<EmergencyAssistantProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [userInputs, setUserInputs] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showQuickAnswers, setShowQuickAnswers] = useState(true);
+  const [quickAnswerShown, setQuickAnswerShown] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const quickAnswers: { question: string; answer: string }[] = [
+    { question: 'What number should I call?', answer: '📞 Emergency numbers in Ethiopia:\n• Police: 991\n• Ambulance: 939\n• Fire: 912\n\nCall these numbers immediately for direct emergency services.' },
+    { question: 'How long will help take?', answer: '⏱️ Responders typically arrive within 8-15 minutes in urban areas like Addis Ababa. In rural areas it may take longer. Stay calm and wait at a safe location.' },
+    { question: 'What should I do while waiting?', answer: '🆘 While waiting for help:\n• Stay calm and stay in a safe place\n• Keep the injured person still and warm\n• Do NOT give food or drink to an injured person\n• Gather ID and medical info if possible\n• Keep your phone charged and nearby' },
+    { question: 'Where is the nearest hospital?', answer: '🏥 You can see nearby emergency stations listed on the Emergency page below the map. Common hospitals in Addis Ababa include Tikur Anbessa, St. Paul\'s, and Yekatit 12.' },
+    { question: 'Should I move the injured person?', answer: '⚠️ Do NOT move an injured person unless they are in immediate danger (fire, flooding, collapsing structure). Moving them could worsen spinal or neck injuries. Wait for paramedics.' },
+    { question: 'How do I stop bleeding?', answer: '🩹 To stop bleeding:\n1. Apply firm, direct pressure with a clean cloth\n2. Keep pressure for 10-15 minutes\n3. Do NOT remove the cloth if blood soaks through — add another on top\n4. Elevate the wound above heart level if possible\n5. Call 939 for ambulance' },
+    { question: 'Is this an emergency?', answer: '✅ Call emergency services if:\n• Someone is unconscious or not breathing\n• Severe bleeding that won\'t stop\n• Chest pain or difficulty breathing\n• Fire or smoke\n• Crime in progress\n• Serious accident with injuries\n\nIf unsure, call 991 (Police) or 939 (Ambulance) — better safe than sorry.' },
+    { question: 'How do I report a fire?', answer: '🔥 If you see fire or smoke:\n1. Evacuate the building immediately\n2. Call 912 (Fire Department)\n3. Do NOT use elevators\n4. Stay low to avoid smoke\n5. Meet at a safe distance from the building\n6. Wait for firefighters to arrive' },
+  ];
 
   const conversationSteps: ConversationStep[] = [
     {
@@ -136,6 +149,46 @@ export const EmergencyAssistant: React.FC<EmergencyAssistantProps> = ({
         <CardContent className="flex-1 p-0 flex flex-col">
           <ScrollArea className="flex-1 p-4">
             <div className="space-y-4">
+              {/* Quick Answer shown */}
+              {quickAnswerShown && (
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 text-red-600" />
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm max-w-[85%]">
+                    <div className="whitespace-pre-wrap text-gray-800">{quickAnswerShown}</div>
+                    <div className="text-xs text-gray-500 mt-1">{new Date().toLocaleTimeString()}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Answer Chips */}
+              {showQuickAnswers && currentStep === 0 && !quickAnswerShown && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">📋 Quick Answers</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {quickAnswers.map((qa) => (
+                      <button
+                        key={qa.question}
+                        onClick={() => {
+                          setQuickAnswerShown(qa.answer);
+                          setShowQuickAnswers(false);
+                        }}
+                        className="text-xs bg-white hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-full px-3 py-1.5 transition-colors"
+                      >
+                        {qa.question}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setShowQuickAnswers(false)}
+                    className="text-xs text-gray-400 hover:text-gray-600 mt-2 underline"
+                  >
+                    Start guided flow →
+                  </button>
+                </div>
+              )}
+
               {conversationSteps.slice(0, currentStep + 1).map((step, index) => (
                 <div key={step.id} className="space-y-3">
                   {/* Bot Message */}

@@ -209,7 +209,7 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
 
           {/* Crime heat hotspots */}
           {CRIME_HOTSPOTS.map((spot) => (
-            <React.Fragment key={spot.id}>
+            <div key={spot.id} style={{ display: 'contents' }}>
               <Circle
                 center={{ lat: spot.lat, lng: spot.lng }}
                 radius={spot.radius}
@@ -227,9 +227,8 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
                   path: window.google?.maps?.SymbolPath?.CIRCLE || 1,
                   scale: 0,
                 }}
-                title={`${getSeverityLabel(spot.severity)} — ${spot.incidents} incidents (${spot.type})`}
               />
-            </React.Fragment>
+            </div>
           ))}
 
           {/* Service markers */}

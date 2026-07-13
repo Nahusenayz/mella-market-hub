@@ -96,6 +96,28 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
     return data.publicUrl;
   };
 
+  const moderateListing = async (title: string, description: string, category: string) => {
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Mella Market Hub',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-3.1-8b-instruct',
+          messages: [{ role: 'user', content: `Is this listing appropriate for a community marketplace? Category: ${category}, Title: ${title}, Description: ${description}. Respond with exactly 'APPROVE' or 'FLAG: <brief reason>'.` }]
+        })
+      });
+      const data = await res.json();
+      const result = (data.choices?.[0]?.message?.content || 'APPROVE').trim();
+      if (result === 'APPROVE') return null;
+      return result.replace('FLAG:', '').trim();
+    } catch { return null; }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -103,6 +125,11 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
     setLoading(true);
 
     try {
+      const flagReason = await moderateListing(formData.title, formData.description, formData.category);
+      if (flagReason) {
+        toast({ title: "⚠️ Content Flagged", description: `Our AI flagged this listing: ${flagReason}. You can still post it.`, variant: "destructive" });
+      }
+
       let imageUrl = imagePreview || null;
       if (imageFile) {
         imageUrl = await uploadImage(imageFile);

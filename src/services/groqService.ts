@@ -52,6 +52,23 @@ export const askMellaAssistant = async (prompt: string, history: ChatMessage[] =
   );
 };
 
+export const classifyEmergency = async (details: string, language: string = 'en') => {
+  const prompt = language === 'am'
+    ? `የሚከተለውን የአደጋ ጊዜ መግለጫ ተንትን። ምድብ (police|ambulance|fire_truck|traffic_police|tow_truck) እና የአስቸኳይ ጊዜ ደረጃ (Critical|High|Normal) መልስ። ቅርጸት፦ CATEGORY: police | URGENCY: Critical`
+    : `Analyze this emergency description. Return the category (police|ambulance|fire_truck|traffic_police|tow_truck) and urgency level (Critical|High|Normal). Format: CATEGORY: police | URGENCY: Critical\n\nDescription: ${details}`;
+  const result = await callOpenRouter(
+    'You are an emergency triage AI. Analyze descriptions and classify them into categories and urgency levels. Respond ONLY in the requested format.',
+    prompt
+  );
+  const catMatch = result.match(/CATEGORY:\s*(\w+)/i);
+  const urgMatch = result.match(/URGENCY:\s*(\w+)/i);
+  return {
+    category: catMatch?.[1]?.toLowerCase() || null,
+    urgency: urgMatch?.[1] || null,
+    raw: result
+  };
+};
+
 export const translateWithMella = async (
   text: string,
   targetLanguage: 'en' | 'am',

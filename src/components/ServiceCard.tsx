@@ -1,7 +1,8 @@
 import React from 'react';
-import { Star, MapPin, MessageCircle, User, Share2 } from 'lucide-react';
+import { Star, MapPin, MessageCircle, User, Share2, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFavorites } from '@/hooks/useFavorites';
 import { Translated } from './Translated';
 
 interface Service {
@@ -46,6 +47,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorited = isFavorite(service.id);
 
   const handleMessage = () => {
     if (!user) {
@@ -94,8 +97,17 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
         <div className="absolute top-4 right-4 premium-gradient-orange rounded-2xl px-4 py-2 shadow-xl backdrop-blur-md border border-white/30">
           <span className="text-white font-black tracking-tight">ETB {service.price.toLocaleString()}</span>
         </div>
-        <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md rounded-2xl px-3 py-1 border border-white/20">
-          <span className="text-white text-xs font-bold uppercase tracking-widest">{service.category}</span>
+        <div className="absolute top-4 left-4 flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleFavorite(service.id); }}
+            className="p-2 rounded-xl bg-black/30 backdrop-blur-md border border-white/20 hover:bg-black/50 transition-all active:scale-90"
+            aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <Heart size={16} className={favorited ? 'fill-red-500 text-red-500' : 'text-white'} />
+          </button>
+          <span className="bg-black/40 backdrop-blur-md rounded-2xl px-3 py-1 border border-white/20">
+            <span className="text-white text-xs font-bold uppercase tracking-widest">{service.category}</span>
+          </span>
         </div>
       </div>
       

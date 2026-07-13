@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { supabase } from '../integrations/supabase/client'
 import { useEmergencyRequests } from '../hooks/useEmergencyRequests'
 import { useNavigate } from 'react-router-dom'
@@ -8,6 +8,7 @@ import WorkerEarnings from '../components/WorkerEarnings'
 import DemandHeatmap from '../components/DemandHeatmapGoogle'
 import WorkerLeaderboard from '../components/WorkerLeaderboard'
 import { useTranslation } from '../contexts/LanguageContext'
+import { useVoiceCall } from '../hooks/useVoiceCall'
 import {
   Bell,
   Map as MapIcon,
@@ -24,7 +25,8 @@ import {
   Gauge,
   MapPin,
   Settings,
-  Volume2
+  Volume2,
+  Phone
 } from 'lucide-react'
 import { EmergencyRequest } from '../hooks/useEmergencyRequests'
 
@@ -41,18 +43,57 @@ export default function Dashboard() {
   const [showNotification, setShowNotification] = useState(false)
   const [newRequestCount, setNewRequestCount] = useState(0)
   const prevRequestsRef = useRef<string[]>([])
-  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
   const [ringing, setRinging] = useState(false)
   const ringingRef = useRef(false)
 
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const getAudioContext = useCallback(() => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume().catch(() => {});
+    }
+    return audioCtxRef.current;
+  }, []);
+
+  const playAlarmSound = useCallback(() => {
+    try {
+      const ctx = getAudioContext();
+      const playTone = (freq: number, start: number, dur: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, start);
+        gain.gain.exponentialRampToValueAtTime(0.01, start + dur);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + dur);
+      };
+      for (let i = 0; i < 4; i++) {
+        playTone(880, i * 0.6, 0.25);
+        playTone(660, i * 0.6 + 0.3, 0.25);
+      }
+    } catch (e) {
+      console.warn('Web Audio API not available for alarm');
+    }
+  }, [getAudioContext]);
+
+  // Pre-create AudioContext on first user interaction (for autoplay policy)
+  useEffect(() => {
+    const handler = () => { getAudioContext(); document.removeEventListener('pointerdown', handler); document.removeEventListener('keydown', handler); };
+    document.addEventListener('pointerdown', handler);
+    document.addEventListener('keydown', handler);
+    return () => { document.removeEventListener('pointerdown', handler); document.removeEventListener('keydown', handler); };
+  }, [getAudioContext]);
+
   const stopAlarm = () => {
     ringingRef.current = false
     setRinging(false)
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-    }
   }
 
   const getGpsQuality = (accuracy: number | null): 'excellent' | 'good' | 'fair' | 'poor' | 'unknown' => {
@@ -123,14 +164,7 @@ export default function Dashboard() {
       if (!ringingRef.current) {
         ringingRef.current = true
         setRinging(true)
-        if (audioRef.current) {
-          audioRef.current.loop = true
-          audioRef.current.currentTime = 0
-          audioRef.current.play().catch(() => {
-            ringingRef.current = false
-            setRinging(false)
-          })
-        }
+        playAlarmSound()
       }
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('🚨 New Emergency Request!', {
@@ -225,7 +259,9 @@ export default function Dashboard() {
       navigator.geolocation.clearWatch(watchId);
       clearInterval(heartbeatId);
     }
-  }, [userId, userCategory, isOnline, loc])
+  }, [userId, userCategory, isOnline])
+
+  // Voice call - auto-listen on first active request
 
   const toggleOnlineStatus = async () => {
     const newStatus = !isOnline
@@ -258,6 +294,47 @@ export default function Dashboard() {
   const theme = getTheme(userCategory)
   const pendingRequests = requests.filter(r => r.status === 'pending')
   const activeRequests = requests.filter(r => r.status !== 'pending' && r.status !== 'completed' && r.status !== 'cancelled')
+  const primaryActiveRequest = activeRequests[0];
+  const voiceCall = useVoiceCall(
+    primaryActiveRequest?.id || 'none',
+    userId || '',
+    primaryActiveRequest?.user_id || ''
+  );
+
+  // En-route location simulation ref
+  const enRouteSimRef = useRef<number | null>(null);
+
+  const startEnRouteSim = (requestId: string, targetLat: number, targetLng: number, currentLoc: { lat: number; lng: number }) => {
+    if (enRouteSimRef.current) { clearInterval(enRouteSimRef.current); enRouteSimRef.current = null; }
+    // If start and target are the same (both default coords), apply a visible offset for demonstration
+    const dLat = targetLat - currentLoc.lat;
+    const dLng = targetLng - currentLoc.lng;
+    let effectiveTarget = { lat: targetLat, lng: targetLng };
+    if (Math.abs(dLat) < 0.001 && Math.abs(dLng) < 0.001) {
+      effectiveTarget = { lat: currentLoc.lat + 0.02, lng: currentLoc.lng + 0.02 };
+      console.log('📍 Using offset target for visual movement:', effectiveTarget);
+    }
+    console.log('🚗 Starting en-route simulation:', requestId, currentLoc, '->', effectiveTarget);
+    let step = 0;
+    const totalSteps = 60;
+    const simInterval = window.setInterval(() => {
+      step++;
+      if (step > totalSteps) { clearInterval(simInterval); enRouteSimRef.current = null; console.log('✅ En-route simulation complete'); return; }
+      const fraction = Math.min(step / totalSteps, 1);
+      const newLat = currentLoc.lat + (effectiveTarget.lat - currentLoc.lat) * fraction;
+      const newLng = currentLoc.lng + (effectiveTarget.lng - currentLoc.lng) * fraction;
+      void supabase.from('emergency_requests' as any)
+        .update({
+          responder_location_lat: newLat,
+          responder_location_lng: newLng,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId)
+        .then(() => console.log('📍 Sim update step', step, ':', newLat, newLng));
+    }, 2000);
+    enRouteSimRef.current = simInterval;
+  };
+
   const recentHistory = history.slice(0, 3)
   const completedCount = history.filter(h => h.status === 'completed').length
   const topDemandCategory = useMemo(() => {
@@ -308,7 +385,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-24 md:pb-8 overflow-x-hidden">
-      <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2871/2871-preview.mp3" preload="auto" />
 
       {/* Global Notifications Area */}
       {showNotification && (
@@ -333,7 +409,7 @@ export default function Dashboard() {
                 )}
               </div>
               <button
-                onClick={stopAlarm}
+                onClick={() => { stopAlarm(); setShowNotification(false); setNewRequestCount(0); }}
                 className="shrink-0 rounded-2xl bg-slate-900 px-4 py-2 text-xs font-black text-white shadow-lg transition-all hover:bg-black active:scale-95"
               >
                 {t('DISMISS')}
@@ -623,6 +699,15 @@ export default function Dashboard() {
                                     <span className="text-xs font-black text-orange-600 uppercase tracking-widest">{r.category?.replace('_', ' ')}</span>
                                     <span className="h-1 w-1 rounded-full bg-slate-300" />
                                     <span className="text-xs font-bold text-slate-400">{formatTimeAgo(r.created_at)}</span>
+                                    {primaryActiveRequest?.id === r.id && voiceCall.callStatus === 'connected' && (
+                                      <span className="flex items-center gap-1 text-[10px] font-black text-green-600 uppercase tracking-wider bg-green-50 px-2 py-0.5 rounded-full">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                        Live Call
+                                      </span>
+                                    )}
+                                    {voiceCall.error && primaryActiveRequest?.id === r.id && (
+                                      <span className="text-[10px] text-red-500 ml-2">{voiceCall.error}</span>
+                                    )}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -636,10 +721,25 @@ export default function Dashboard() {
                               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                                 {r.status === 'accepted' && (
                                   <button 
-                                    onClick={() => loc && updateStatus(r.id, 'en_route', loc)} 
+                                    onClick={() => {
+                                      if (loc && r.user_location_lat && r.user_location_lng) {
+                                        updateStatus(r.id, 'en_route', loc);
+                                        startEnRouteSim(r.id, r.user_location_lat, r.user_location_lng, loc);
+                                      } else if (loc) {
+                                        updateStatus(r.id, 'en_route', loc);
+                                      }
+                                    }}
                                     className="min-h-[64px] flex-[2] rounded-[24px] bg-indigo-600 text-white text-base font-black shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                   >
                                     {t('EN ROUTE')}
+                                  </button>
+                                )}
+                                {primaryActiveRequest?.id === r.id && voiceCall.callStatus === 'connected' && (
+                                  <button
+                                    onClick={() => voiceCall.endCall()}
+                                    className="min-h-[64px] flex-1 rounded-[24px] bg-green-600 text-white font-black shadow-xl shadow-green-100 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                                  >
+                                    <Phone className="h-5 w-5" /> {t('End Call')}
                                   </button>
                                 )}
                                 <button 
@@ -649,7 +749,12 @@ export default function Dashboard() {
                                   {t('MARK COMPLETED')}
                                 </button>
                                 <button
-                                  onClick={() => updateStatus(r.id, 'cancelled')}
+                                  onClick={() => {
+                                    if (primaryActiveRequest?.id === r.id && voiceCall.callStatus !== 'idle') {
+                                      voiceCall.endCall();
+                                    }
+                                    updateStatus(r.id, 'cancelled');
+                                  }}
                                   className="min-h-[64px] flex-1 rounded-[24px] bg-slate-100 text-slate-400 font-black hover:bg-rose-50 hover:text-rose-600 transition-all text-xs"
                                 >
                                   {t('CANCEL')}
@@ -848,6 +953,38 @@ export default function Dashboard() {
           })
         }}
       />
+
+      {/* Incoming Call Notification */}
+      {voiceCall.incomingCall && primaryActiveRequest && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm animate-in zoom-in-95 duration-300">
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-green-400">
+              <div className="bg-gradient-to-b from-emerald-500 to-green-600 p-8 text-center">
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/20 ring-4 ring-white/30 animate-pulse">
+                  <Phone className="h-10 w-10 text-white" />
+                </div>
+                <h2 className="mt-6 text-2xl font-black text-white">Incoming Call</h2>
+                <p className="mt-1 text-green-100 font-medium">{primaryActiveRequest.user_profile?.full_name || 'Emergency User'}</p>
+                <p className="text-green-200 text-sm">{primaryActiveRequest.category?.replace('_', ' ')} emergency</p>
+              </div>
+              <div className="flex gap-4 p-6">
+                <button
+                  onClick={() => voiceCall.declineCall()}
+                  className="flex-1 min-h-[56px] rounded-2xl bg-red-500 text-white font-black text-base hover:bg-red-600 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Phone className="h-5 w-5 rotate-135" /> Decline
+                </button>
+                <button
+                  onClick={() => voiceCall.acceptCall()}
+                  className="flex-1 min-h-[56px] rounded-2xl bg-emerald-500 text-white font-black text-base hover:bg-emerald-600 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-200"
+                >
+                  <Phone className="h-5 w-5" /> Accept
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

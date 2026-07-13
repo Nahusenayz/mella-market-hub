@@ -13,6 +13,7 @@ import { AdForm } from '@/components/AdForm';
 import { PostModal } from '@/components/PostModal';
 import { Footer } from '@/components/Footer';
 import { TowTruckFlow } from '@/components/TowTruckFlow';
+import { AIServiceSuggestions } from '@/components/AIServiceSuggestions';
 import { useRealTimeAds } from '@/hooks/useRealTimeAds';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { List, MapPin, Plus, AlertTriangle, Shield, HeartPulse, MessageSquarePlus, Activity, Truck } from 'lucide-react';
@@ -81,6 +82,14 @@ const Index = () => {
   const [editAd, setEditAd] = useState<Service | null>(null);
   const { workers: responders } = useWorkerLocations();
   const onlineResponders = responders.length;
+  const responderCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    responders.forEach(r => {
+      const cat = r.category;
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return counts;
+  }, [responders]);
   const [dismissedCrimeAlert, setDismissedCrimeAlert] = useState(false);
 
   // Default location fallback
@@ -222,7 +231,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-orange-50 to-red-50 pb-4 overflow-x-hidden">
+    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-orange-50 to-red-50 dark:from-slate-900 dark:to-slate-900 dark:bg-slate-900 pb-4 overflow-x-hidden">
       <Navbar onPostAd={handlePostAd} />
 
       {!selectedMessageUser && (
@@ -232,6 +241,7 @@ const Index = () => {
             onSearchChange={setSearchQuery}
             isWorkerMode={false}
             onTowTruckClick={() => setShowTowTruck(true)}
+            responderCounts={responderCounts}
           />
 
           {/* Real-time Responder Stats Ticker */}
@@ -278,18 +288,18 @@ const Index = () => {
               <div className="mb-12">
                 <div className="flex items-center gap-2 mb-4">
                   <AlertTriangle className="text-red-600 h-6 w-6" />
-                  <h2 className="text-xl font-bold text-gray-800">Recent Safety Alerts</h2>
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">Recent Safety Alerts</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filteredServices
                     .filter(s => s.category === 'Safety Alert')
                     .slice(0, 2)
                     .map(alert => (
-                      <div key={alert.id} className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => handlePostClick(alert)}>
+                      <div key={alert.id} className="bg-red-50 dark:bg-red-950 border-l-4 border-red-500 p-4 rounded-r-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => handlePostClick(alert)}>
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="font-bold text-red-800">{alert.title}</h4>
-                            <p className="text-sm text-red-700 line-clamp-1">{alert.description}</p>
+                            <h4 className="font-bold text-red-800 dark:text-red-300">{alert.title}</h4>
+                            <p className="text-sm text-red-700 dark:text-red-400 line-clamp-1">{alert.description}</p>
                           </div>
                           <Badge variant="destructive" className="text-[10px] py-0 px-1">URGENT</Badge>
                         </div>
@@ -310,18 +320,22 @@ const Index = () => {
 
             {isSearching && (
               <div className="mb-6">
-                <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <span className="text-blue-800">
+                <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <span className="text-blue-800 dark:text-blue-300">
                     {t('searchResults')} ({searchResults.length})
                   </span>
                   <button
                     onClick={clearSearch}
-                    className="text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 font-medium"
                   >
                     {t('clearSearch')}
                   </button>
                 </div>
               </div>
+            )}
+
+            {selectedCategory !== 'all' && (
+              <AIServiceSuggestions category={selectedCategory} listingTitles={ads.filter(a => a.category === selectedCategory).map(a => a.title)} />
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -338,9 +352,9 @@ const Index = () => {
 
               <div className="lg:col-span-3">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800">
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
                     {isSearching ? t('searchResults') : t('communityPosts')}
-                    <span className="text-lg font-normal text-gray-600 ml-2">
+                    <span className="text-lg font-normal text-gray-600 dark:text-slate-400 ml-2">
                       ({filteredServices.length} {t('postsWithinDistance')} {distanceFilter}{t('kilometers')})
                     </span>
                   </h2>
@@ -358,19 +372,19 @@ const Index = () => {
                     {/* 3D Map Button */}
                     <button
                       onClick={() => navigate('/map3d')}
-                      className="bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors flex items-center gap-2 font-medium"
+                      className="bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-200 px-4 py-2 rounded-lg border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors flex items-center gap-2 font-medium"
                     >
                       <MapPin size={16} />
                       <span className="hidden sm:inline">{t('map3D') || '3D Map'}</span>
                     </button>
 
-                    <div className="flex bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                    <div className="flex bg-white dark:bg-slate-700 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-slate-600">
                       <button
                         onClick={() => setViewMode('list')}
                         className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
                           viewMode === 'list'
                             ? 'bg-orange-500 text-white'
-                            : 'bg-white text-gray-600 hover:bg-gray-50'
+                            : 'bg-white dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-600'
                         }`}
                       >
                         <List size={20} />
@@ -381,7 +395,7 @@ const Index = () => {
                         className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
                           viewMode === 'map'
                             ? 'bg-orange-500 text-white'
-                            : 'bg-white text-gray-600 hover:bg-gray-50'
+                            : 'bg-white dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-600'
                         }`}
                       >
                         <MapPin size={20} />
@@ -394,7 +408,7 @@ const Index = () => {
                 {loading ? (
                   <div className="text-center py-12">
                     <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">{t('loadingPosts')}</p>
+                    <p className="mt-4 text-gray-600 dark:text-slate-300">{t('loadingPosts')}</p>
                   </div>
                 ) : (
                   <>
@@ -408,7 +422,7 @@ const Index = () => {
                         onPostClick={handlePostClick}
                       />
                     ) : (
-                      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden h-[600px] mb-8 sticky top-24">
+                      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 overflow-hidden h-[600px] mb-8 sticky top-24">
                         <MapView 
                           services={filteredServices} 
                           userLocation={currentLocation} 
@@ -425,7 +439,7 @@ const Index = () => {
       )}
 
       {selectedMessageUser && (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 dark:text-slate-100">
           <div className="max-w-4xl mx-auto">
             <MessageThread
               otherUserId={selectedMessageUser.id}

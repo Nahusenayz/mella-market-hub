@@ -12,8 +12,9 @@ import AdminJobsTable from '@/components/admin/AdminJobsTable';
 import AdminPaymentsTable from '@/components/admin/AdminPaymentsTable';
 import AdminReports from '@/components/admin/AdminReports';
 import AdminEmergenciesTable from '@/components/admin/AdminEmergenciesTable';
+import { useAnomalyDetection } from '@/hooks/useAnomalyDetection';
 import { ShieldX, Loader2, ShieldCheck, Lock, User as UserIcon } from 'lucide-react';
-import { playAlarm, requestBrowserNotification } from '@/utils/notifications';
+import { playAlarm, requestBrowserNotification, initAudioContext } from '@/utils/notifications';
 import '@/styles/admin.css';
 
 const AdminDashboard: React.FC = () => {
@@ -24,6 +25,13 @@ const AdminDashboard: React.FC = () => {
   
   const [newEmergencyCount, setNewEmergencyCount] = useState(0);
   const queryClient = useQueryClient();
+
+  // Pre-create AudioContext on first user click (required for autoplay policy)
+  useEffect(() => {
+    const handler = () => { initAudioContext(); document.removeEventListener('click', handler); };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -39,9 +47,20 @@ const AdminDashboard: React.FC = () => {
           queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
         }
       })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'emergency_requests' }, (payload) => {
+        const row = payload.new as any;
+        const old = payload.old as any;
+        if (row.status !== old?.status && (row.status === 'accepted' || row.status === 'en_route' || row.status === 'completed')) {
+          playAlarm();
+          queryClient.invalidateQueries({ queryKey: ['admin', 'emergencies'] });
+          queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
+        }
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [isAdmin, queryClient]);
+
+  const anomalies = useAnomalyDetection();
 
   const clearNewEmergencies = () => setNewEmergencyCount(0);
 
@@ -192,6 +211,17 @@ const AdminDashboard: React.FC = () => {
         newEmergencyCount={newEmergencyCount}
       />
       <main className="admin-content">
+        {anomalies.length > 0 && (
+          <div className="px-6 pt-4 space-y-2">
+            {anomalies.map((a, i) => (
+              <div key={i} className={`px-4 py-3 rounded-lg text-sm font-medium ${
+                a.severity === 'danger' ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+              }`}>
+                {a.message}
+              </div>
+            ))}
+          </div>
+        )}
         {renderContent()}
       </main>
     </div>

@@ -102,7 +102,7 @@ export function useEmergencyRequests() {
                 full_name: profile.full_name,
                 phone_number: profile.phone_number,
                 profile_image_url: profile.profile_image_url
-              } : null,
+              } : undefined,
               estimated_price: price
             };
           })

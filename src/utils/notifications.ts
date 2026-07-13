@@ -1,21 +1,34 @@
+let audioCtx: AudioContext | null = null;
+
+export function initAudioContext() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    } catch { return null; }
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
 
 export function playAlarm() {
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const ctx = initAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
-    const frequencies = [880, 660, 880, 660];
-    frequencies.forEach((freq, i) => {
+    for (let i = 0; i < 8; i++) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.frequency.setValueAtTime(freq, now + i * 0.2);
+      osc.frequency.setValueAtTime(i % 2 === 0 ? 880 : 660, now + i * 0.25);
       osc.type = 'square';
-      gain.gain.setValueAtTime(0.15, now + i * 0.2);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.2 + 0.15);
-      osc.start(now + i * 0.2);
-      osc.stop(now + i * 0.2 + 0.15);
-    });
+      gain.gain.setValueAtTime(0.15, now + i * 0.25);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.25 + 0.2);
+      osc.start(now + i * 0.25);
+      osc.stop(now + i * 0.25 + 0.2);
+    }
   } catch {}
 }
 

@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NotificationSystem } from './NotificationSystem';
 import { UserSearch } from './UserSearch';
 import { UserProfileModal } from './UserProfile';
-import { User, LogOut, MessageSquare, Home, Plus, Globe, AlertTriangle } from 'lucide-react';
+import { User, LogOut, MessageSquare, Home, Plus, Globe, AlertTriangle, Moon, Sun } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import logo from '@/logo.png';
 import { Translated } from './Translated';
@@ -21,6 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const [selectedUserProfile, setSelectedUserProfile] = useState<string | null>(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -65,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
 
   return (
     <>
-      <nav className="glass-navbar border-none shadow-none">
+      <nav className="glass-navbar border-none shadow-none dark:bg-slate-900/95">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
@@ -77,23 +79,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                 <img src={logo} alt="Mella" className="w-8 h-8 object-contain" />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">Mella</h1>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Market Hub</p>
+                <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-none">Mella</h1>
+                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">Market Hub</p>
               </div>
             </div>
 
             {/* Navigation Links - Horizontal on desktop */}
-            <div className="hidden md:flex items-center space-x-1 sm:space-x-4 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/50">
+            <div className="hidden md:flex items-center space-x-1 sm:space-x-4 bg-slate-100/50 dark:bg-slate-800/50 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
               <button 
                 onClick={() => navigate('/')} 
-                className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${isActive('/') ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-600 hover:text-orange-500 hover:bg-white/50'}`}
+                className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${isActive('/') ? 'bg-white dark:bg-slate-700 text-orange-600 shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-orange-500 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
               >
                 <Home size={16} />
                 <span className="hidden sm:inline">{t('home')}</span>
               </button>
               <button 
                 onClick={() => navigate('/emergency')} 
-                className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${isActive('/emergency') ? 'bg-red-50 text-red-600 shadow-sm' : 'text-red-500 hover:text-red-600 hover:bg-white/50'}`}
+                className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${isActive('/emergency') ? 'bg-red-50 dark:bg-red-950 text-red-600 shadow-sm' : 'text-red-500 hover:text-red-600 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
               >
                 <AlertTriangle size={16} />
                 <span className="hidden sm:inline">{t('emergency')}</span>
@@ -103,12 +105,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
 
             {/* Right Side */}
             <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Dark Mode Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleTheme}
+                className="flex items-center gap-1 text-gray-600 dark:text-slate-300 hover:text-orange-600 flex-shrink-0 px-2"
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              </Button>
+
               {/* Language Switcher */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleLanguage}
-                className="flex items-center gap-1 text-gray-600 hover:text-orange-600 flex-shrink-0 px-2"
+                className="flex items-center gap-1 text-gray-600 dark:text-slate-300 hover:text-orange-600 flex-shrink-0 px-2"
               >
                 <Globe size={18} />
                 <span className="text-xs font-bold uppercase">{language === 'en' ? 'አማ' : 'EN'}</span>
@@ -122,8 +135,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                   <button
                     onClick={() => navigate('/messages')}
                     className={`p-2 rounded-full transition-colors ${isActive('/messages')
-                      ? 'bg-orange-100 text-orange-600'
-                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                      ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-600'
+                      : 'text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:hover:text-slate-100 hover:bg-gray-100 dark:hover:bg-slate-700'
                       }`}
                   >
                     <MessageSquare size={20} />
@@ -141,7 +154,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                   {/* Profile Dropdown */}
                   <div className="relative" ref={dropdownRef}>
                     <button
-                      className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
                       onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                     >
                       {user.user_metadata?.avatar_url ? (
@@ -155,21 +168,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                           <User size={16} className="text-orange-600" />
                         </div>
                       )}
-                      <span className="hidden md:block text-sm font-medium text-gray-700">
+                      <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-slate-200">
                         <Translated text={user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'} />
                       </span>
                     </button>
 
                     {/* Dropdown Menu */}
                     {isProfileDropdownOpen && (
-                      <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 animate-in fade-in zoom-in duration-200">
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 z-50 animate-in fade-in zoom-in duration-200">
                         <div className="py-2">
                           <button
                             onClick={() => {
                               navigate('/profile');
                               setIsProfileDropdownOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-2 text-gray-700 dark:text-slate-200"
                           >
                             <User size={16} />
                             My Profile
@@ -179,18 +192,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                               navigate('/messages');
                               setIsProfileDropdownOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-2 text-gray-700 dark:text-slate-200"
                           >
                             <MessageSquare size={16} />
                             Messages
                           </button>
-                          <hr className="my-2" />
+                          <hr className="my-2 dark:border-slate-600" />
                           <button
                             onClick={() => {
                               handleSignOut();
                               setIsProfileDropdownOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-2 text-red-600"
                           >
                             <LogOut size={16} />
                             Sign Out
@@ -204,7 +217,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onPostAd }) => {
                 <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
                   <button
                     onClick={() => navigate('/auth')}
-                    className="text-slate-600 hover:text-slate-900 font-bold text-xs sm:text-sm px-1 sm:px-2 whitespace-nowrap"
+                    className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 font-bold text-xs sm:text-sm px-1 sm:px-2 whitespace-nowrap"
                   >
                     Sign In
                   </button>

@@ -70,7 +70,7 @@ export const useMessages = (activeOtherUserId?: string) => {
             ...conv,
             other_user: {
               id: otherUserId,
-              full_name: profile?.full_name || 'Mella User',
+              full_name: profile?.full_name || 'User',
               profile_image_url: profile?.profile_image_url || '',
               is_verified: profile?.is_verified || false,
               badges: Array.isArray(profile?.badges) ? profile.badges.filter((badge): badge is string => typeof badge === 'string') : []

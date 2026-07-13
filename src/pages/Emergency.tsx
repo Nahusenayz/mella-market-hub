@@ -39,6 +39,9 @@ import { useWorkerLocations } from '@/hooks/useWorkerLocations';
 import { Translated } from '@/components/Translated';
 import { useToast } from '@/hooks/use-toast';
 import { calculateDistanceKm } from '@/lib/utils';
+import { classifyEmergency } from '@/services/groqService';
+import AmharicVoiceInput from '@/components/AmharicVoiceInput';
+import { useVoiceCall } from '@/hooks/useVoiceCall';
 
 interface EmergencyStation {
   id: string;
@@ -101,9 +104,21 @@ export const Emergency: React.FC = () => {
   const [requestDetails, setRequestDetails] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeRequest, setActiveRequest] = useState<ActiveRequest | null>(null);
+  const voiceCall = useVoiceCall(
+    activeRequest?.id || 'none',
+    user?.id || '',
+    activeRequest?.responder_id || ''
+  );
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
   const [filterCategory, setFilterCategory] = useState<string>(location.state?.category || 'all');
+  const [aiTriage, setAiTriage] = useState<{ category: string | null; urgency: string | null } | null>(null);
+  const [urgencyLevel, setUrgencyLevel] = useState<string>('Normal');
+  const urgencyRef = useRef('Normal');
+  useEffect(() => { urgencyRef.current = urgencyLevel; }, [urgencyLevel]);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const [isTriaging, setIsTriaging] = useState(false);
+  const requestStatusRef = useRef<string>('pending');
   const presetReasons = React.useMemo(() => {
     const key = (selectedWorker?.category || selectedCategory || 'general').toLowerCase();
     const map: Record<string, string[]> = {
@@ -138,6 +153,28 @@ export const Emergency: React.FC = () => {
     };
     return descs[key] || key;
   };
+
+  // AI Emergency Triage — classify details text when user stops typing
+  useEffect(() => {
+    if (!requestDetails || requestDetails.length < 5) { setAiTriage(null); return; }
+    const timer = setTimeout(async () => {
+      setIsTriaging(true);
+      try {
+        const result = await classifyEmergency(requestDetails, language);
+        if (result.category) {
+          setAiTriage({ category: result.category, urgency: result.urgency });
+          setUrgencyLevel(result.urgency || 'Normal');
+          // Auto-select category if not already selected
+          if (!selectedCategory) {
+            const match = EMERGENCY_CATEGORIES.find(c => c.key === result.category);
+            if (match) setSelectedCategory(result.category);
+          }
+        }
+      } catch (e) { console.error('Triage error:', e); }
+      finally { setIsTriaging(false); }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [requestDetails]);
 
   // Also set selectedCategory for the request form if a specific category was passed
   useEffect(() => {
@@ -183,12 +220,79 @@ export const Emergency: React.FC = () => {
     }
   }, []);
 
-  // Subscribe to active request updates
+  // Create AudioContext once on first user interaction
+  const ensureAudioCtx = () => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
+  };
+
+  const playSiren = () => {
+    try {
+      const ctx = ensureAudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.value = 0.3;
+      osc.start();
+      setTimeout(() => { osc.frequency.value = 660; }, 500);
+      setTimeout(() => { osc.stop(); ctx.close(); }, 1500);
+    } catch (e) { console.warn('Siren error:', e); }
+  };
+
+  // Poll active request updates (fallback if Realtime TIMED_OUT/CLOSED)
   useEffect(() => {
-    if (!activeRequest) return;
+    if (!activeRequest?.id) return;
+
+    const handleUpdate = (newData: any) => {
+      const oldStatus = requestStatusRef.current;
+      requestStatusRef.current = newData.status;
+
+      console.log('🔄 Request update:', { old: oldStatus, new: newData.status, lat: newData.responder_location_lat, lng: newData.responder_location_lng });
+
+      if (newData.status !== oldStatus) {
+        if (newData.status === 'completed') {
+          try { toast({ title: "✅ Request Completed", description: "The responder has marked this emergency as resolved.", variant: "default" }); } catch {}
+          setActiveRequest(null);
+          return;
+        } else if (newData.status === 'cancelled') {
+          try { toast({ title: "⚠️ Request Cancelled", description: "Your emergency request has been cancelled.", variant: "destructive" }); } catch {}
+          setActiveRequest(null);
+          return;
+        } else if (newData.status === 'accepted') {
+          try {
+            toast({ title: "🚨 Request Accepted!", description: "A responder has accepted your request and is preparing to assist you.", variant: "default" });
+            if (urgencyRef.current === 'Critical') playSiren();
+          } catch {}
+        } else if (newData.status === 'en_route') {
+          try { toast({ title: "🚑 Responder En Route", description: "The responder is on their way to your location.", variant: "default" }); } catch {}
+        }
+      }
+
+      // Update location if present
+      setActiveRequest(prev => {
+        if (!prev) return newData as ActiveRequest;
+        return {
+          ...prev,
+          status: newData.status || prev.status,
+          responder_location_lat: newData.responder_location_lat ?? prev.responder_location_lat,
+          responder_location_lng: newData.responder_location_lng ?? prev.responder_location_lng,
+        };
+      });
+    };
+
+    // Try Realtime subscription first
+    let pollingTimer: number | null = null;
+    let subscribed = false;
 
     const channel = supabase
-      .channel('active-request-' + activeRequest.id)
+      .channel('request-tracking-' + activeRequest.id)
       .on(
         'postgres_changes',
         {
@@ -197,86 +301,32 @@ export const Emergency: React.FC = () => {
           table: 'emergency_requests',
           filter: `id=eq.${activeRequest.id}`
         },
-        (payload) => {
-          const newData = payload.new as ActiveRequest;
-          const oldData = activeRequest;
-          
-          console.log('🔄 Request update received:', { old: oldData.status, new: newData.status });
-          
-          if (newData.status !== oldData.status) {
-            if (newData.status === 'accepted') {
-              toast({
-                title: "🚨 Request Accepted!",
-                description: "A responder has accepted your request and is preparing to assist you.",
-                variant: "default",
-              });
-            } else if (newData.status === 'en_route') {
-              toast({
-                title: "🚑 Responder En Route",
-                description: "The responder is on their way to your location.",
-                variant: "default",
-              });
-            } else if (newData.status === 'cancelled') {
-              toast({
-                title: "⚠️ Request Cancelled",
-                description: "Your emergency request has been cancelled.",
-                variant: "destructive",
-              });
-              setActiveRequest(null); // Clear it if cancelled
-              return;
-            } else if (newData.status === 'pending' && oldData.status !== 'pending') {
-              toast({
-                title: "🔄 Request Re-queued",
-                description: "The previous responder was unable to attend. Your request is back in the queue for the next available responder.",
-                variant: "default",
-              });
-            }
-          }
-          
-          setActiveRequest(newData);
-        }
+        (payload) => handleUpdate(payload.new)
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🔄 Realtime subscription status:', status);
+        if (status === 'SUBSCRIBED') subscribed = true;
+        if (status === 'TIMED_OUT' || status === 'CLOSED') {
+          // Fallback: poll every 3s
+          if (!pollingTimer) {
+            console.log('📡 Realtime failed, starting polling fallback');
+            pollingTimer = window.setInterval(async () => {
+              const { data } = await supabase
+                .from('emergency_requests' as any)
+                .select('*')
+                .eq('id', activeRequest.id)
+                .single();
+              if (data) handleUpdate(data);
+            }, 3000);
+          }
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
+      if (pollingTimer) clearInterval(pollingTimer);
     };
   }, [activeRequest?.id]);
-
-  // Subscribe to responder location when en_route
-  useEffect(() => {
-    if (activeRequest?.status !== 'en_route' || !activeRequest?.responder_id) return;
-
-    console.log('🛰️ Subscribing to responder location:', activeRequest.responder_id);
-
-    const channel = supabase
-      .channel('responder-tracking')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'worker_locations',
-          filter: `worker_id=eq.${activeRequest.responder_id}`
-        },
-        (payload) => {
-          console.log('📍 New responder location:', payload.new);
-          const newLoc = payload.new;
-          if (newLoc.location_lat && newLoc.location_lng) {
-            setActiveRequest(prev => prev ? ({
-              ...prev,
-              responder_location_lat: newLoc.location_lat,
-              responder_location_lng: newLoc.location_lng
-            }) : null);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeRequest?.status, activeRequest?.responder_id]);
 
   // Check for existing active requests on mount
   useEffect(() => {
@@ -396,17 +446,26 @@ export const Emergency: React.FC = () => {
     console.log('User ID:', userId);
 
     if (!userId) {
-      alert('Please sign in to request help.');
+      toast({ title: 'Sign in required', description: 'Please sign in to request help.', variant: 'destructive' });
       return;
     }
 
     if (activeRequest) {
-      console.log('⚠️ Already have active request, showing alert');
-      alert('You already have an active request. Please wait or cancel it first.');
+      toast({ title: 'Active request exists', description: 'You already have an active request. Please wait or cancel it first.', variant: 'destructive' });
       return;
     }
 
     console.log('✓ No active request, proceeding...');
+
+    // Run AI triage to set urgencyLevel before subscription starts
+    const det = `Emergency ${worker.category} assistance requested. Responder: ${worker.profiles?.full_name || 'Available'}`;
+    try {
+      const triageResult = await classifyEmergency(det, language);
+      if (triageResult.urgency) {
+        setUrgencyLevel(triageResult.urgency);
+        urgencyRef.current = triageResult.urgency;
+      }
+    } catch (e) { console.warn('Triage pre-classify error:', e); }
 
     // Skip confirmation for faster Uber-like experience
     try {
@@ -416,7 +475,7 @@ export const Emergency: React.FC = () => {
         user_id: userId,
         status: 'pending',
         category: worker.category,
-        details: `Emergency ${worker.category} assistance requested. Responder: ${worker.profiles?.full_name || 'Available'}`,
+        details: det,
         user_location_lat: userLocation.lat,
         user_location_lng: userLocation.lng,
         responder_id: worker.worker_id,
@@ -433,23 +492,27 @@ export const Emergency: React.FC = () => {
 
       if (error) {
         console.error('❌ Error creating request:', error);
-        alert(`Failed to send request: ${error.message}`);
+        toast({ title: 'Request failed', description: error.message, variant: 'destructive' });
         return;
       }
 
       console.log('✅ Emergency request created:', data);
-      alert('🚨 Emergency request sent! The responder will see your request and can accept it.');
+      toast({ title: '🚨 Request sent!', description: 'A responder will see your request shortly.' });
+
+      // Ensure AudioContext is ready on user gesture
+      ensureAudioCtx();
 
       setActiveRequest(data as unknown as ActiveRequest);
+      console.log('✅ activeRequest set, subscription should activate');
     } catch (e: any) {
       console.error('💥 Exception:', e);
-      alert('Failed to send request. Please try again.');
+      toast({ title: 'Request failed', description: 'Please try again.', variant: 'destructive' });
     }
   };
 
   const createEmergencyRequest = async (targetWorkerId?: string) => {
     if (!selectedCategory && !targetWorkerId && !selectedWorker) {
-      alert('Please select an emergency category');
+      toast({ title: 'Select category', description: 'Please select an emergency category.', variant: 'destructive' });
       return;
     }
 
@@ -458,7 +521,7 @@ export const Emergency: React.FC = () => {
       const { data: session } = await supabase.auth.getUser();
       const userId = session.user?.id;
       if (!userId) {
-        alert('Please sign in to request help.');
+        toast({ title: 'Sign in required', description: 'Please sign in to request help.', variant: 'destructive' });
         setIsSubmitting(false);
         return;
       }
@@ -496,6 +559,7 @@ export const Emergency: React.FC = () => {
       console.log('✅ Emergency request created:', data);
       alert('🚨 Emergency request sent! A responder will accept shortly.');
 
+      ensureAudioCtx();
       setActiveRequest(data as unknown as ActiveRequest);
       setShowRequestModal(false);
       setSelectedCategory(null);
@@ -738,7 +802,18 @@ export const Emergency: React.FC = () => {
                   <h3 className="font-bold text-lg leading-tight">
                     {activeRequest.status === 'accepted' ? 'Responder Accepted' : 'Responder Dispatched'}
                   </h3>
-                  <p className="text-blue-100/90 text-sm font-medium mt-0.5">ETA: ~4 min</p>
+                  <p className="text-blue-100/90 text-sm font-medium mt-0.5">
+                    {activeRequest.responder_location_lat && activeRequest.responder_location_lng
+                      ? (() => {
+                          const d = calculateDistanceKm(
+                            activeRequest.responder_location_lat, activeRequest.responder_location_lng,
+                            userLocation.lat, userLocation.lng
+                          );
+                          const eta = Math.max(1, Math.round(d / 30 * 60));
+                          return `ETA: ~${eta} min`;
+                        })()
+                      : 'Connecting...'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -783,17 +858,43 @@ export const Emergency: React.FC = () => {
                     </Button>
                   );
                 })()}
+                {activeRequest.status === 'en_route' && (
+                  <Button
+                    className={`flex-1 gap-2 h-10 ${voiceCall.callStatus === 'connected' ? 'bg-green-600 hover:bg-green-700' : voiceCall.callStatus === 'calling' || voiceCall.callStatus === 'ringing' ? 'bg-orange-500 hover:bg-orange-600 animate-pulse' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                    onClick={() => {
+                      if (voiceCall.callStatus === 'connected' || voiceCall.callStatus === 'calling' || voiceCall.callStatus === 'ringing') {
+                        voiceCall.endCall();
+                      } else {
+                        voiceCall.startCall();
+                      }
+                    }}
+                  >
+                    {voiceCall.callStatus === 'connected' ? (
+                      <><PhoneCall className="w-4 h-4" /> On Call</>
+                    ) : voiceCall.callStatus === 'calling' || voiceCall.callStatus === 'ringing' ? (
+                      <><PhoneCall className="w-4 h-4" /> Calling...</>
+                    ) : (
+                      <><PhoneCall className="w-4 h-4" /> Voice Call</>
+                    )}
+                  </Button>
+                )}
                 <Button variant="outline" className="flex-1 gap-2 h-10" onClick={() => handleEmergencyCall('991')}>
                   <Shield className="w-4 h-4" /> 991
                 </Button>
                 <Button
                   variant="ghost"
                   className="w-full mt-2 text-red-600 hover:text-red-700 hover:bg-red-50 gap-2"
-                  onClick={cancelRequest}
+                  onClick={() => {
+                    if (voiceCall.callStatus !== 'idle') voiceCall.endCall();
+                    cancelRequest();
+                  }}
                 >
                   <XCircle className="w-4 h-4" /> {t('cancelRequest')}
                 </Button>
               </div>
+              {voiceCall.error && (
+                <div className="mt-2 text-xs text-red-500 text-center">{voiceCall.error}</div>
+              )}
             </div>
           </div>
         </div>
@@ -832,7 +933,7 @@ export const Emergency: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="container mx-auto px-4 py-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <Button
             onClick={() => setShowEmergencyAssistant(true)}
             className="h-20 bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white flex-col gap-2 emergency-pulse shadow-lg"
@@ -864,14 +965,40 @@ export const Emergency: React.FC = () => {
 
           <Button
             onClick={() => {
-              const body = `Emergency! My location: ${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}. Google Maps: https://maps.google.com/?q=${userLocation.lat},${userLocation.lng}`;
-              window.open(`sms:?&body=${encodeURIComponent(body)}`, '_self');
+              setSelectedWorker(null);
+              setSelectedCategory(null);
+              setShowRequestModal(true);
             }}
-            className="h-20 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white flex-col gap-2 shadow-lg"
+            className="h-20 bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white flex-col gap-2 shadow-lg"
           >
             <MessageCircle className="h-6 w-6" />
             <span className="text-sm font-medium">SMS Alert</span>
           </Button>
+          {/* Voice-First Emergency Button */}
+          <div className="relative">
+            <AmharicVoiceInput
+              onResult={async (transcript) => {
+                setSelectedCategory(null);
+                setSelectedWorker(null);
+                setRequestDetails(transcript);
+                setShowRequestModal(true);
+                // Auto-analyze with AI triage
+                try {
+                  const result = await classifyEmergency(transcript, language);
+                  if (result.category) {
+                    const match = EMERGENCY_CATEGORIES.find(c => c.key === result.category);
+                    if (match) setSelectedCategory(result.category);
+                    setAiTriage({ category: result.category, urgency: result.urgency });
+                    setUrgencyLevel(result.urgency || 'Normal');
+                  }
+                } catch (e) { console.error('Voice triage error:', e); }
+              }}
+              className="h-20 w-full bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-xl flex-col gap-2 shadow-lg cursor-pointer"
+            >
+              🎤
+              <span className="text-sm font-medium">Voice Emergency</span>
+            </AmharicVoiceInput>
+          </div>
         </div>
       </div>
 
@@ -1216,28 +1343,42 @@ export const Emergency: React.FC = () => {
                     className="flex-1 p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                     rows={3}
                   />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-                      if (!SpeechRecognition) { alert('Voice input is not supported in this browser. Try Chrome.'); return; }
-                      const recognition = new SpeechRecognition();
-                      recognition.lang = language === 'am' ? 'am-ET' : 'en-US';
-                      recognition.interimResults = false;
-                      recognition.onresult = (e: any) => {
-                        const transcript = e.results[0][0].transcript;
-                        setRequestDetails((prev: string) => (prev ? prev + ' ' : '') + transcript);
-                      };
-                      recognition.start();
-                    }}
-                    className="self-stretch px-3 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-xl transition-colors flex flex-col items-center justify-center gap-1 text-[10px] font-bold"
-                    title="Voice input (Amharic / English)"
-                  >
-                    🎤
-                    <span>Voice</span>
-                  </button>
+                  <AmharicVoiceInput
+                      onResult={(text) => setRequestDetails((prev) => (prev ? prev + ' ' : '') + text)}
+                      className="self-stretch px-3 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-xl transition-colors flex flex-col items-center justify-center gap-1 text-[10px] font-bold"
+                    >
+                      🎤
+                      <span>Voice</span>
+                    </AmharicVoiceInput>
                 </div>
               </div>
+
+              {/* AI Triage Result */}
+              {isTriaging && (
+                <div className="mb-4 flex items-center gap-2 text-sm text-purple-600 bg-purple-50 p-3 rounded-xl">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  AI analyzing urgency...
+                </div>
+              )}
+              {aiTriage && !isTriaging && (
+                <div className="mb-4 flex items-center gap-3 flex-wrap">
+                  <span className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                    aiTriage.urgency === 'Critical' ? 'bg-red-100 text-red-700 ring-1 ring-red-300' :
+                    aiTriage.urgency === 'High' ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-300' :
+                    'bg-green-100 text-green-700 ring-1 ring-green-300'
+                  }`}>
+                    {aiTriage.urgency || 'Normal'} Priority
+                  </span>
+                  {aiTriage.category && (() => {
+                    const cat = EMERGENCY_CATEGORIES.find(c => c.key === aiTriage.category);
+                    return cat ? (
+                      <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 ring-1 ring-blue-300 flex items-center gap-1">
+                        {cat.icon} {cat.label}
+                      </span>
+                    ) : null;
+                  })()}
+                </div>
+              )}
 
               {/* Location Info */}
               <div className="mb-6 p-4 bg-blue-50 rounded-xl">

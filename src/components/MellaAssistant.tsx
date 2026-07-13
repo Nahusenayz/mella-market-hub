@@ -28,6 +28,7 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load history
@@ -69,6 +70,31 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
     scrollToBottom();
   }, [messages, isLoading]);
 
+  const fetchSuggestions = async (history: Message[]) => {
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Mella Market Hub',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-3.1-8b-instruct',
+          messages: [
+            { role: 'system', content: 'Based on the conversation, suggest 3 short reply options as a JSON array of strings. Return ONLY valid JSON, no markdown, no explanation.' },
+            ...history.slice(-6).map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text }))
+          ]
+        })
+      });
+      const data = await res.json();
+      const text = data.choices?.[0]?.message?.content || '[]';
+      const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+      if (Array.isArray(parsed)) setSuggestions(parsed.slice(0, 3));
+    } catch { setSuggestions([]); }
+  };
+
   const handleSendMessage = async (text?: string) => {
     const messageText = text || inputMessage;
     if (!messageText.trim()) return;
@@ -100,6 +126,8 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
       };
 
       setMessages(prev => [...prev, botMsg]);
+      const allMessages = [...messages, userMsg, botMsg];
+      fetchSuggestions(allMessages);
     } catch (error) {
       console.error('Mella AI Error:', error);
     } finally {
@@ -188,6 +216,18 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
+
+          {suggestions.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-4 py-3 border-t border-slate-200 bg-white">
+              <p className="w-full text-[10px] font-bold text-purple-500 uppercase tracking-wider">Quick replies</p>
+              {suggestions.map((s, i) => (
+                <button key={i} onClick={() => { setInputMessage(s); handleSendMessage(s); setSuggestions([]); }}
+                  className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-full px-3 py-1.5 border border-purple-200 transition-colors font-medium">
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="p-4 bg-white border-t border-slate-100">
             <div className="flex items-center gap-2">
