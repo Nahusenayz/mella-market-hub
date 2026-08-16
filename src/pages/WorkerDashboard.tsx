@@ -9,10 +9,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { BookingTracker } from '@/components/BookingTracker';
 import { MessageThread } from '@/components/MessageThread';
 import { Navbar } from '@/components/Navbar';
-import { TrackingMap } from '@/components/TrackingMapGoogle';
 import { MapPin, Clock, Phone, Check, X, Navigation, Home, Flag, Bell, BellRing } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playAlarm, requestBrowserNotification } from '@/utils/notifications';
+
+const LazyTrackingMap = React.lazy(() =>
+  import('@/components/TrackingMapGoogle').then((mod) => ({ default: mod.TrackingMap }))
+);
 
 const WorkerDashboard = () => {
   const { user } = useAuth();
@@ -88,16 +91,12 @@ const WorkerDashboard = () => {
     if (!user) return;
     const fetchProfile = async () => {
       const { data } = await supabase
-        .from('profiles')
-        .select('badges')
-        .eq('id', user.id)
-        .single();
-      if (data && Array.isArray(data.badges)) {
-        const badgesArray = data.badges as any[];
-        const categoryBadge = badgesArray.find((b: any) => typeof b === 'object' && b !== null && 'category' in b);
-        if (categoryBadge && typeof categoryBadge === 'object' && 'category' in categoryBadge) {
-          setWorkerCategory(categoryBadge.category as string);
-        }
+        .from('worker_locations')
+        .select('category')
+        .eq('worker_id', user.id)
+        .maybeSingle();
+      if (data?.category) {
+        setWorkerCategory(data.category as string);
       }
     };
     fetchProfile();
@@ -410,11 +409,13 @@ const WorkerDashboard = () => {
                                <div className="absolute top-2 left-2 z-[400] bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-semibold text-gray-700 shadow-sm border border-gray-100 flex items-center gap-1">
                                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Live Tracking
                                </div>
-                               <TrackingMap 
-                                  userLocation={{ lat: r.user_location_lat, lng: r.user_location_lng }}
-                                  responderLocation={userLocation}
-                                  responderType={workerCategory || undefined}
-                               />
+                               <React.Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-gray-500">Loading map...</div>}>
+                                 <LazyTrackingMap 
+                                    userLocation={{ lat: r.user_location_lat, lng: r.user_location_lng }}
+                                    responderLocation={userLocation}
+                                    responderType={workerCategory || undefined}
+                                 />
+                               </React.Suspense>
                             </div>
                           )}
                         </div>

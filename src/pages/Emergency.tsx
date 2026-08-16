@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { EmergencyAssistant } from '@/components/EmergencyAssistant';
 import { SafetyScore } from '@/components/SafetyScore';
-import { MapView } from '@/components/MapViewGoogle';
-import { TrackingMap } from '@/components/TrackingMapGoogle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -40,13 +37,29 @@ import { Translated } from '@/components/Translated';
 import { useToast } from '@/hooks/use-toast';
 import { calculateDistanceKm } from '@/lib/utils';
 import { classifyEmergency } from '@/services/groqService';
-import AmharicVoiceInput from '@/components/AmharicVoiceInput';
 import { useVoiceCall } from '@/hooks/useVoiceCall';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { VerificationBadge } from '@/components/VerificationBadge';
+import AmharicVoiceInput from '@/components/AmharicVoiceInput';
+import { DEFAULT_LOCATION } from '@/lib/defaultLocation';
+import type {
+  EmergencyProfileData,
+  TrustedContact
+} from '@/components/emergencyPreparedness';
+import {
+  DEFAULT_EMERGENCY_PROFILE,
+  DEFAULT_TRUSTED_CONTACTS,
+  EMERGENCY_PROFILE_KEY,
+  EMERGENCY_CONTACTS_KEY,
+  EMERGENCY_NOTIFY_KEY,
+  buildEmergencyAlertMessage,
+  sendTrustedContactAlerts
+} from '@/components/emergencyPreparedness';
 
 interface EmergencyStation {
   id: string;
   name: string;
-  type: 'hospital' | 'police' | 'fire' | 'ambulance';
+  type: 'hospital' | 'police' | 'fire' | 'ambulance' | 'traffic' | 'tow';
   location: { lat: number; lng: number };
   distance: number;
   phone: string;
@@ -72,12 +85,29 @@ const EMERGENCY_CATEGORIES = [
   { key: 'tow_truck', label: 'Tow', icon: '🏗️', color: '#4b5563', description: 'Vehicle breakdown' }
 ];
 
+const LazyEmergencyAssistant = React.lazy(() =>
+  import('@/components/EmergencyAssistant').then((mod) => ({ default: mod.EmergencyAssistant }))
+);
+
+const LazyMapView = React.lazy(() =>
+  import('@/components/MapViewGoogle').then((mod) => ({ default: mod.MapView }))
+);
+
+const LazyTrackingMap = React.lazy(() =>
+  import('@/components/TrackingMapGoogle').then((mod) => ({ default: mod.TrackingMap }))
+);
+
+const LazyEmergencyPreparednessPanel = React.lazy(() =>
+  import('@/components/EmergencyPreparednessPanel').then((mod) => ({ default: mod.EmergencyPreparednessPanel }))
+);
+
 export const Emergency: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, language, setLanguage } = useLanguage();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const routeState = location.state as { category?: string; autoDispatch?: boolean; source?: string } | null;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -96,11 +126,14 @@ export const Emergency: React.FC = () => {
     await signOut();
     navigate('/');
   };
-  const [userLocation, setUserLocation] = useState({ lat: 9.0320, lng: 38.7469 });
+  const [userLocation, setUserLocation] = useState(DEFAULT_LOCATION);
   const [emergencyStations, setEmergencyStations] = useState<EmergencyStation[]>([]);
   const [showEmergencyAssistant, setShowEmergencyAssistant] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [fallbackStation, setFallbackStation] = useState<EmergencyStation | null>(null);
+  const [showZeroResponderNotice, setShowZeroResponderNotice] = useState(false);
+  const [showDirectCallPrompt, setShowDirectCallPrompt] = useState(false);
   const [requestDetails, setRequestDetails] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeRequest, setActiveRequest] = useState<ActiveRequest | null>(null);
@@ -111,10 +144,17 @@ export const Emergency: React.FC = () => {
   );
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
-  const [filterCategory, setFilterCategory] = useState<string>(location.state?.category || 'all');
+  const [filterCategory, setFilterCategory] = useState<string>(routeState?.category || 'all');
   const [aiTriage, setAiTriage] = useState<{ category: string | null; urgency: string | null } | null>(null);
   const [urgencyLevel, setUrgencyLevel] = useState<string>('Normal');
   const urgencyRef = useRef('Normal');
+  const autoDispatchCategoryRef = useRef<string | null>(null);
+  const [emergencyProfile, setEmergencyProfile] = useLocalStorage<EmergencyProfileData>(EMERGENCY_PROFILE_KEY, DEFAULT_EMERGENCY_PROFILE);
+  const [trustedContacts, setTrustedContacts] = useLocalStorage<TrustedContact[]>(EMERGENCY_CONTACTS_KEY, DEFAULT_TRUSTED_CONTACTS);
+  const [notifyTrustedContacts, setNotifyTrustedContacts] = useLocalStorage<boolean>(EMERGENCY_NOTIFY_KEY, true);
+  const [offlineQueue, setOfflineQueue] = useLocalStorage<any[]>('mella-offline-emergency-queue', []);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [requestTimeline, setRequestTimeline] = useState<Array<{ label: string; detail?: string; time: string }>>([]);
   useEffect(() => { urgencyRef.current = urgencyLevel; }, [urgencyLevel]);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const [isTriaging, setIsTriaging] = useState(false);
@@ -154,6 +194,46 @@ export const Emergency: React.FC = () => {
     return descs[key] || key;
   };
 
+  const getStationTypeForCategory = (category: string): EmergencyStation['type'] => {
+    const mapping: Record<string, EmergencyStation['type']> = {
+      police: 'police',
+      ambulance: 'ambulance',
+      fire_truck: 'fire',
+      traffic_police: 'traffic',
+      tow_truck: 'tow'
+    };
+
+    return mapping[category] || 'police';
+  };
+
+  const getClosestFallbackStation = (category: string) => {
+    const desiredType = getStationTypeForCategory(category);
+    const nearbyStations = emergencyStations
+      .filter(station => station.type === desiredType)
+      .sort((a, b) => a.distance - b.distance);
+
+    return nearbyStations[0] || null;
+  };
+
+  const getDirectEmergencyNumber = (category: string) => {
+    const directNumbers: Record<string, string> = {
+      police: '991',
+      traffic_police: '991',
+      ambulance: '939',
+      fire_truck: '912',
+      tow_truck: fallbackStation?.phone || '991'
+    };
+
+    return directNumbers[category] || '991';
+  };
+
+  const addTimelineEvent = (label: string, detail?: string) => {
+    setRequestTimeline(prev => [
+      { label, detail, time: new Date().toLocaleTimeString(), ...{} },
+      ...prev.slice(0, 5)
+    ]);
+  };
+
   // AI Emergency Triage — classify details text when user stops typing
   useEffect(() => {
     if (!requestDetails || requestDetails.length < 5) { setAiTriage(null); return; }
@@ -178,10 +258,10 @@ export const Emergency: React.FC = () => {
 
   // Also set selectedCategory for the request form if a specific category was passed
   useEffect(() => {
-    if (location.state?.category) {
-      setSelectedCategory(location.state.category);
+    if (routeState?.category) {
+      setSelectedCategory(routeState.category);
     }
-  }, [location.state]);
+  }, [routeState?.category]);
   const mapRef = useRef<HTMLDivElement>(null);
 
   // Fetch available workers
@@ -259,10 +339,12 @@ export const Emergency: React.FC = () => {
       if (newData.status !== oldStatus) {
         if (newData.status === 'completed') {
           try { toast({ title: "✅ Request Completed", description: "The responder has marked this emergency as resolved.", variant: "default" }); } catch {}
+          addTimelineEvent('Completed', 'Responder marked the request resolved');
           setActiveRequest(null);
           return;
         } else if (newData.status === 'cancelled') {
           try { toast({ title: "⚠️ Request Cancelled", description: "Your emergency request has been cancelled.", variant: "destructive" }); } catch {}
+          addTimelineEvent('Cancelled', 'Request was cancelled');
           setActiveRequest(null);
           return;
         } else if (newData.status === 'accepted') {
@@ -270,8 +352,18 @@ export const Emergency: React.FC = () => {
             toast({ title: "🚨 Request Accepted!", description: "A responder has accepted your request and is preparing to assist you.", variant: "default" });
             if (urgencyRef.current === 'Critical') playSiren();
           } catch {}
+          addTimelineEvent('Responder accepted', 'A responder is preparing to assist you');
+          sendTrustedContactNotifications(newData.category || activeRequest.category, 'accepted', {
+            lat: newData.user_location_lat || userLocation.lat,
+            lng: newData.user_location_lng || userLocation.lng
+          });
         } else if (newData.status === 'en_route') {
           try { toast({ title: "🚑 Responder En Route", description: "The responder is on their way to your location.", variant: "default" }); } catch {}
+          addTimelineEvent('Responder en route', 'Help is on the way');
+          sendTrustedContactNotifications(newData.category || activeRequest.category, 'en route', {
+            lat: newData.user_location_lat || userLocation.lat,
+            lng: newData.user_location_lng || userLocation.lng
+          });
         }
       }
 
@@ -400,6 +492,36 @@ export const Emergency: React.FC = () => {
         phone: '+251-11-456-7890',
         isOpen: true,
         responseTime: '6-10 min'
+      },
+      {
+        id: '5',
+        name: language === 'am' ? 'የትራፊክ መቆጣጠሪያ ማዕከል' : 'Traffic Control Center',
+        type: 'traffic',
+        location: { lat: location.lat + 0.006, lng: location.lng - 0.004 },
+        distance: 0,
+        phone: '+251-11-551-9900',
+        isOpen: true,
+        responseTime: '4-8 min'
+      },
+      {
+        id: '6',
+        name: language === 'am' ? 'MOENCO የመጎተቻ እርዳታ' : 'MOENCO Roadside Assistance',
+        type: 'tow',
+        location: { lat: 8.995, lng: 38.788 },
+        distance: 0,
+        phone: '+251116612233',
+        isOpen: true,
+        responseTime: '10-15 min'
+      },
+      {
+        id: '7',
+        name: language === 'am' ? 'Nyala Motors የመጎተቻ እርዳታ' : 'Nyala Motors Roadside Assistance',
+        type: 'tow',
+        location: { lat: 8.940, lng: 38.760 },
+        distance: 0,
+        phone: '+251114341188',
+        isOpen: true,
+        responseTime: '12-18 min'
       }
     ];
 
@@ -422,6 +544,8 @@ export const Emergency: React.FC = () => {
       case 'police': return <Shield className="h-5 w-5" />;
       case 'fire': return <Flame className="h-5 w-5" />;
       case 'ambulance': return <Car className="h-5 w-5" />;
+      case 'traffic': return <Navigation className="h-5 w-5" />;
+      case 'tow': return <PhoneCall className="h-5 w-5" />;
       default: return <AlertTriangle className="h-5 w-5" />;
     }
   };
@@ -432,6 +556,8 @@ export const Emergency: React.FC = () => {
       case 'police': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
       case 'fire': return 'bg-red-100 text-red-800 border-red-200';
       case 'ambulance': return 'bg-green-100 text-green-800 border-green-200';
+      case 'traffic': return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'tow': return 'bg-slate-100 text-slate-800 border-slate-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -471,16 +597,41 @@ export const Emergency: React.FC = () => {
     try {
       console.log('📤 Sending emergency request...');
 
+      const profileSummary = [
+        emergencyProfile.bloodType ? `Blood type: ${emergencyProfile.bloodType}` : null,
+        emergencyProfile.allergies ? `Allergies: ${emergencyProfile.allergies}` : null,
+        emergencyProfile.chronicConditions ? `Conditions: ${emergencyProfile.chronicConditions}` : null,
+        emergencyProfile.homeAddress ? `Home address: ${emergencyProfile.homeAddress}` : null,
+        emergencyProfile.notes ? `Notes: ${emergencyProfile.notes}` : null
+      ].filter(Boolean).join(' | ');
+
       const requestData = {
         user_id: userId,
         status: 'pending',
         category: worker.category,
-        details: det,
+        details: profileSummary ? `${det}\n\nEmergency profile: ${profileSummary}` : det,
         user_location_lat: userLocation.lat,
         user_location_lng: userLocation.lng,
         responder_id: worker.worker_id,
         estimated_price: worker.service_fee || 0
       };
+
+      if (!isOnline) {
+        setOfflineQueue(prev => [...prev, {
+          category: worker.category,
+          requestData,
+          notifyContacts: notifyTrustedContacts
+        }]);
+        addTimelineEvent('Request queued offline', `Queued for ${worker.category}`);
+        if (notifyTrustedContacts) {
+          sendTrustedContactNotifications(worker.category, 'queued offline', userLocation);
+        }
+        toast({
+          title: 'Offline mode',
+          description: 'Your emergency request was saved locally and will send once you are back online.',
+        });
+        return;
+      }
 
       console.log('Request data:', requestData);
 
@@ -498,17 +649,75 @@ export const Emergency: React.FC = () => {
 
       console.log('✅ Emergency request created:', data);
       toast({ title: '🚨 Request sent!', description: 'A responder will see your request shortly.' });
+      addTimelineEvent('Request created', `Sent to ${worker.profiles?.full_name || 'available responder'}`);
 
       // Ensure AudioContext is ready on user gesture
       ensureAudioCtx();
 
       setActiveRequest(data as unknown as ActiveRequest);
       console.log('✅ activeRequest set, subscription should activate');
+      if (notifyTrustedContacts) {
+        sendTrustedContactNotifications(worker.category, 'request sent', userLocation);
+      }
     } catch (e: any) {
       console.error('💥 Exception:', e);
       toast({ title: 'Request failed', description: 'Please try again.', variant: 'destructive' });
     }
   };
+
+  useEffect(() => {
+    if (activeRequest) {
+      setShowZeroResponderNotice(false);
+      setFallbackStation(null);
+      return;
+    }
+
+    if (!routeState?.autoDispatch || !selectedCategory || workersLoading) {
+      return;
+    }
+
+    if (autoDispatchCategoryRef.current === selectedCategory) {
+      return;
+    }
+
+    const nearestCategoryWorker = getNearbyWorkers(userLocation.lat, userLocation.lng, 1000)
+      .filter(worker => worker.category === selectedCategory)
+      .sort((a, b) => (a.distance || 0) - (b.distance || 0))[0];
+
+    autoDispatchCategoryRef.current = selectedCategory;
+
+    if (nearestCategoryWorker) {
+      setShowZeroResponderNotice(false);
+      setFallbackStation(null);
+      setSelectedWorker(nearestCategoryWorker);
+      callResponder(nearestCategoryWorker);
+      return;
+    }
+
+    const station = getClosestFallbackStation(selectedCategory);
+    setSelectedWorker(null);
+    setFallbackStation(station);
+    setShowZeroResponderNotice(true);
+
+    if (station) {
+      toast({
+        title: `0 ${catLabel(selectedCategory)} responders online`,
+        description: `Call ${station.name} at ${station.phone} instead.`,
+        variant: 'destructive'
+      });
+    }
+  }, [
+    activeRequest,
+    callResponder,
+    getClosestFallbackStation,
+    getNearbyWorkers,
+    routeState?.autoDispatch,
+    selectedCategory,
+    toast,
+    userLocation.lat,
+    userLocation.lng,
+    workersLoading
+  ]);
 
   const createEmergencyRequest = async (targetWorkerId?: string) => {
     if (!selectedCategory && !targetWorkerId && !selectedWorker) {
@@ -531,16 +740,52 @@ export const Emergency: React.FC = () => {
       console.log('User Location:', userLocation);
       console.log('Category:', selectedCategory || selectedWorker?.category);
 
+      const profileSummary = [
+        emergencyProfile.bloodType ? `Blood type: ${emergencyProfile.bloodType}` : null,
+        emergencyProfile.allergies ? `Allergies: ${emergencyProfile.allergies}` : null,
+        emergencyProfile.chronicConditions ? `Conditions: ${emergencyProfile.chronicConditions}` : null,
+        emergencyProfile.homeAddress ? `Home address: ${emergencyProfile.homeAddress}` : null,
+        emergencyProfile.notes ? `Notes: ${emergencyProfile.notes}` : null
+      ].filter(Boolean).join(' | ');
+
       const requestData = {
         user_id: userId,
         status: 'pending',
         category: selectedCategory || selectedWorker?.category,
-        details: requestDetails || `Emergency ${selectedCategory || selectedWorker?.category} assistance requested`,
+        details: [
+          requestDetails || `Emergency ${selectedCategory || selectedWorker?.category} assistance requested`,
+          profileSummary ? `Emergency profile: ${profileSummary}` : null
+        ].filter(Boolean).join('\n\n'),
         user_location_lat: userLocation.lat,
         user_location_lng: userLocation.lng,
         responder_id: selectedWorker?.worker_id || targetWorkerId,
         estimated_price: selectedWorker?.service_fee || 0
       };
+
+      if (!isOnline) {
+        setOfflineQueue(prev => [...prev, {
+          category: selectedCategory || selectedWorker?.category || 'general',
+          requestData,
+          notifyContacts: notifyTrustedContacts
+        }]);
+        addTimelineEvent('Request queued offline', `Queued for ${selectedCategory || selectedWorker?.category}`);
+        if (notifyTrustedContacts) {
+          sendTrustedContactNotifications(
+            selectedCategory || selectedWorker?.category || 'general',
+            'queued offline',
+            userLocation
+          );
+        }
+        toast({
+          title: 'Offline mode',
+          description: 'Your emergency request was saved locally and will send once you reconnect.',
+        });
+        setShowRequestModal(false);
+        setSelectedCategory(null);
+        setSelectedWorker(null);
+        setRequestDetails('');
+        return;
+      }
 
       console.log('Request data:', requestData);
 
@@ -558,6 +803,7 @@ export const Emergency: React.FC = () => {
 
       console.log('✅ Emergency request created:', data);
       alert('🚨 Emergency request sent! A responder will accept shortly.');
+      addTimelineEvent('Request created', `Category ${selectedCategory || selectedWorker?.category}`);
 
       ensureAudioCtx();
       setActiveRequest(data as unknown as ActiveRequest);
@@ -565,6 +811,13 @@ export const Emergency: React.FC = () => {
       setSelectedCategory(null);
       setSelectedWorker(null);
       setRequestDetails('');
+      if (notifyTrustedContacts) {
+        sendTrustedContactNotifications(
+          selectedCategory || selectedWorker?.category || 'general',
+          'request sent',
+          userLocation
+        );
+      }
     } catch (e: any) {
       console.error('💥 Exception:', e);
       alert('Failed to send request. Please try again.');
@@ -599,6 +852,32 @@ export const Emergency: React.FC = () => {
     window.open(`tel:${phone}`);
   };
 
+  const sendTrustedContactNotifications = React.useCallback(
+    (category: string, status: string, overrideLocation?: { lat: number; lng: number }) => {
+      if (!notifyTrustedContacts) return;
+      const activeContacts = trustedContacts.filter(contact => contact.name.trim() || contact.phone.trim());
+      if (!activeContacts.length) return;
+
+      sendTrustedContactAlerts(
+        activeContacts,
+        buildEmergencyAlertMessage({
+          category: catLabel(category),
+          status,
+          location: overrideLocation || userLocation,
+          profile: emergencyProfile
+        })
+      );
+    },
+    [
+      catLabel,
+      emergencyProfile,
+      notifyTrustedContacts,
+      trustedContacts,
+      userLocation.lat,
+      userLocation.lng
+    ]
+  );
+
   // Transform workers for map display
   const transformWorkersForMap = () => {
     const nearbyWorkers = getNearbyWorkers(userLocation.lat, userLocation.lng, 1000);
@@ -622,8 +901,75 @@ export const Emergency: React.FC = () => {
           profile_image_url: worker.profiles?.profile_image_url || '/placeholder.svg'
         }
       };
-    });
+      });
   };
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOnline || offlineQueue.length === 0) return;
+
+    const flushQueue = async () => {
+      const remaining: any[] = [];
+
+      for (const queued of offlineQueue) {
+        try {
+          const { error } = await supabase
+            .from('emergency_requests' as any)
+            .insert(queued.requestData)
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          if (queued.notifyContacts) {
+            sendTrustedContactNotifications(
+              queued.category,
+              'queued request sent',
+              { lat: queued.requestData.user_location_lat, lng: queued.requestData.user_location_lng }
+            );
+          }
+        } catch (error) {
+          console.warn('Failed to flush offline emergency request', error);
+          remaining.push(queued);
+        }
+      }
+
+      setOfflineQueue(remaining);
+      if (remaining.length === 0) {
+        toast({
+          title: 'Offline requests sent',
+          description: 'Your queued emergency requests were sent after reconnecting.'
+        });
+      }
+    };
+
+    flushQueue();
+  }, [isOnline, offlineQueue, sendTrustedContactNotifications, setOfflineQueue, toast]);
+
+  useEffect(() => {
+    if (!showZeroResponderNotice || !selectedCategory) {
+      setShowDirectCallPrompt(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setShowDirectCallPrompt(true);
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [showZeroResponderNotice, selectedCategory]);
 
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -643,6 +989,9 @@ export const Emergency: React.FC = () => {
   const filteredWorkers = filterCategory === 'all'
     ? allWorkers
     : allWorkers.filter(w => w.category === filterCategory);
+  const selectedCategoryWorkerCount = selectedCategory
+    ? allWorkers.filter(worker => worker.category === selectedCategory).length
+    : 0;
 
   // Get category counts
   const categoryCounts = EMERGENCY_CATEGORIES.map(cat => ({
@@ -788,6 +1137,31 @@ export const Emergency: React.FC = () => {
         </div>
       )}
 
+      {activeRequest && requestTimeline.length > 0 && (
+        <div className="container mx-auto px-4 py-2">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="h-5 w-5 text-orange-600" />
+              <h3 className="font-bold text-gray-800">Incident timeline</h3>
+            </div>
+            <div className="space-y-3">
+              {requestTimeline.map((entry, index) => (
+                <div key={`${entry.label}-${index}`} className="flex gap-3">
+                  <div className="mt-1 h-3 w-3 rounded-full bg-orange-500 shadow-sm" />
+                  <div className="flex-1 rounded-xl bg-orange-50 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-semibold text-orange-900">{entry.label}</p>
+                      <span className="text-xs text-orange-700">{entry.time}</span>
+                    </div>
+                    {entry.detail && <p className="mt-1 text-sm text-orange-800">{entry.detail}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating Live Tracking Popup (Accepted / En Route) - Overlays on bottom right */}
       {activeRequest && (activeRequest.status === 'en_route' || activeRequest.status === 'accepted') && (
         <div className="fixed bottom-0 left-0 right-0 md:bottom-4 md:right-4 md:left-auto md:w-96 z-[9999] p-2 md:p-0">
@@ -821,7 +1195,7 @@ export const Emergency: React.FC = () => {
             {/* Map */}
             <div className="h-48 bg-gray-100 relative">
               {activeRequest.responder_location_lat && activeRequest.responder_location_lng ? (
-                <TrackingMap
+                <LazyTrackingMap
                   userLocation={userLocation}
                   responderLocation={{
                     lat: activeRequest.responder_location_lat,
@@ -926,6 +1300,95 @@ export const Emergency: React.FC = () => {
         </div>
       </div>
 
+      {!isOnline && (
+        <div className="container mx-auto px-4">
+          <Alert className="mb-4 border-amber-200 bg-amber-50 text-amber-900">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold">Offline emergency mode</p>
+                <p className="text-sm text-amber-800">
+                  You are offline. Emergency requests can be queued locally and sent as soon as you reconnect.
+                </p>
+              </div>
+              <Badge variant="secondary" className="w-fit bg-amber-100 text-amber-800">
+                Cached stations + direct dial available
+              </Badge>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
+      {showZeroResponderNotice && selectedCategory && fallbackStation && (
+        <div className="container mx-auto px-4">
+          <Alert className="mb-4 border-orange-200 bg-orange-50 text-orange-900">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold">
+                  0 {catLabel(selectedCategory)} responders online
+                </p>
+                <p className="text-sm text-orange-800">
+                  Call the closest station instead: {fallbackStation.name} ({fallbackStation.phone})
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  onClick={() => handleEmergencyCall(fallbackStation.phone)}
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Call Station
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-orange-300 text-orange-700 hover:bg-orange-100"
+                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${fallbackStation.location.lat},${fallbackStation.location.lng}`, '_blank')}
+                >
+                  <MapPinned className="h-4 w-4 mr-2" />
+                  View Station
+                </Button>
+                {showDirectCallPrompt && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => handleEmergencyCall(getDirectEmergencyNumber(selectedCategory))}
+                  >
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call official line {getDirectEmergencyNumber(selectedCategory)}
+                  </Button>
+                )}
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
+      <div className="container mx-auto px-4">
+        <LazyEmergencyPreparednessPanel
+          compact
+          isOffline={!isOnline}
+          profile={emergencyProfile}
+          setProfile={setEmergencyProfile}
+          contacts={trustedContacts}
+          setContacts={setTrustedContacts}
+          notifyContacts={notifyTrustedContacts}
+          setNotifyContacts={setNotifyTrustedContacts}
+          onShareSummary={() => {
+            const summary = buildEmergencyAlertMessage({
+              category: selectedCategory || 'general',
+              status: activeRequest?.status || 'prepared',
+              location: userLocation,
+              profile: emergencyProfile
+            });
+            navigator.clipboard?.writeText(summary);
+            toast({ title: 'Copied', description: 'Emergency profile summary copied to clipboard.' });
+          }}
+        />
+      </div>
+
       {/* Safety Score */}
       <div className="container mx-auto px-4">
         <SafetyScore location={userLocation} />
@@ -1010,7 +1473,7 @@ export const Emergency: React.FC = () => {
             Live Responder Map
           </h2>
           <div className="w-full h-[300px] md:h-[350px] rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
-            <MapView
+            <LazyMapView
               services={transformWorkersForMap()}
               userLocation={userLocation}
               distanceFilter={1000}
@@ -1100,9 +1563,17 @@ export const Emergency: React.FC = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-col gap-1">
-                            <h3 className="font-semibold text-gray-800 truncate">
-                              <Translated text={worker.profiles?.full_name || 'Available Responder'} />
-                            </h3>
+                            <div className="flex items-center gap-2 min-w-0">
+                              <h3 className="font-semibold text-gray-800 truncate">
+                                <Translated text={worker.profiles?.full_name || 'Available Responder'} />
+                              </h3>
+                              <VerificationBadge
+                                isVerified={!!worker.profiles?.is_verified}
+                                verificationType={worker.profiles?.verification_type || undefined}
+                                badges={worker.profiles?.badges || []}
+                                size="sm"
+                              />
+                            </div>
                             <div className="flex items-center gap-2">
                               <span className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded ${isOnline ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
@@ -1415,11 +1886,13 @@ export const Emergency: React.FC = () => {
       )}
 
       {/* Emergency Assistant Modal */}
-      <EmergencyAssistant
-        isOpen={showEmergencyAssistant}
-        onClose={() => setShowEmergencyAssistant(false)}
-        userLocation={userLocation}
-      />
+      <React.Suspense fallback={null}>
+        <LazyEmergencyAssistant
+          isOpen={showEmergencyAssistant}
+          onClose={() => setShowEmergencyAssistant(false)}
+          userLocation={userLocation}
+        />
+      </React.Suspense>
 
     </div>
   );

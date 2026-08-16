@@ -33,6 +33,11 @@ interface ConversationWithProfile extends Conversation {
   };
 }
 
+const deriveBadges = (verificationType?: string | null) => {
+  if (!verificationType) return [];
+  return [verificationType];
+};
+
 export const useMessages = (activeOtherUserId?: string) => {
   const { user } = useAuth();
   const { createActivity } = useSocialFeed();
@@ -62,7 +67,7 @@ export const useMessages = (activeOtherUserId?: string) => {
 
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id, full_name, profile_image_url, is_verified, badges')
+            .select('id, full_name, profile_image_url, is_verified, verification_type')
             .eq('id', otherUserId)
             .maybeSingle();
 
@@ -73,7 +78,7 @@ export const useMessages = (activeOtherUserId?: string) => {
               full_name: profile?.full_name || 'User',
               profile_image_url: profile?.profile_image_url || '',
               is_verified: profile?.is_verified || false,
-              badges: Array.isArray(profile?.badges) ? profile.badges.filter((badge): badge is string => typeof badge === 'string') : []
+              badges: deriveBadges(profile?.verification_type)
             }
           };
         })

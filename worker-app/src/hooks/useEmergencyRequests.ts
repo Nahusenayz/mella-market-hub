@@ -1,165 +1,125 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { supabase } from '../integrations/supabase/client'
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { supabase } from '../integrations/supabase/client';
+import {
+  attachEmergencyProfiles,
+  extractEstimatedPrice,
+  sendEmergencyMessage,
+  updateEmergencyStatus,
+} from '../../../src/shared/emergencyRequestService';
 
 export type EmergencyRequest = {
-  id: string
-  user_id: string
-  responder_id: string | null
-  status: 'pending' | 'accepted' | 'declined' | 'en_route' | 'completed' | 'cancelled'
-  category: string | null
-  details: string | null
-  user_location_lat: number | null
-  user_location_lng: number | null
-  responder_location_lat: number | null
-  responder_location_lng: number | null
-  created_at: string
-  updated_at: string | null
-  estimated_price?: number | null
-  // User profile information
+  id: string;
+  user_id: string;
+  responder_id: string | null;
+  status: 'pending' | 'accepted' | 'declined' | 'en_route' | 'completed' | 'cancelled';
+  category: string | null;
+  details: string | null;
+  user_location_lat: number | null;
+  user_location_lng: number | null;
+  responder_location_lat: number | null;
+  responder_location_lng: number | null;
+  created_at: string;
+  updated_at: string | null;
+  estimated_price?: number | null;
   user_profile?: {
-    full_name: string | null
-    phone_number: string | null
-    profile_image_url: string | null
-  }
-}
+    full_name: string | null;
+    phone_number: string | null;
+    profile_image_url: string | null;
+  };
+};
 
 export function useEmergencyRequests() {
-  const [requests, setRequests] = useState<EmergencyRequest[]>([])
-  const [history, setHistory] = useState<EmergencyRequest[]>([])
-  const [loading, setLoading] = useState(true)
-  const [userId, setUserId] = useState<string | null>(null)
-  const [userCategory, setUserCategory] = useState<string | null>(null)
-  const [declinedIds, setDeclinedIds] = useState<string[]>([])
+  const [requests, setRequests] = useState<EmergencyRequest[]>([]);
+  const [history, setHistory] = useState<EmergencyRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userCategory, setUserCategory] = useState<string | null>(null);
+  const [declinedIds, setDeclinedIds] = useState<string[]>([]);
 
-  // Get user info on mount
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      const user = data.user
+      const user = data.user;
       if (user) {
-        setUserId(user.id)
-        setUserCategory(user.user_metadata?.category || null)
+        setUserId(user.id);
+        setUserCategory(user.user_metadata?.category || null);
       }
-    })
-  }, [])
+    });
+  }, []);
 
   const fetchRequests = useCallback(async () => {
     try {
-      // Fetch active requests - filter by category if worker has one
-      let query = supabase
-        .from('emergency_requests' as any)
+      const { data: activeData, error: activeError } = await supabase
+        .from('emergency_requests')
         .select('*')
         .in('status', ['pending', 'accepted', 'en_route'])
-        .order('created_at', { ascending: false })
-
-      const { data: activeData, error: activeError } = await query
+        .order('created_at', { ascending: false });
 
       if (activeError) {
-        console.error('Error fetching requests:', activeError)
+        console.error('Error fetching requests:', activeError);
       }
 
-      // Filter pending requests to only show matching category
-      let filteredData = (activeData || []) as EmergencyRequest[]
-      // Filter out requests this worker has already declined in this session
-      filteredData = filteredData.filter(r => !declinedIds.includes(r.id))
+      let filteredData = (activeData || []) as EmergencyRequest[];
+      filteredData = filteredData.filter((r) => !declinedIds.includes(r.id));
 
       if (userCategory) {
-        filteredData = filteredData.filter(r => {
-          // Show pending requests for matching category or no category
+        filteredData = filteredData.filter((r) => {
           if (r.status === 'pending') {
-            const matchesCategory = !r.category || r.category === userCategory
-            const isUnassigned = !r.responder_id
-            const isAssignedToMe = r.responder_id === userId
-            return matchesCategory && (isUnassigned || isAssignedToMe)
+            const matchesCategory = !r.category || r.category === userCategory;
+            const isUnassigned = !r.responder_id;
+            const isAssignedToMe = r.responder_id === userId;
+            return matchesCategory && (isUnassigned || isAssignedToMe);
           }
-          // Show accepted/en_route requests only if assigned to this responder
-          return r.responder_id === userId
-        })
+          return r.responder_id === userId;
+        });
       }
 
-      // Fetch user profiles for all requests
       if (filteredData.length > 0) {
-        const userIds = [...new Set(filteredData.map(r => r.user_id))]
-        const { data: profiles } = await supabase
-          .from('profiles' as any)
-          .select('id, full_name, phone_number, profile_image_url')
-          .in('id', userIds)
-
-        if (profiles) {
-          const profileMap = new Map(profiles.map((p: any) => [p.id, p]))
-          filteredData = filteredData.map(r => {
-            const profile = profileMap.get(r.user_id) as any;
-            let price = null;
-            try {
-              if (r.details?.startsWith('{')) {
-                const parsed = JSON.parse(r.details);
-                price = parsed.price;
-              }
-            } catch (e) {}
-            
-            return {
-              ...r,
-              user_profile: profile ? {
-                full_name: profile.full_name,
-                phone_number: profile.phone_number,
-                profile_image_url: profile.profile_image_url
-              } : undefined,
-              estimated_price: price
-            };
-          })
-        }
+        filteredData = (await attachEmergencyProfiles(filteredData)) as EmergencyRequest[];
       }
 
-      setRequests(filteredData)
+      setRequests(filteredData);
 
-      // Fetch history (completed/cancelled) for this responder
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: historyData, error: historyError } = await supabase
-          .from('emergency_requests' as any)
+          .from('emergency_requests')
           .select('*')
           .eq('responder_id', user.id)
           .in('status', ['completed', 'cancelled', 'declined'])
           .order('created_at', { ascending: false })
-          .limit(50)
+          .limit(50);
 
-        if (historyError) console.error(historyError)
-        const historyWithPrice = (historyData || []).map((r: any) => {
-          let price = null;
-          try {
-            if (r.details?.startsWith('{')) {
-              const parsed = JSON.parse(r.details);
-              price = parsed.price;
-            }
-          } catch (e) {}
-          return { ...r, estimated_price: price };
-        });
-        setHistory(historyWithPrice as EmergencyRequest[])
+        if (historyError) console.error(historyError);
+        const historyWithPrice = (historyData || []).map((r) => ({
+          ...r,
+          estimated_price: extractEstimatedPrice(r.details),
+        }));
+        setHistory(historyWithPrice as EmergencyRequest[]);
       }
 
-      setLoading(false)
+      setLoading(false);
     } catch (e) {
-      console.error('Error in fetchRequests:', e)
-      setLoading(false)
+      console.error('Error in fetchRequests:', e);
+      setLoading(false);
     }
-  }, [userId, userCategory])
+  }, [declinedIds, userCategory, userId]);
 
   const accept = async (id: string, responderId: string) => {
     try {
-      // First check if request is still available
       const { data: checkData } = await supabase
-        .from('emergency_requests' as any)
+        .from('emergency_requests')
         .select('status, responder_id')
         .eq('id', id)
-        .single()
+        .single();
 
       if (checkData?.status !== 'pending' || (checkData?.responder_id && checkData?.responder_id !== responderId)) {
-        alert('This request has already been taken by another responder')
-        fetchRequests()
-        return
+        alert('This request has already been taken by another responder');
+        fetchRequests();
+        return;
       }
 
       const { error } = await supabase
-        .from('emergency_requests' as any)
+        .from('emergency_requests')
         .update({
           status: 'accepted',
           responder_id: responderId,
@@ -167,47 +127,46 @@ export function useEmergencyRequests() {
         })
         .eq('id', id)
         .or(`responder_id.is.null,responder_id.eq.${responderId}`)
-        .eq('status', 'pending')
+        .eq('status', 'pending');
 
       if (error) {
-        console.error('Error accepting request:', error)
-        alert('Failed to accept request. It may have been taken by another responder.')
+        console.error('Error accepting request:', error);
+        alert('Failed to accept request. It may have been taken by another responder.');
       } else {
-        // Send a message to the user that the request was accepted
-        const request = requests.find(r => r.id === id)
+        const request = requests.find((r) => r.id === id);
         if (request && userId) {
-          await sendMessage(request.user_id, 'I have accepted your emergency request and am preparing to assist you.')
+          await sendEmergencyMessage(userId, request.user_id, 'I have accepted your emergency request and am preparing to assist you.');
         }
       }
 
-      fetchRequests()
+      fetchRequests();
     } catch (e) {
-      console.error('Error accepting:', e)
+      console.error('Error accepting:', e);
     }
-  }
+  };
 
   const decline = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('emergency_requests' as any)
+        .from('emergency_requests')
         .update({
           status: 'declined',
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
-        .eq('status', 'pending')
+        .eq('status', 'pending');
 
       if (error) {
-        console.error('Error declining:', error)
+        console.error('Error declining:', error);
       } else {
-        setDeclinedIds(prev => [...prev, id])
-        alert('Request declined. It will be sent to another responder.')
+        setDeclinedIds((prev) => [...prev, id]);
+        alert('Request declined. It will be sent to another responder.');
       }
-      fetchRequests()
+      fetchRequests();
     } catch (e) {
-      console.error('Error declining:', e)
+      console.error('Error declining:', e);
     }
-  }
+  };
 
   const updateStatus = async (
     id: string,
@@ -215,103 +174,64 @@ export function useEmergencyRequests() {
     location?: { lat: number; lng: number }
   ) => {
     try {
-      const update: any = {
-        status,
-        updated_at: new Date().toISOString()
-      }
+      await updateEmergencyStatus(id, status, location);
 
-      if (location) {
-        update.responder_location_lat = location.lat
-        update.responder_location_lng = location.lng
-      }
-
-      const { error } = await supabase
-        .from('emergency_requests' as any)
-        .update(update)
-        .eq('id', id)
-
-      if (error) {
-        console.error('Error updating status:', error)
-      } else {
-        // Send a message to the user about the status update
-        const request = requests.concat(history).find(r => r.id === id)
-        if (request && userId) {
-          let message = ''
-          switch (status) {
-            case 'en_route':
-              message = 'I am now en route to your location. You can track my live location on the map.'
-              break
-            case 'completed':
-              message = 'I have marked this emergency as completed. Please stay safe.'
-              break
-            case 'cancelled':
-              message = 'I have had to cancel this assignment. Another responder may be assigned or you can request again.'
-              break
-            case 'accepted':
-              message = 'I have accepted your request and will be starting soon.'
-              break
-          }
-          if (message) {
-            await sendMessage(request.user_id, message)
-          }
+      const request = requests.concat(history).find((r) => r.id === id);
+      if (request && userId) {
+        let message = '';
+        switch (status) {
+          case 'en_route':
+            message = 'I am now en route to your location. You can track my live location on the map.';
+            break;
+          case 'completed':
+            message = 'I have marked this emergency as completed. Please stay safe.';
+            break;
+          case 'cancelled':
+            message = 'I have had to cancel this assignment. Another responder may be assigned or you can request again.';
+            break;
+          case 'accepted':
+            message = 'I have accepted your request and will be starting soon.';
+            break;
         }
-
-        if (status === 'cancelled') {
-          alert('Request cancelled.')
+        if (message) {
+          await sendEmergencyMessage(userId, request.user_id, message);
         }
       }
-      fetchRequests()
+
+      if (status === 'cancelled') {
+        alert('Request cancelled.');
+      }
+      fetchRequests();
     } catch (e) {
-      console.error('Error updating status:', e)
+      console.error('Error updating status:', e);
     }
-  }
+  };
 
-  // Update responder location periodically when en_route
   const updateLocation = useCallback(async (
     id: string,
     location: { lat: number; lng: number }
   ) => {
     try {
-      await supabase
-        .from('emergency_requests' as any)
-        .update({
-          responder_location_lat: location.lat,
-          responder_location_lng: location.lng,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
+      await updateEmergencyStatus(id, 'en_route', location);
     } catch (e) {
-      console.error('Error updating location:', e)
+      console.error('Error updating location:', e);
     }
-  }, [])
+  }, []);
 
   const sendMessage = async (receiverId: string, content: string) => {
     if (!userId) return false;
     try {
-      const { error } = await supabase
-        .from('messages' as any)
-        .insert({
-          sender_id: userId,
-          receiver_id: receiverId,
-          content,
-          message_type: 'text'
-        });
-
-      if (error) {
-        console.error('Error sending message:', error);
-        return false;
-      }
+      await sendEmergencyMessage(userId, receiverId, content);
       return true;
     } catch (e) {
       console.error('Error in sendMessage:', e);
       return false;
     }
-  }
+  };
 
   useEffect(() => {
-    fetchRequests()
+    fetchRequests();
 
-    // Set up real-time subscription
     const ch = supabase
       .channel('emergency-requests-channel')
       .on(
@@ -322,18 +242,18 @@ export function useEmergencyRequests() {
           table: 'emergency_requests'
         },
         (payload) => {
-          console.log('Real-time update:', payload)
-          fetchRequests()
+          console.log('Real-time update:', payload);
+          fetchRequests();
         }
       )
       .subscribe((status) => {
-        console.log('Subscription status:', status)
-      })
+        console.log('Subscription status:', status);
+      });
 
     return () => {
-      supabase.removeChannel(ch)
-    }
-  }, [fetchRequests])
+      supabase.removeChannel(ch);
+    };
+  }, [fetchRequests]);
 
   return {
     requests,
@@ -345,5 +265,5 @@ export function useEmergencyRequests() {
     updateLocation,
     sendMessage,
     refetch: fetchRequests
-  }
+  };
 }

@@ -21,3 +21,18 @@ export function calculateDistanceKm(
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
+
+export function getAdDistanceKm(
+  userLocation: { lat: number; lng: number },
+  adLocationLat: number | string | null | undefined,
+  adLocationLng: number | string | null | undefined
+): number | null {
+  const lat = adLocationLat != null ? Number(adLocationLat) : NaN;
+  const lng = adLocationLng != null ? Number(adLocationLng) : NaN;
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return null;
+  }
+
+  return calculateDistanceKm(userLocation.lat, userLocation.lng, lat, lng);
+}

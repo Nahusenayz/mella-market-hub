@@ -40,6 +40,7 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [assistantNotice, setAssistantNotice] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load history
@@ -113,6 +114,7 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
     }
 
     setIsLoading(true);
+    setAssistantNotice(null);
 
     try {
       const history = messages.slice(-5).map(m => ({
@@ -131,8 +133,12 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
 
       setMessages(prev => [...prev, botMsg]);
       fetchSuggestions();
+      if (/connection error|trouble thinking|not connected/i.test(botResponse)) {
+        setAssistantNotice('Mella AI is using a fallback response right now.');
+      }
     } catch (error) {
       console.error('Mella AI Error:', error);
+      setAssistantNotice('Mella AI is temporarily unavailable.');
     } finally {
       setIsLoading(false);
     }
@@ -177,6 +183,12 @@ export const MellaAssistant: React.FC<MellaAssistantProps> = ({ isOpen, onClose 
             </Button>
           </div>
         </CardHeader>
+
+        {assistantNotice && (
+          <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 text-xs font-medium text-amber-800">
+            {assistantNotice}
+          </div>
+        )}
 
         <CardContent className="flex-1 overflow-hidden p-0 flex flex-col bg-slate-50">
           <ScrollArea className="flex-1 p-4">

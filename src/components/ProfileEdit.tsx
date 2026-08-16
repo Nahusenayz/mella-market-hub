@@ -194,6 +194,8 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({ profile, onClose, onPr
                   <Upload size={16} />
                 )}
                 <input
+                  id="profile-image-upload"
+                  name="profile_image"
                   type="file"
                   className="hidden"
                   accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
@@ -208,10 +210,13 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({ profile, onClose, onPr
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="profile-full-name" className="block text-sm font-medium text-gray-700 mb-2">
               Full Name
             </label>
             <input
+              id="profile-full-name"
+              name="full_name"
+              autoComplete="name"
               type="text"
               required
               value={formData.full_name}
@@ -223,10 +228,13 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({ profile, onClose, onPr
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="profile-phone-number" className="block text-sm font-medium text-gray-700 mb-2">
               Phone Number
             </label>
             <input
+              id="profile-phone-number"
+              name="phone_number"
+              autoComplete="tel"
               type="tel"
               value={formData.phone_number}
               onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
@@ -237,10 +245,12 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({ profile, onClose, onPr
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="profile-bio" className="block text-sm font-medium text-gray-700 mb-2">
               Bio
             </label>
             <textarea
+              id="profile-bio"
+              name="bio"
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
               rows={4}

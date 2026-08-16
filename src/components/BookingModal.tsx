@@ -61,11 +61,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({ onClose, service, wo
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="booking-service-date" className="block text-sm font-medium text-gray-700 mb-2">
                 <Calendar size={16} className="inline mr-2" />
                 Preferred Date (Optional)
               </label>
               <input
+                id="booking-service-date"
+                name="serviceDate"
                 type="datetime-local"
                 value={formData.serviceDate}
                 onChange={(e) => setFormData({ ...formData, serviceDate: e.target.value })}
@@ -75,7 +77,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ onClose, service, wo
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
+                <label htmlFor="booking-message" className="block text-sm font-medium text-gray-700">
                   <MessageSquare size={16} className="inline mr-2" />
                   Message (Optional)
                 </label>
@@ -87,6 +89,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({ onClose, service, wo
                 </AmharicVoiceInput>
               </div>
               <textarea
+                id="booking-message"
+                name="message"
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 rows={3}

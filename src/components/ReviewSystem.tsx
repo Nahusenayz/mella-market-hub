@@ -93,10 +93,12 @@ export const ReviewSystem: React.FC<ReviewSystemProps> = ({
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="review-title" className="block text-sm font-medium text-gray-700 mb-2">
                   Title (optional)
                 </label>
                 <input
+                  id="review-title"
+                  name="title"
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -106,10 +108,12 @@ export const ReviewSystem: React.FC<ReviewSystemProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="review-comment" className="block text-sm font-medium text-gray-700 mb-2">
                   Review (optional)
                 </label>
                 <textarea
+                  id="review-comment"
+                  name="comment"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   rows={4}

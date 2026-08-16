@@ -7,6 +7,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { translateWithMella } from '@/services/groqService';
+import { runAiText } from '@/services/aiGateway';
+import { DEFAULT_LOCATION } from '@/lib/defaultLocation';
 
 interface AdFormProps {
   onClose: () => void;
@@ -41,7 +43,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
   const { location: contextLocation, loading: locationLoading, error: locationError, permissionStatus, requestPermission } = useLocation();
 
   // Use context location if available, otherwise fall back to prop location
-  const userLocation = contextLocation || propLocation || { lat: 9.0257, lng: 38.7468 };
+  const userLocation = contextLocation || propLocation || DEFAULT_LOCATION;
   const [formData, setFormData] = useState({
     title: adToEdit?.title || '',
     description: adToEdit?.description || '',
@@ -60,6 +62,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
   const [isTranslating, setIsTranslating] = useState(false);
   const [aiPriceSuggestion, setAiPriceSuggestion] = useState<string | null>(null);
   const [isGettingAiPrice, setIsGettingAiPrice] = useState(false);
+  const [aiStatusMessage, setAiStatusMessage] = useState<string | null>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -98,21 +101,12 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
 
   const moderateListing = async (title: string, description: string, category: string) => {
     try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'Mella Market Hub',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'meta-llama/llama-3.1-8b-instruct',
-          messages: [{ role: 'user', content: `Is this listing appropriate for a community marketplace? Category: ${category}, Title: ${title}, Description: ${description}. Respond with exactly 'APPROVE' or 'FLAG: <brief reason>'.` }]
-        })
+      const response = await runAiText({
+        systemPrompt: 'Decide if a marketplace listing is appropriate. Reply only with APPROVE or FLAG: <brief reason>.',
+        prompt: `Is this listing appropriate for a community marketplace? Category: ${category}, Title: ${title}, Description: ${description}. Respond with exactly 'APPROVE' or 'FLAG: <brief reason>'.`,
+        model: 'meta-llama/llama-3.1-8b-instruct',
       });
-      const data = await res.json();
-      const result = (data.choices?.[0]?.message?.content || 'APPROVE').trim();
+      const result = (response.text || 'APPROVE').trim();
       if (result === 'APPROVE') return null;
       return result.replace('FLAG:', '').trim();
     } catch { return null; }
@@ -123,6 +117,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
     if (!user) return;
 
     setLoading(true);
+    setAiStatusMessage(null);
 
     try {
       const flagReason = await moderateListing(formData.title, formData.description, formData.category);
@@ -169,6 +164,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
             image_url: imageUrl,
             location_lat: userLocation.lat,
             location_lng: userLocation.lng,
+            is_active: true,
             ad_type: formData.type,
             property_type: formData.category === 'Properties' ? formData.property_type : null,
             listing_type: formData.category === 'Properties' ? (formData.type === 'rent' ? 'Rent' : 'Sale') : null,
@@ -181,9 +177,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
         .select()
         .single();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: 'Success!',
@@ -234,30 +228,22 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
     }
     setIsGettingAiPrice(true);
     setAiPriceSuggestion(null);
+    setAiStatusMessage(null);
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'Mella Market Hub',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'meta-llama/llama-3.1-8b-instruct',
-          messages: [
-            { role: 'system', content: 'You are a pricing expert for the Ethiopian market. Given a listing title, description, and category, suggest a fair price range in ETB. Return ONLY a single line like "Suggested: ETB XXX - YYY" with no extra text.' },
-            { role: 'user', content: `Category: ${formData.category}\nTitle: ${formData.title || '(not set)'}\nDescription: ${formData.description || '(not set)'}\nType: ${formData.type}` }
-          ]
-        })
+      const response = await runAiText({
+        systemPrompt: 'You are a pricing expert for the Ethiopian market. Return ONLY a single line like "Suggested: ETB XXX - YYY" with no extra text.',
+        prompt: `Category: ${formData.category}\nTitle: ${formData.title || '(not set)'}\nDescription: ${formData.description || '(not set)'}\nType: ${formData.type}`,
+        model: 'meta-llama/llama-3.1-8b-instruct',
       });
-      const data = await response.json();
-      const suggestion = data.choices?.[0]?.message?.content || null;
+      const suggestion = response.text || null;
       if (suggestion) {
         setAiPriceSuggestion(suggestion);
+      } else {
+        setAiStatusMessage('AI price suggestion is unavailable right now.');
       }
     } catch (e) {
       console.error('AI price suggest error:', e);
+      setAiStatusMessage('AI price suggestion is unavailable right now.');
     } finally {
       setIsGettingAiPrice(false);
     }
@@ -292,6 +278,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
           ? `${prev.description}\n\n${translatedLabel} translation:\n${translated}`
           : translated,
       }));
+      setAiStatusMessage(null);
 
       toast({
         title: 'Translated',
@@ -321,6 +308,13 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
             <X size={24} />
           </button>
         </div>
+        {aiStatusMessage && (
+          <div className="px-6 mt-3">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              {aiStatusMessage}
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Type Selection */}
@@ -375,10 +369,12 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="ad-title" className="block text-sm font-medium text-gray-700 mb-2">
               {formData.type === 'service' ? 'Service Title' : 'Product Title'}
             </label>
             <input
+              id="ad-title"
+              name="title"
               type="text"
               required
               value={formData.title}
@@ -390,7 +386,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">
+              <label htmlFor="ad-description" className="block text-sm font-medium text-gray-700">
                 Description
               </label>
               <div className="flex gap-2">
@@ -406,6 +402,8 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
               </div>
             </div>
             <textarea
+              id="ad-description"
+              name="description"
               required
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -417,10 +415,12 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="ad-category" className="block text-sm font-medium text-gray-700 mb-2">
                 Category
               </label>
               <select
+                id="ad-category"
+                name="category"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -434,12 +434,14 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="ad-price" className="block text-sm font-medium text-gray-700 mb-2">
                 Price {formData.type === 'rent' && '(per day)'}
               </label>
               <div className="relative">
                 <DollarSign size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
+                  id="ad-price"
+                  name="price"
                   type="number"
                   required
                   min="0"
@@ -491,8 +493,10 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Property Type</label>
+                  <label htmlFor="ad-property-type" className="block text-sm font-medium text-gray-700 mb-2">Property Type</label>
                   <select
+                    id="ad-property-type"
+                    name="property_type"
                     value={formData.property_type}
                     onChange={(e) => setFormData({ ...formData, property_type: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -506,8 +510,10 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Area (sqm)</label>
+                  <label htmlFor="ad-area-sqm" className="block text-sm font-medium text-gray-700 mb-2">Area (sqm)</label>
                   <input
+                    id="ad-area-sqm"
+                    name="area_sqm"
                     type="number"
                     value={formData.area_sqm}
                     onChange={(e) => setFormData({ ...formData, area_sqm: e.target.value })}
@@ -517,8 +523,10 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Bedrooms</label>
+                  <label htmlFor="ad-bedrooms" className="block text-sm font-medium text-gray-700 mb-2">Bedrooms</label>
                   <input
+                    id="ad-bedrooms"
+                    name="bedrooms"
                     type="number"
                     value={formData.bedrooms}
                     onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
@@ -528,8 +536,10 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Bathrooms</label>
+                  <label htmlFor="ad-bathrooms" className="block text-sm font-medium text-gray-700 mb-2">Bathrooms</label>
                   <input
+                    id="ad-bathrooms"
+                    name="bathrooms"
                     type="number"
                     value={formData.bathrooms}
                     onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
@@ -543,6 +553,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
                 <input
                   type="checkbox"
                   id="is_furnished"
+                  name="is_furnished"
                   checked={formData.is_furnished}
                   onChange={(e) => setFormData({ ...formData, is_furnished: e.target.checked })}
                   className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
@@ -555,7 +566,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="image-upload" className="block text-sm font-medium text-gray-700 mb-2">
               {formData.type === 'service' ? 'Service Image' : 'Product Image'}
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-500 transition-colors">
@@ -565,6 +576,7 @@ export const AdForm: React.FC<AdFormProps> = ({ onClose, userLocation: propLocat
                 onChange={handleImageUpload}
                 className="hidden"
                 id="image-upload"
+                name="image"
               />
               <label htmlFor="image-upload" className="cursor-pointer">
                 {imagePreview ? (

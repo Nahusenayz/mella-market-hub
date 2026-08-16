@@ -3,13 +3,14 @@ import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/ap
 import { useRealTimeAds } from '@/hooks/useRealTimeAds';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { DEFAULT_LOCATION } from '@/lib/defaultLocation';
 
 const containerStyle = {
   width: '100%',
   height: '100%',
 };
 
-const defaultCenter = { lat: 9.032, lng: 38.7469 };
+const defaultCenter = DEFAULT_LOCATION;
 
 const emergencyStations = [
   { id: 'e1', name: 'Tikur Anbessa Hospital', type: 'hospital', lat: 9.0366, lng: 38.7639 },

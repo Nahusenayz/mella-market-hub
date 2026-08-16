@@ -1,42 +1,21 @@
+import { runAiText, type ChatMessage } from './aiGateway';
 
-type ChatMessage = { role: string; content: string };
-
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const OPENROUTER_MODEL = "meta-llama/llama-3.1-8b-instruct";
+const OPENROUTER_MODEL = 'meta-llama/llama-3.1-8b-instruct';
 
 const callOpenRouter = async (systemPrompt: string, prompt: string, history: ChatMessage[] = []) => {
-  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+  const response = await runAiText({
+    systemPrompt,
+    prompt,
+    history,
+    model: OPENROUTER_MODEL,
+  });
 
-  if (!apiKey) {
-    console.error("OpenRouter API key is missing. Please set VITE_OPENROUTER_API_KEY in .env.local");
-    return "I'm sorry, my AI brain is not connected right now. Please check the API key.";
-  }
-
-  try {
-    const response = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Mella Market Hub",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: OPENROUTER_MODEL,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...history,
-          { role: "user", content: prompt }
-        ]
-      })
-    });
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || "I'm having trouble thinking right now. Please try again.";
-  } catch (error) {
-    console.error("Error calling OpenRouter:", error);
+  if (response.error && !response.text) {
+    console.error('AI request failed:', response.error);
     return "Connection error. Please check your internet and try again.";
   }
+
+  return response.text || "I'm having trouble thinking right now. Please try again.";
 };
 
 export const askMellaAssistant = async (prompt: string, history: ChatMessage[] = []) => {
@@ -54,18 +33,20 @@ export const askMellaAssistant = async (prompt: string, history: ChatMessage[] =
 
 export const classifyEmergency = async (details: string, language: string = 'en') => {
   const prompt = language === 'am'
-    ? `የሚከተለውን የአደጋ ጊዜ መግለጫ ተንትን። ምድብ (police|ambulance|fire_truck|traffic_police|tow_truck) እና የአስቸኳይ ጊዜ ደረጃ (Critical|High|Normal) መልስ። ቅርጸት፦ CATEGORY: police | URGENCY: Critical`
+    ? `á‹¨áˆšáŠ¨á‰°áˆˆá‹áŠ• á‹¨áŠ á‹°áŒ‹ áŒŠá‹œ áˆ˜áŒáˆˆáŒ« á‰°áŠ•á‰µáŠ•á¢ áˆá‹µá‰¥ (police|ambulance|fire_truck|traffic_police|tow_truck) áŠ¥áŠ“ á‹¨áŠ áˆµá‰¸áŠ³á‹­ áŒŠá‹œ á‹°áˆ¨áŒƒ (Critical|High|Normal) áˆ˜áˆáˆµá¢ á‰…áˆ­áŒ¸á‰µá¦ CATEGORY: police | URGENCY: Critical`
     : `Analyze this emergency description. Return the category (police|ambulance|fire_truck|traffic_police|tow_truck) and urgency level (Critical|High|Normal). Format: CATEGORY: police | URGENCY: Critical\n\nDescription: ${details}`;
+
   const result = await callOpenRouter(
     'You are an emergency triage AI. Analyze descriptions and classify them into categories and urgency levels. Respond ONLY in the requested format.',
     prompt
   );
+
   const catMatch = result.match(/CATEGORY:\s*(\w+)/i);
   const urgMatch = result.match(/URGENCY:\s*(\w+)/i);
   return {
     category: catMatch?.[1]?.toLowerCase() || null,
     urgency: urgMatch?.[1] || null,
-    raw: result
+    raw: result,
   };
 };
 

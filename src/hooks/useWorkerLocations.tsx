@@ -16,6 +16,9 @@ export interface WorkerLocation {
         full_name: string;
         profile_image_url?: string;
         phone_number?: string;
+        is_verified?: boolean;
+        verification_type?: string | null;
+        badges?: string[] | null;
     };
     distance?: number;
 }
@@ -60,7 +63,7 @@ export const useWorkerLocations = (filterCategory?: string) => {
             const workerIds = locationsData.map((loc: any) => loc.worker_id);
             const { data: profilesData, error: profilesError } = await supabase
                 .from('profiles')
-                .select('id, full_name, profile_image_url, phone_number')
+                .select('id, full_name, profile_image_url, phone_number, is_verified, verification_type')
                 .in('id', workerIds);
 
             if (profilesError) {
@@ -81,11 +84,17 @@ export const useWorkerLocations = (filterCategory?: string) => {
                     profiles: profile ? {
                         full_name: profile.full_name || 'Responder',
                         profile_image_url: profile.profile_image_url,
-                        phone_number: profile.phone_number
+                        phone_number: profile.phone_number,
+                        is_verified: profile.is_verified || false,
+                        verification_type: profile.verification_type,
+                        badges: profile.verification_type ? [profile.verification_type] : []
                     } : {
                         full_name: 'Responder',
                         profile_image_url: undefined,
-                        phone_number: undefined
+                        phone_number: undefined,
+                        is_verified: false,
+                        verification_type: undefined,
+                        badges: []
                     },
                     service_fee: loc.service_fee
                 };

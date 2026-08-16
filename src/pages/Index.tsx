@@ -4,7 +4,6 @@ import { SearchHero } from '@/components/SearchHero';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { DistanceFilter } from '@/components/DistanceFilter';
 import { ServiceGrid } from '@/components/ServiceGrid';
-import { MapView } from '@/components/MapViewGoogle';
 import { SearchBar } from '@/components/SearchBar';
 import { BookingModal } from '@/components/BookingModal';
 import { MessageThread } from '@/components/MessageThread';
@@ -24,8 +23,17 @@ import { useLocation as useLocationContext } from '@/contexts/LocationContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { calculateDistanceKm } from '@/lib/utils';
+import { calculateDistanceKm, getAdDistanceKm } from '@/lib/utils';
+import { DEFAULT_LOCATION } from '@/lib/defaultLocation';
 import { isInCrimeZone, getSeverityLabel, getSeverityColor } from '@/hooks/crimeData';
+
+const LazyMapView = React.lazy(() =>
+  import('@/components/MapViewGoogle').then((mod) => ({ default: mod.MapView }))
+);
+
+const LazyCommunitySafetyFeed = React.lazy(() =>
+  import('@/components/CommunitySafetyFeed').then((mod) => ({ default: mod.CommunitySafetyFeed }))
+);
 
 interface Service {
   id: string;
@@ -36,6 +44,7 @@ interface Service {
   provider: string;
   rating: number;
   distance: number;
+  hasLocation?: boolean;
   image: string;
   location: { lat: number; lng: number };
   user_id: string;
@@ -63,7 +72,7 @@ const Index = () => {
   const { location: userLocation } = useLocationContext(); // Get location from context
   const { ads, loading, searchAds } = useRealTimeAds();
   const [selectedCategory, setSelectedCategory] = useLocalStorage('selectedCategory', 'all');
-  const [distanceFilter, setDistanceFilter] = useLocalStorage('distanceFilter', 5); // Default to 5km max
+  const [distanceFilter, setDistanceFilter] = useLocalStorage('distanceFilter', 25); // Default to 25km radius
   const [viewMode, setViewMode] = useLocalStorage('viewMode', 'list');
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedPost, setSelectedPost] = useState<Service | null>(null);
@@ -80,40 +89,32 @@ const Index = () => {
   const [showAdForm, setShowAdForm] = useState(false);
   const [showTowTruck, setShowTowTruck] = useState(false);
   const [editAd, setEditAd] = useState<Service | null>(null);
+
   const { workers: responders } = useWorkerLocations();
   const onlineResponders = responders.length;
-  const responderCounts = React.useMemo(() => {
-    const counts: Record<string, number> = {};
-    responders.forEach(r => {
-      const cat = r.category;
-      counts[cat] = (counts[cat] || 0) + 1;
-    });
-    return counts;
-  }, [responders]);
-  const [dismissedCrimeAlert, setDismissedCrimeAlert] = useState(false);
+  const currentLocation = userLocation || DEFAULT_LOCATION;
 
-  // Default location fallback
-  const currentLocation = userLocation || { lat: 9.0320, lng: 38.7469 };
-  const crimeZone = isInCrimeZone(currentLocation.lat, currentLocation.lng);
-  const showCrimeAlert = crimeZone && !dismissedCrimeAlert && crimeZone.severity !== 'low';
-
-  // Check if we need to open ad form from navigation state
-  useEffect(() => {
-    if (location.state?.openAdForm) {
-      setShowAdForm(true);
-      // Clear the state to prevent reopening on refresh
-      navigate('/', { replace: true });
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setIsSearching(false);
+      setSearchResults([]);
+      return;
     }
-  }, [location.state, navigate]);
+    setIsSearching(true);
+    const results = await searchAds(query);
+    setSearchResults(results);
+  };
 
-
+  const clearSearch = () => {
+    setIsSearching(false);
+    setSearchResults([]);
+  };
 
   // Memoized transformation of ads data to match Service interface
   const services = React.useMemo(() => {
     return ads.map(ad => {
-      const distance = ad.location_lat && ad.location_lng
-        ? calculateDistanceKm(currentLocation.lat, currentLocation.lng, ad.location_lat, ad.location_lng)
-        : 0;
+      const distance = getAdDistanceKm(currentLocation, ad.location_lat, ad.location_lng);
 
       return {
         id: ad.id,
@@ -123,11 +124,12 @@ const Index = () => {
         category: ad.category,
         provider: ad.profiles?.full_name || 'Unknown Provider',
         rating: ad.profiles?.rating || 0,
-        distance: distance,
+        distance: distance ?? 0,
+        hasLocation: distance != null,
         image: ad.image_url || '/placeholder.svg',
         location: {
-          lat: ad.location_lat || currentLocation.lat,
-          lng: ad.location_lng || currentLocation.lng
+          lat: Number(ad.location_lat) || currentLocation.lat,
+          lng: Number(ad.location_lng) || currentLocation.lng
         },
         user_id: ad.user_id,
         profiles: ad.profiles,
@@ -142,34 +144,103 @@ const Index = () => {
   }, [ads, currentLocation.lat, currentLocation.lng]);
 
   const filteredServices = React.useMemo(() => {
-    // If we're searching, searchResults are already filtered/transformed from searchAds
-    // But we still need to apply distance and category filters to the main ads list
     const source = isSearching
-      ? searchResults.map(ad => ({
-        ...ad,
-        distance: ad.location_lat && ad.location_lng
-          ? calculateDistanceKm(currentLocation.lat, currentLocation.lng, ad.location_lat, ad.location_lng)
-          : 0
-      }))
+      ? searchResults.map(ad => {
+        const distance = getAdDistanceKm(currentLocation, ad.location_lat, ad.location_lng);
+        return {
+          ...ad,
+          distance: distance ?? 0,
+          hasLocation: distance != null,
+        };
+      })
       : services;
 
-    return source.filter(service => {
-      const categoryMatch = selectedCategory === 'all' || service.category === selectedCategory;
-      const distanceMatch = service.distance <= distanceFilter;
-      return categoryMatch && distanceMatch;
+    const categoryFiltered = source.filter(service => {
+      return selectedCategory === 'all' || service.category === selectedCategory;
     });
+
+    if (distanceFilter >= 100) {
+      return categoryFiltered;
+    }
+
+    const withinRadius = categoryFiltered.filter(service => {
+      if (!service.hasLocation) return true;
+      return service.distance <= distanceFilter;
+    });
+
+    // If nothing is within the selected radius, show all community posts sorted by distance
+    if (withinRadius.length === 0 && categoryFiltered.length > 0) {
+      return [...categoryFiltered].sort((a, b) => {
+        if (!a.hasLocation && !b.hasLocation) return 0;
+        if (!a.hasLocation) return 1;
+        if (!b.hasLocation) return -1;
+        return a.distance - b.distance;
+      });
+    }
+
+    return withinRadius;
   }, [services, isSearching, searchResults, selectedCategory, distanceFilter, currentLocation.lat, currentLocation.lng]);
 
-  const handleSearch = async (query: string, location?: { lat: number; lng: number }, radius?: number) => {
-    setIsSearching(true);
-    const results = await searchAds(query, location, radius);
-    setSearchResults(results);
-  };
+  const nearbyPostCount = React.useMemo(() => {
+    if (distanceFilter >= 100) return filteredServices.length;
+    return filteredServices.filter(service => !service.hasLocation || service.distance <= distanceFilter).length;
+  }, [filteredServices, distanceFilter]);
 
-  const clearSearch = () => {
-    setIsSearching(false);
-    setSearchResults([]);
-  };
+  const responderCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    responders.forEach(r => {
+      const cat = r.category;
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return counts;
+  }, [responders]);
+  const emergencyInsights = React.useMemo(() => {
+    const categories = ['police', 'traffic_police', 'ambulance', 'fire_truck', 'tow_truck'];
+    return categories.reduce((acc, category) => {
+      const matches = responders.filter(r => r.category === category);
+      const nearest = matches
+        .map(worker => ({
+          ...worker,
+          distance: calculateDistanceKm(
+            currentLocation.lat,
+            currentLocation.lng,
+            worker.location_lat,
+            worker.location_lng
+          )
+        }))
+        .sort((a, b) => (a.distance || 0) - (b.distance || 0))[0];
+
+      const etaMinutes = nearest
+        ? Math.max(2, Math.round(((nearest.distance || 0) / 35) * 60))
+        : null;
+
+      acc[category] = {
+        count: matches.length,
+        etaLabel: matches.length > 0
+          ? `ETA ~${etaMinutes} min`
+          : 'Station fallback ready',
+        statusLabel: matches.length > 1
+          ? 'Online now'
+          : matches.length === 1
+            ? 'Closest available'
+            : '0 responders online'
+      };
+      return acc;
+    }, {} as Record<string, { count: number; etaLabel: string; statusLabel: string }>);
+  }, [responders, currentLocation.lat, currentLocation.lng]);
+  const [dismissedCrimeAlert, setDismissedCrimeAlert] = useState(false);
+
+  const crimeZone = isInCrimeZone(currentLocation.lat, currentLocation.lng);
+  const showCrimeAlert = crimeZone && !dismissedCrimeAlert && crimeZone.severity !== 'low';
+
+  // Check if we need to open ad form from navigation state
+  useEffect(() => {
+    if (location.state?.openAdForm) {
+      setShowAdForm(true);
+      // Clear the state to prevent reopening on refresh
+      navigate('/', { replace: true });
+    }
+  }, [location.state, navigate]);
 
   const handlePostClick = (service: Service) => {
     setSelectedPost(service);
@@ -242,7 +313,14 @@ const Index = () => {
             isWorkerMode={false}
             onTowTruckClick={() => setShowTowTruck(true)}
             responderCounts={responderCounts}
+            emergencyInsights={emergencyInsights}
           />
+
+          <div className="container mx-auto px-4 mt-4">
+            <React.Suspense fallback={<div className="rounded-lg bg-white p-4 text-sm text-gray-500 shadow-sm">Loading safety feed...</div>}>
+              <LazyCommunitySafetyFeed userLocation={currentLocation} />
+            </React.Suspense>
+          </div>
 
           {/* Real-time Responder Stats Ticker */}
           <div className="bg-orange-600 text-white py-2 overflow-hidden whitespace-nowrap">
@@ -355,7 +433,11 @@ const Index = () => {
                   <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
                     {isSearching ? t('searchResults') : t('communityPosts')}
                     <span className="text-lg font-normal text-gray-600 dark:text-slate-400 ml-2">
-                      ({filteredServices.length} {t('postsWithinDistance')} {distanceFilter}{t('kilometers')})
+                      ({nearbyPostCount} {t('postsWithinDistance')} {distanceFilter}{t('kilometers')}
+                      {nearbyPostCount === 0 && filteredServices.length > 0 && !isSearching && (
+                        <span>{` · showing ${filteredServices.length} community posts`}</span>
+                      )}
+                      )
                     </span>
                   </h2>
 
@@ -423,11 +505,13 @@ const Index = () => {
                       />
                     ) : (
                       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 overflow-hidden h-[600px] mb-8 sticky top-24">
-                        <MapView 
-                          services={filteredServices} 
-                          userLocation={currentLocation} 
-                          distanceFilter={distanceFilter} 
-                        />
+                        <React.Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-gray-500">Loading map...</div>}>
+                          <LazyMapView 
+                            services={filteredServices} 
+                            userLocation={currentLocation} 
+                            distanceFilter={distanceFilter} 
+                          />
+                        </React.Suspense>
                       </div>
                     )}
                   </>

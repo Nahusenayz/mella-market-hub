@@ -1,8 +1,13 @@
-
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import {
+  attachEmergencyProfiles,
+  extractEstimatedPrice,
+  sendEmergencyMessage,
+  updateEmergencyStatus,
+} from '@/shared/emergencyRequestService';
 
 export type EmergencyRequest = {
   id: string;
@@ -17,6 +22,12 @@ export type EmergencyRequest = {
   responder_location_lng: number | null;
   created_at: string;
   updated_at: string | null;
+  estimated_price?: number | null;
+  user_profile?: {
+    full_name: string | null;
+    phone_number: string | null;
+    profile_image_url: string | null;
+  };
 };
 
 export type NewRequestHandler = (request: EmergencyRequest) => void;
@@ -31,17 +42,21 @@ export const useEmergencyRequests = (onNewRequest?: NewRequestHandler) => {
   const fetchRequests = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('emergency_requests' as any)
+        .from('emergency_requests')
         .select('*')
         .in('status', ['pending', 'accepted', 'en_route'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+
       const fetched = (data || []) as EmergencyRequest[];
-      setRequests(prev => {
-        const prevIds = new Set(prev.map(r => r.id));
+      const withProfiles = await attachEmergencyProfiles(fetched);
+
+      setRequests((prev) => {
+        const prevIds = new Set(prev.map((r) => r.id));
         const firstKnown = knownIds.current.size === 0;
-        for (const r of fetched) {
+
+        for (const r of withProfiles) {
           if (!knownIds.current.has(r.id)) {
             knownIds.current.add(r.id);
             if (!firstKnown && !prevIds.has(r.id) && r.status === 'pending' && onNewRequest) {
@@ -49,7 +64,8 @@ export const useEmergencyRequests = (onNewRequest?: NewRequestHandler) => {
             }
           }
         }
-        return fetched;
+
+        return withProfiles as EmergencyRequest[];
       });
     } catch (e) {
       console.error('Error fetching emergency requests', e);
@@ -62,12 +78,14 @@ export const useEmergencyRequests = (onNewRequest?: NewRequestHandler) => {
     if (!user) return;
     try {
       const { error } = await supabase
-        .from('emergency_requests' as any)
+        .from('emergency_requests')
         .update({ status: 'accepted', responder_id: user.id })
         .eq('id', id)
         .is('responder_id', null)
         .eq('status', 'pending');
+
       if (error) throw error;
+
       toast({ title: 'Request accepted' });
       fetchRequests();
     } catch (e: any) {
@@ -79,10 +97,12 @@ export const useEmergencyRequests = (onNewRequest?: NewRequestHandler) => {
   const declineRequest = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('emergency_requests' as any)
+        .from('emergency_requests')
         .update({ status: 'declined' })
         .eq('id', id);
+
       if (error) throw error;
+
       toast({ title: 'Request declined' });
       fetchRequests();
     } catch (e: any) {
@@ -97,16 +117,7 @@ export const useEmergencyRequests = (onNewRequest?: NewRequestHandler) => {
     location?: { lat: number; lng: number }
   ) => {
     try {
-      const update: any = { status };
-      if (location) {
-        update.responder_location_lat = location.lat;
-        update.responder_location_lng = location.lng;
-      }
-      const { error } = await supabase
-        .from('emergency_requests' as any)
-        .update(update)
-        .eq('id', id);
-      if (error) throw error;
+      await updateEmergencyStatus(id, status, location);
       toast({ title: 'Status updated' });
       fetchRequests();
     } catch (e: any) {
@@ -117,23 +128,27 @@ export const useEmergencyRequests = (onNewRequest?: NewRequestHandler) => {
 
   useEffect(() => {
     fetchRequests();
+
     const channel = supabase
       .channel('emergency-requests')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'emergency_requests' as any },
+        { event: 'INSERT', schema: 'public', table: 'emergency_requests' },
         (payload) => {
           const newReq = payload.new as EmergencyRequest;
           if (newReq.status === 'pending' && onNewRequest) {
             knownIds.current.add(newReq.id);
-            onNewRequest(newReq);
+            onNewRequest({
+              ...newReq,
+              estimated_price: extractEstimatedPrice(newReq.details),
+            });
           }
           fetchRequests();
         }
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'emergency_requests' as any },
+        { event: '*', schema: 'public', table: 'emergency_requests' },
         () => fetchRequests()
       )
       .subscribe();

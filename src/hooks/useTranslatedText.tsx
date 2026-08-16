@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translateWithMella } from '@/services/groqService';
+import { translateOffline } from '@/services/transformersService';
 
 const translationCache = new Map<string, string>();
 
@@ -42,8 +43,12 @@ export const useTranslatedText = (text: string | null | undefined): string => {
           return;
         }
 
-        // Translate live via Mella
-        const result = await translateWithMella(original, 'am');
+        // Try offline translation first, then fall back to live translation if needed.
+        const offlineResult = await translateOffline(original, 'am');
+        const result = offlineResult && offlineResult !== original
+          ? offlineResult
+          : await translateWithMella(original, 'am');
+
         if (result && result !== original) {
           translationCache.set(original, result);
           setTranslated(result);

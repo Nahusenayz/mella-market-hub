@@ -221,12 +221,15 @@ const Auth = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="auth-fullname" className="block text-sm font-medium text-gray-700 mb-2">
                   Full Name
                 </label>
                 <div className="relative">
                   <User size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
+                    id="auth-fullname"
+                    name="fullName"
+                    autoComplete="name"
                     type="text"
                     required
                     value={fullName}
@@ -240,10 +243,12 @@ const Auth = () => {
           )}
           {isSignUp && userType === 'worker' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="auth-station-category" className="block text-sm font-medium text-gray-700 mb-2">
                 Emergency Station Category
               </label>
               <select
+                id="auth-station-category"
+                name="stationCategory"
                 value={stationCategory}
                 onChange={e => setStationCategory(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -287,6 +292,9 @@ const Auth = () => {
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">+251</span>
                 <input
+                  id="auth-phone"
+                  name="phoneNumber"
+                  autoComplete="tel"
                   type="tel"
                   required
                   value={phoneNumber}
@@ -299,6 +307,9 @@ const Auth = () => {
               <div className="relative">
                 <Mail size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
+                  id="auth-email"
+                  name="email"
+                  autoComplete="email"
                   type="email"
                   required
                   value={email}
@@ -311,12 +322,15 @@ const Auth = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="auth-password" className="block text-sm font-medium text-gray-700 mb-2">
               Password
             </label>
             <div className="relative">
               <Lock size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
+                id="auth-password"
+                name="password"
+                autoComplete={isSignUp ? "new-password" : "current-password"}
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={password}

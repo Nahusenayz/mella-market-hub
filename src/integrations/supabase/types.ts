@@ -20,12 +20,19 @@ export type Database = {
           category: string
           created_at: string | null
           description: string
+          area_sqm: number | null
           id: string
+          bedrooms: number | null
+          bathrooms: number | null
           image_url: string | null
+          is_furnished: boolean | null
           is_active: boolean | null
           location_lat: number | null
           location_lng: number | null
+          listing_type: string | null
           price: number
+          property_type: string | null
+          status: string | null
           title: string
           updated_at: string | null
           user_id: string
@@ -35,12 +42,19 @@ export type Database = {
           category: string
           created_at?: string | null
           description: string
+          area_sqm?: number | null
           id?: string
+          bedrooms?: number | null
+          bathrooms?: number | null
           image_url?: string | null
+          is_furnished?: boolean | null
           is_active?: boolean | null
           location_lat?: number | null
           location_lng?: number | null
+          listing_type?: string | null
           price: number
+          property_type?: string | null
+          status?: string | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -50,12 +64,19 @@ export type Database = {
           category?: string
           created_at?: string | null
           description?: string
+          area_sqm?: number | null
           id?: string
+          bedrooms?: number | null
+          bathrooms?: number | null
           image_url?: string | null
+          is_furnished?: boolean | null
           is_active?: boolean | null
           location_lat?: number | null
           location_lng?: number | null
+          listing_type?: string | null
           price?: number
+          property_type?: string | null
+          status?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string
@@ -174,6 +195,96 @@ export type Database = {
         }
         Relationships: []
       }
+      content_translations: {
+        Row: {
+          created_at: string | null
+          source_text: string
+          target_language: string
+          target_text: string
+        }
+        Insert: {
+          created_at?: string | null
+          source_text: string
+          target_language?: string
+          target_text: string
+        }
+        Update: {
+          created_at?: string | null
+          source_text?: string
+          target_language?: string
+          target_text?: string
+        }
+        Relationships: []
+      }
+      emergency_requests: {
+        Row: {
+          category: string | null
+          created_at: string
+          declined_responder_ids: string[] | null
+          details: string | null
+          estimated_price: number | null
+          fallback_order: number | null
+          id: string
+          responder_id: string | null
+          responder_location_lat: number | null
+          responder_location_lng: number | null
+          status: string
+          updated_at: string | null
+          user_id: string
+          user_location_lat: number | null
+          user_location_lng: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          declined_responder_ids?: string[] | null
+          details?: string | null
+          estimated_price?: number | null
+          fallback_order?: number | null
+          id?: string
+          responder_id?: string | null
+          responder_location_lat?: number | null
+          responder_location_lng?: number | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+          user_location_lat?: number | null
+          user_location_lng?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          declined_responder_ids?: string[] | null
+          details?: string | null
+          estimated_price?: number | null
+          fallback_order?: number | null
+          id?: string
+          responder_id?: string | null
+          responder_location_lat?: number | null
+          responder_location_lng?: number | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          user_location_lat?: number | null
+          user_location_lng?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_requests_responder_id_fkey"
+            columns: ["responder_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feed_activities: {
         Row: {
           activity_type: string
@@ -203,6 +314,53 @@ export type Database = {
           {
             foreignKeyName: "feed_activities_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worker_locations: {
+        Row: {
+          category: string
+          created_at: string | null
+          currency: string | null
+          id: string
+          is_available: boolean | null
+          last_updated: string | null
+          location_lat: number
+          location_lng: number
+          service_fee: number | null
+          worker_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_available?: boolean | null
+          last_updated?: string | null
+          location_lat: number
+          location_lng: number
+          service_fee?: number | null
+          worker_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_available?: boolean | null
+          last_updated?: string | null
+          location_lat?: number
+          location_lng?: number
+          service_fee?: number | null
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_locations_worker_id_fkey"
+            columns: ["worker_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

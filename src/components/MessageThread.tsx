@@ -231,6 +231,8 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
           </div>
           <div className="flex gap-2">
             <textarea
+              id="chat-message-input"
+              name="message"
               value={newMessage}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}

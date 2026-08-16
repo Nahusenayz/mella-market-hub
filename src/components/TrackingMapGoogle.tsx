@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { runAiText } from '@/services/aiGateway';
 
 interface TrackingMapProps {
   userLocation: { lat: number; lng: number };
@@ -45,6 +46,7 @@ export const TrackingMap: React.FC<TrackingMapProps> = ({
   responderType = 'ambulance'
 }) => {
   const [aiEta, setAiEta] = useState<number | null>(null);
+  const [aiEtaStatus, setAiEtaStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
 
   const distanceKm = useMemo(() => haversineKm(
     userLocation.lat, userLocation.lng,
@@ -54,25 +56,20 @@ export const TrackingMap: React.FC<TrackingMapProps> = ({
   useEffect(() => {
     if (distanceKm < 0.1) return;
     const timer = setTimeout(async () => {
+      setAiEtaStatus('loading');
       try {
         const hour = new Date().getHours();
-        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-            'HTTP-Referer': window.location.origin,
-            'X-Title': 'Mella Market Hub',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: 'meta-llama/llama-3.1-8b-instruct',
-            messages: [{ role: 'user', content: `Given a ${distanceKm.toFixed(1)}km trip in Addis Ababa at ${hour}:00, estimate arrival in minutes considering traffic. Return only a number, no text.` }]
-          })
+        const response = await runAiText({
+          systemPrompt: 'Return only a number for the estimated arrival time in minutes.',
+          prompt: `Given a ${distanceKm.toFixed(1)}km trip in Addis Ababa at ${hour}:00, estimate arrival in minutes considering traffic. Return only a number, no text.`,
+          model: 'meta-llama/llama-3.1-8b-instruct',
         });
-        const data = await res.json();
-        const num = parseInt(data.choices?.[0]?.message?.content || '', 10);
+        const num = parseInt(response.text || '', 10);
         if (!isNaN(num) && num > 0) setAiEta(num);
-      } catch { /* keep math-based ETA */ }
+        setAiEtaStatus('ready');
+      } catch {
+        setAiEtaStatus('error');
+      }
     }, 10000);
     return () => clearTimeout(timer);
   }, [distanceKm]);
@@ -162,6 +159,11 @@ export const TrackingMap: React.FC<TrackingMapProps> = ({
           <div className="flex items-center gap-1 mt-1 text-purple-300">
             <span className="text-[10px]">🤖</span>
             <span className="text-[11px]">AI ETA: ~{aiEta} min</span>
+          </div>
+        )}
+        {aiEtaStatus === 'error' && (
+          <div className="mt-1 text-[10px] text-amber-300">
+            AI ETA unavailable, using math estimate.
           </div>
         )}
         <div className="text-gray-400 text-xs mt-0.5">

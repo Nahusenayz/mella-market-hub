@@ -13,6 +13,20 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Translated } from '@/components/Translated';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import type { EmergencyProfileData, TrustedContact } from '@/components/emergencyPreparedness';
+import { DEFAULT_LOCATION } from '@/lib/defaultLocation';
+import {
+  DEFAULT_EMERGENCY_PROFILE,
+  DEFAULT_TRUSTED_CONTACTS,
+  EMERGENCY_PROFILE_KEY,
+  EMERGENCY_CONTACTS_KEY,
+  EMERGENCY_NOTIFY_KEY
+} from '@/components/emergencyPreparedness';
+
+const LazyEmergencyPreparednessPanel = React.lazy(() =>
+  import('@/components/EmergencyPreparednessPanel').then((mod) => ({ default: mod.EmergencyPreparednessPanel }))
+);
 
 interface UserProfile {
   id: string;
@@ -34,8 +48,8 @@ interface UserAd {
   price: number;
   image_url: string;
   is_active: boolean;
-  created_at: string;
   ad_type: string;
+  created_at: string;
 }
 
 interface Certification {
@@ -52,7 +66,7 @@ const Profile = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { location: userLocationFromContext } = useLocation(); // Get location from context
+  const { location: userLocationFromContext } = useLocation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [userAds, setUserAds] = useState<UserAd[]>([]);
   const [certifications, setCertifications] = useState<Certification[]>([]);
@@ -65,6 +79,9 @@ const Profile = () => {
   const [hidePhone, setHidePhone] = useState(false);
   const [lastSignIn, setLastSignIn] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [emergencyProfile, setEmergencyProfile] = useLocalStorage<EmergencyProfileData>(EMERGENCY_PROFILE_KEY, DEFAULT_EMERGENCY_PROFILE);
+  const [trustedContacts, setTrustedContacts] = useLocalStorage<TrustedContact[]>(EMERGENCY_CONTACTS_KEY, DEFAULT_TRUSTED_CONTACTS);
+  const [notifyTrustedContacts, setNotifyTrustedContacts] = useLocalStorage<boolean>(EMERGENCY_NOTIFY_KEY, true);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,7 +90,6 @@ const Profile = () => {
         setIsDropdownOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -83,11 +99,8 @@ const Profile = () => {
     navigate('/');
   };
 
-  // Worker dashboard hooks
   const { activeBookings, updateBookingStatus } = useBookingTracking();
-
-  // Use real user location from context or fallback to Addis Ababa
-  const userLocation = userLocationFromContext || { lat: 9.0320, lng: 38.7469 };
+  const userLocation = userLocationFromContext || DEFAULT_LOCATION;
 
   useEffect(() => {
     if (!user) {
@@ -96,7 +109,6 @@ const Profile = () => {
     }
     fetchUserData();
 
-    // Get last sign in from session
     const getSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session?.user.last_sign_in_at) {
@@ -123,7 +135,7 @@ const Profile = () => {
         setProfile(profileData);
       }
 
-      // Fetch user ads - now including ad_type
+      // Fetch user ads
       const { data: adsData, error: adsError } = await supabase
         .from('ads')
         .select('*')
@@ -136,7 +148,7 @@ const Profile = () => {
         setUserAds(adsData || []);
       }
 
-      // Fetch certifications
+      // Fetch certifications (table may not exist in all environments)
       const { data: certsData, error: certsError } = await supabase
         .from('certifications')
         .select('*')
@@ -144,7 +156,10 @@ const Profile = () => {
         .order('issue_date', { ascending: false });
 
       if (certsError) {
-        console.error('Error fetching certifications:', certsError);
+        // Table may not exist yet — silently skip
+        if (certsError.code !== 'PGRST205') {
+          console.error('Error fetching certifications:', certsError);
+        }
       } else {
         setCertifications(certsData || []);
       }
@@ -165,76 +180,44 @@ const Profile = () => {
 
       const file = event.target.files[0];
 
-      // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please select an image under 10MB.",
-          variant: "destructive",
-        });
+        toast({ title: "File too large", description: "Please select an image under 10MB.", variant: "destructive" });
         return;
       }
 
-      // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: "Invalid file type",
-          description: "Please select a valid image file (JPEG, PNG, GIF, or WebP).",
-          variant: "destructive",
-        });
+        toast({ title: "Invalid file type", description: "Please select a valid image file (JPEG, PNG, GIF, or WebP).", variant: "destructive" });
         return;
       }
 
       const fileExt = file.name.split('.').pop();
       const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
-      // Prefix with user id to satisfy avatars bucket RLS policies
       const filePath = `${user?.id}/profile-images/${fileName}`;
 
-      console.log('Uploading profile image to path:', filePath);
-
-      // Upload to the 'avatars' bucket (created by migration). Do not fallback to non-existent buckets
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
 
       if (uploadError) {
-        // Surface helpful message when bucket missing
         if ((uploadError as any)?.message?.includes('Bucket not found')) {
           throw new Error("Storage bucket 'avatars' not found. Run the Supabase migrations to create it.");
         }
         throw uploadError;
       }
 
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
       const publicUrl = urlData.publicUrl;
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
-          profile_image_url: publicUrl,
-          updated_at: new Date().toISOString()
-        })
+        .update({ profile_image_url: publicUrl, updated_at: new Date().toISOString() })
         .eq('id', user?.id);
 
-      if (updateError) {
-        console.error('Profile update error:', updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
       setProfile(prev => prev ? { ...prev, profile_image_url: publicUrl } : null);
-
-      toast({
-        title: "Success",
-        description: "Profile image updated successfully!",
-      });
-
-      console.log('Profile image updated successfully:', publicUrl);
+      toast({ title: "Success", description: "Profile image updated successfully!" });
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
@@ -293,44 +276,28 @@ const Profile = () => {
     setShowAdForm(false);
   };
 
-  // Worker dashboard functions
   const handleAcceptBooking = async (bookingId: string) => {
     await updateBookingStatus(bookingId, 'accepted');
-    toast({
-      title: "Booking Accepted",
-      description: "You have accepted the booking request.",
-    });
+    toast({ title: "Booking Accepted", description: "You have accepted the booking request." });
   };
 
   const handleRejectBooking = async (bookingId: string) => {
     await updateBookingStatus(bookingId, 'rejected');
-    toast({
-      title: "Booking Rejected",
-      description: "You have rejected the booking request.",
-    });
+    toast({ title: "Booking Rejected", description: "You have rejected the booking request." });
   };
 
   const handleStartTrip = async (bookingId: string) => {
     await updateBookingStatus(bookingId, 'en_route', userLocation);
     setIsLocationSharing(true);
-    toast({
-      title: "Trip Started",
-      description: "Your location is now being shared with the customer.",
-    });
+    toast({ title: "Trip Started", description: "Your location is now being shared with the customer." });
   };
 
   const toggleLocationSharing = () => {
     setIsLocationSharing(!isLocationSharing);
     if (!isLocationSharing) {
-      toast({
-        title: "Location Sharing Enabled",
-        description: "Your location will be shared with customers during active bookings.",
-      });
+      toast({ title: "Location Sharing Enabled", description: "Your location will be shared with customers during active bookings." });
     } else {
-      toast({
-        title: "Location Sharing Disabled",
-        description: "Location sharing has been turned off.",
-      });
+      toast({ title: "Location Sharing Disabled", description: "Location sharing has been turned off." });
     }
   };
 
@@ -392,7 +359,6 @@ const Profile = () => {
                 )}
               </button>
 
-              {/* Profile Dropdown */}
               {isDropdownOpen && (
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 animate-in fade-in zoom-in duration-200 overflow-hidden">
                   <div className="py-1">
@@ -408,10 +374,7 @@ const Profile = () => {
                       <span className="text-sm font-medium">My Profile</span>
                     </button>
                     <button
-                      onClick={() => {
-                        navigate('/messages');
-                        setIsDropdownOpen(false);
-                      }}
+                      onClick={() => { navigate('/messages'); setIsDropdownOpen(false); }}
                       className="w-full text-left px-4 py-2.5 hover:bg-green-50 flex items-center gap-3 text-gray-700 transition-colors"
                     >
                       <MessageSquare size={18} className="text-green-600" />
@@ -450,7 +413,6 @@ const Profile = () => {
                 </div>
               )}
 
-              {/* Upload Button */}
               <label className="absolute bottom-0 right-0 bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-colors cursor-pointer">
                 {uploading ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -598,7 +560,16 @@ const Profile = () => {
                   : 'text-gray-600 hover:bg-gray-50'
                   }`}
               >
-                Security & Privacy
+                Security &amp; Privacy
+              </button>
+              <button
+                onClick={() => setActiveTab('emergency')}
+                className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${activeTab === 'emergency'
+                  ? 'bg-red-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+              >
+                Emergency Prep
               </button>
             </nav>
           </div>
@@ -819,7 +790,7 @@ const Profile = () => {
                         <p className="text-sm text-gray-600">Change your password to keep your account secure</p>
                       </div>
                       <button
-                        onClick={() => navigate('/auth')} // Redirect to auth for now, or implement a specific password reset call
+                        onClick={() => navigate('/auth')}
                         className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors text-sm"
                       >
                         Reset Password
@@ -870,6 +841,19 @@ const Profile = () => {
                   </div>
                 </div>
               </div>
+            )}
+
+            {activeTab === 'emergency' && (
+              <React.Suspense fallback={<div className="rounded-xl bg-gray-50 p-6 text-sm text-gray-500">Loading emergency profile...</div>}>
+                <LazyEmergencyPreparednessPanel
+                  profile={emergencyProfile}
+                  setProfile={setEmergencyProfile}
+                  contacts={trustedContacts}
+                  setContacts={setTrustedContacts}
+                  notifyContacts={notifyTrustedContacts}
+                  setNotifyContacts={setNotifyTrustedContacts}
+                />
+              </React.Suspense>
             )}
           </div>
         </div>

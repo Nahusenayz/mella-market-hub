@@ -4,6 +4,7 @@ import { Phone, MapPin } from 'lucide-react';
 import { useLocation } from '@/contexts/LocationContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
+import { DEFAULT_LOCATION } from '@/lib/defaultLocation';
 
 interface SearchHeroProps {
   searchQuery: string;
@@ -11,6 +12,7 @@ interface SearchHeroProps {
   isWorkerMode: boolean;
   onTowTruckClick?: () => void;
   responderCounts?: Record<string, number>;
+  emergencyInsights?: Record<string, { count: number; etaLabel: string; statusLabel: string }>;
 }
 
 export const SearchHero: React.FC<SearchHeroProps> = ({
@@ -18,13 +20,14 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
   onSearchChange,
   isWorkerMode,
   onTowTruckClick,
-  responderCounts = {}
+  responderCounts = {},
+  emergencyInsights = {}
 }) => {
   const { t } = useLanguage();
   const { location: contextLocation, permissionStatus } = useLocation();
   const navigate = useNavigate();
 
-  const userLocation = contextLocation || { lat: 9.0320, lng: 38.7469 };
+  const userLocation = contextLocation || DEFAULT_LOCATION;
   const isLocationTracking = permissionStatus === 'granted';
 
   const emergencyTypes = [
@@ -88,7 +91,8 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
           {/* Emergency Category Buttons with Responder Counts */}
           <div className="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-4xl mx-auto pb-4 px-1">
             {emergencyTypes.map((emergency) => {
-              const count = responderCounts[emergency.workerCategory] ?? 0;
+              const insight = emergencyInsights[emergency.workerCategory];
+              const count = insight?.count ?? responderCounts[emergency.workerCategory] ?? 0;
               return (
                 <button
                   key={emergency.type}
@@ -96,14 +100,26 @@ export const SearchHero: React.FC<SearchHeroProps> = ({
                     if (emergency.type === 'Tow Truck' && onTowTruckClick) {
                       onTowTruckClick();
                     }
-                    navigate('/emergency', { state: { category: emergency.workerCategory } });
+                    navigate('/emergency', {
+                      state: {
+                        category: emergency.workerCategory,
+                        autoDispatch: true,
+                        source: 'hero'
+                      }
+                    });
                   }}
                   className={`${emergency.color} text-white p-3 sm:p-4 md:px-6 md:py-5 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex flex-col items-center gap-1 sm:gap-2 border-2 border-white/10 md:min-w-[120px] relative`}
-                >
+                  >
                   <span className="text-2xl sm:text-3xl">{emergency.icon}</span>
                   <span className="text-[10px] sm:text-xs md:text-sm font-bold uppercase tracking-wider">{emergency.label}</span>
                   <span className="inline-flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-bold mt-0.5 min-w-[28px]">
                     {count}
+                  </span>
+                  <span className="text-[10px] sm:text-xs font-medium opacity-95">
+                    {insight?.statusLabel || (count > 0 ? 'Online now' : '0 responders online')}
+                  </span>
+                  <span className="text-[10px] sm:text-xs font-semibold opacity-90">
+                    {insight?.etaLabel || (count > 0 ? 'Closest available' : 'Direct station fallback')}
                   </span>
                 </button>
               );

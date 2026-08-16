@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { DEFAULT_LOCATION } from '@/lib/defaultLocation';
 
 // Service interface for type safety
 interface Service {
@@ -33,7 +34,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
             rating: 4.8,
             distance: 2.3,
             image: '/placeholder.svg',
-            location: { lat: 9.0257, lng: 38.7468 }
+            location: DEFAULT_LOCATION
           },
           {
             id: '2',

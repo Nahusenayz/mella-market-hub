@@ -10,6 +10,53 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@react-google-maps') || id.includes('google-maps')) return 'maps';
+            if (id.includes('@supabase')) return 'supabase';
+            if (id.includes('framer-motion')) return 'motion';
+            if (id.includes('lucide-react')) return 'icons';
+            if (id.includes('react-router-dom')) return 'router';
+            if (id.includes('@radix-ui')) return 'radix';
+            if (id.includes('@tanstack/react-query')) return 'query';
+            if (id.includes('react-hook-form') || id.includes('@hookform/resolvers')) return 'forms';
+            if (id.includes('zod')) return 'validation';
+            if (id.includes('date-fns')) return 'date';
+            if (id.includes('react-markdown') || id.includes('remark-gfm')) return 'markdown';
+            if (id.includes('recharts')) return 'charts';
+            if (id.includes('cmdk')) return 'command';
+            if (id.includes('sonner')) return 'toast';
+            if (id.includes('i18next')) return 'i18n';
+            if (id.includes('embla-carousel')) return 'carousel';
+            if (id.includes('vaul')) return 'drawer';
+            return 'vendor';
+          }
+
+          if (
+            id.includes('/src/pages/Emergency.tsx') ||
+            id.includes('/src/components/EmergencyAssistant.tsx') ||
+            id.includes('/src/components/EmergencyPreparednessPanel.tsx') ||
+            id.includes('/src/components/TrackingMapGoogle.tsx') ||
+            id.includes('/src/components/CommunitySafetyFeed.tsx')
+          ) {
+            return 'emergency';
+          }
+
+          if (
+            id.includes('/src/components/MapViewGoogle.tsx') ||
+            id.includes('/src/components/TowTruckFlow.tsx')
+          ) {
+            return 'maps-ui';
+          }
+
+          return undefined;
+        }
+      }
+    }
+  },
   plugins: [
     react(),
     mode === 'development' &&

@@ -223,10 +223,12 @@ export const WorkerForm: React.FC<WorkerFormProps> = ({ onClose, userLocation, o
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="worker-title" className="block text-sm font-medium text-gray-700 mb-2">
               {formData.type === 'service' ? 'Service' : 'Product'} Title
             </label>
             <input
+              id="worker-title"
+              name="title"
               type="text"
               required
               value={formData.title}
@@ -238,10 +240,12 @@ export const WorkerForm: React.FC<WorkerFormProps> = ({ onClose, userLocation, o
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="worker-description" className="block text-sm font-medium text-gray-700 mb-2">
               Description
             </label>
             <textarea
+              id="worker-description"
+              name="description"
               required
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -254,10 +258,12 @@ export const WorkerForm: React.FC<WorkerFormProps> = ({ onClose, userLocation, o
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="worker-category" className="block text-sm font-medium text-gray-700 mb-2">
                 Category
               </label>
               <select
+                id="worker-category"
+                name="category"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
@@ -272,10 +278,12 @@ export const WorkerForm: React.FC<WorkerFormProps> = ({ onClose, userLocation, o
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="worker-price" className="block text-sm font-medium text-gray-700 mb-2">
                 Price (ETB) {formData.type === 'rent' && '/ Day'}
               </label>
               <input
+                id="worker-price"
+                name="price"
                 type="number"
                 required
                 min="0"
@@ -290,7 +298,7 @@ export const WorkerForm: React.FC<WorkerFormProps> = ({ onClose, userLocation, o
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="worker-image-upload" className="block text-sm font-medium text-gray-700 mb-2">
               {formData.type === 'service' ? 'Service' : 'Product'} Image
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors">
@@ -298,6 +306,8 @@ export const WorkerForm: React.FC<WorkerFormProps> = ({ onClose, userLocation, o
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
+                id="worker-image-upload"
+                name="image"
                 className="hidden"
                 id="image-upload"
                 disabled={loading || uploading}

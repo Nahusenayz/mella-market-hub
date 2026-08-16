@@ -80,6 +80,7 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedEmergency, setSelectedEmergency] = useState<any | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const mapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
   const handleEmergencyCall = (phone: string) => {
     window.open(`tel:${phone}`, '_self');
@@ -93,6 +94,22 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
   };
 
   const nearbyEmergencies = getNearbyEmergencyLocations(currentLocation.lat, currentLocation.lng);
+
+  if (!mapsApiKey) {
+    return (
+      <div className="flex h-full min-h-[320px] items-center justify-center rounded-xl border border-dashed border-amber-300 bg-amber-50 p-6 text-center">
+        <div>
+          <p className="text-sm font-semibold text-amber-900">Map unavailable</p>
+          <p className="mt-1 text-xs text-amber-700">
+            Set `VITE_GOOGLE_MAPS_API_KEY` to enable live maps. Listings still load in list view.
+          </p>
+          {locationError && (
+            <p className="mt-2 text-xs text-amber-700">Location fallback: {locationError}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   const getServiceMarkerIcon = (service: Service) =>
     `data:image/svg+xml,${encodeURIComponent(`<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
@@ -149,6 +166,16 @@ export const MapView: React.FC<MapViewProps> = ({ services, userLocation: initia
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      {locationLoading && (
+        <div className="absolute left-3 top-3 z-20 rounded-lg bg-black/60 px-3 py-1.5 text-xs font-semibold text-white">
+          Loading your location...
+        </div>
+      )}
+      {locationError && (
+        <div className="absolute left-3 top-12 z-20 rounded-lg bg-amber-500/90 px-3 py-1.5 text-xs font-semibold text-white">
+          {locationError}
+        </div>
+      )}
       {/* Crime zone legend overlay */}
       {showCrimeLayer && (
         <div style={{

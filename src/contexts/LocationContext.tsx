@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { DEFAULT_LOCATION } from '@/lib/defaultLocation';
 
 interface LocationContextType {
     location: { lat: number; lng: number } | null;
@@ -10,9 +11,6 @@ interface LocationContextType {
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
-
-// Default location: Addis Ababa, Ethiopia
-const DEFAULT_LOCATION = { lat: 9.0257, lng: 38.7468 };
 
 interface LocationProviderProps {
     children: ReactNode;

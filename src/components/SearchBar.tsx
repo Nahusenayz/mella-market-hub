@@ -32,6 +32,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, userLocation }) 
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" size={20} />
             <input
+              id="search-input"
+              name="searchQuery"
               type="text"
               placeholder="Search for services, categories, or descriptions..."
               value={query}
@@ -57,6 +59,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, userLocation }) 
               <input
                 type="checkbox"
                 id="useLocation"
+                name="useLocation"
                 checked={useLocation}
                 onChange={(e) => setUseLocation(e.target.checked)}
                 className="rounded border-gray-300 text-orange-500 focus:ring-orange-500"
@@ -69,8 +72,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, userLocation }) 
             
             {useLocation && (
               <div className="flex items-center space-x-2">
-                <label className="text-sm text-gray-600 dark:text-slate-300">Radius:</label>
+                <label htmlFor="search-radius" className="text-sm text-gray-600 dark:text-slate-300">Radius:</label>
                 <select
+                  id="search-radius"
+                  name="searchRadius"
                   value={radius}
                   onChange={(e) => setRadius(Number(e.target.value))}
                   className="border border-gray-200 dark:border-slate-600 rounded px-2 py-1 text-sm dark:bg-slate-700 dark:text-slate-100"
